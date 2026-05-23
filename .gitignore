@@ -29,9 +29,4 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
-**/**/.flattened-pom.xml
-./.flattened-pom.xml
-
-.omc
+.DS_Store
