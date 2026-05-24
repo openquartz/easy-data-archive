@@ -58,7 +58,10 @@ public final class DateUtils {
      * @param date 时间
      */
     public static Date floorHour(Date date) {
-        return floorDay(date);
+        if (Objects.isNull(date)) {
+            return null;
+        }
+        return Date.from(date2LocalDateTime(date).with(LocalTime.MIN).atZone(ZoneId.systemDefault()).toInstant());
     }
 
     /**

@@ -1,3 +1,4 @@
+.claude/settings.local.json
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
@@ -30,3 +31,5 @@ build/
 !**/src/test/**/build/
 
 .DS_Store
+.worktrees/
+.flattened-pom.xml

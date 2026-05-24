@@ -78,7 +78,8 @@ public class Environment {
     }
 
     public String getGlobalContextParam(String key) {
-        return globalContext.get(key);
+        Object value = globalContext.get(key);
+        return value != null ? value.toString() : null;
     }
 
     public void clearLocalContext() {

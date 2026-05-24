@@ -1,0 +1,103 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: easy-archive-platform
+
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/easy_archive_platform?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      pool-name: EasyArchiveHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+  security:
+    filter:
+      order: -100
+
+  # EasyArchive 原有配置
+  sync:
+    connection:
+      # 源数据库连接
+      source: jdbc:mysql://localhost:3306/source_db?useUnicode=true&characterEncoding=utf8&useSSL=false
+      source-username: root
+      source-password: password
+
+      # 目标数据库连接
+      target: jdbc:mysql://localhost:3306/target_db?useUnicode=true&characterEncoding=utf8&useSSL=false
+      target-username: root
+      target-password: password
+
+      # 配置数据库连接
+      config: jdbc:mysql://localhost:3306/config_db?useUnicode=true&characterEncoding=utf8&useSSL=false
+      config-username: root
+      config-password: password
+
+    # 配置表
+    config:
+      connection: ${spring.sync.connection.config}
+      table: archive_config
+
+    # 性能设置
+    reader:
+      load:
+        max:
+          rows: 5000
+        unit-time:
+          max:
+            try:
+              frequency: 10000
+    archive:
+      step:
+        interval:
+          time: 50
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.openquartz.easyarchive.starter.model.entity
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: when_authorized
+
+archive:
+  task:
+    thread-pool:
+      core-pool-size: 10
+      max-pool-size: 50
+      queue-capacity: 100
+      thread-name-prefix: archive-task-
+  datasource:
+    test-query: SELECT 1
+  rule:
+    default-batch-size: 1000
+    default-pause-ms: 100
+
+logging:
+  level:
+    com.openquartz.easyarchive: DEBUG
+    org.springframework.security: INFO
+    org.mybatis: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/easy-archive-platform.log
