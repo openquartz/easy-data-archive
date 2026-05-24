@@ -11,10 +11,10 @@ EasyArchive is a data archiving and migration tool built with Java and Spring Bo
 The project follows a modular architecture with these key components:
 
 - **easyarchive-common**: Core APIs and utilities shared across modules
-- **easyarchive-core**: Main business logic including execution engine and configuration
+- **easyarchive-core**: Main business logic including execution engine, configuration, and MySQL implementations
 - **easyarchive-starter**: Spring Boot application entry point
-- **easyarchive-source-mysql**: MySQL data source implementation
-- **easyarchive-sink-mysql**: MySQL data sink implementation
+
+Note: MySQL source and sink implementations are included within the `easyarchive-core` module as sub-packages, not as separate modules.
 
 ## Key Components
 
@@ -75,10 +75,10 @@ mvn test -Dmaven.test.skip=true
 ```
 easy-archive/
 ├── easyarchive-common/          # Shared APIs and utilities
-├── easyarchive-core/            # Main business logic
+├── easyarchive-core/            # Main business logic and MySQL implementations
+│   ├── source/mysql/           # MySQL data source implementation
+│   └── sink/mysql/             # MySQL data sink implementation
 ├── easyarchive-starter/         # Spring Boot application
-├── easyarchive-source-mysql/    # MySQL source implementation
-├── easyarchive-sink-mysql/      # MySQL sink implementation
 └── pom.xml                      # Parent POM with dependency management
 ```
 
