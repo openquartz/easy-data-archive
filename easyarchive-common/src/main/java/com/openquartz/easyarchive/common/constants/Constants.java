@@ -5,7 +5,7 @@ public class Constants {
     private Constants(){
     }
 
-    public static final String EMPTY = "";
+    public static final String EMPTY = " ";
 
 
 }

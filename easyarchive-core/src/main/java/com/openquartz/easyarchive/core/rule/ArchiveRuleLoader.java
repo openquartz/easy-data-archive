@@ -1,5 +1,7 @@
 package com.openquartz.easyarchive.core.rule;
 
+import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItem;
+
 import java.util.List;
 
 /**
@@ -7,7 +9,7 @@ import java.util.List;
  *
  * @author svnee
  */
-public interface TableRuleLoader {
+public interface ArchiveRuleLoader {
 
     /**
      * load table rule

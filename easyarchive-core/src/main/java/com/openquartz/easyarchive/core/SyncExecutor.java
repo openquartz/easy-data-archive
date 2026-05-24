@@ -25,11 +25,13 @@ public class SyncExecutor implements Closeable {
     private final ArchiveConfig archiveConfig;
     private final PageSource reader;
     private final Sink sink;
+    private final int stepIntervalMs;
 
-    public SyncExecutor(ArchiveConfig archiveConfig, PageSource source, Sink sink) {
+    public SyncExecutor(ArchiveConfig archiveConfig, PageSource source, Sink sink,int stepIntervalMs) {
         this.archiveConfig = archiveConfig;
         this.reader = source;
         this.sink = sink;
+        this.stepIntervalMs = stepIntervalMs;
     }
 
     public int execute(Long start, Long end, int step) {
@@ -62,7 +64,7 @@ public class SyncExecutor implements Closeable {
 
                 try {
                     //归档太快会对DB有压力, sleep 100ms
-                    Thread.sleep(archiveConfig.getArchiveStepIntervalTime());
+                    Thread.sleep(stepIntervalMs);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     ExceptionUtils.rethrow(e);

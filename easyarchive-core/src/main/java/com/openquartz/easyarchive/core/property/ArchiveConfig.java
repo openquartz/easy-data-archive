@@ -13,17 +13,6 @@ import org.springframework.stereotype.Component;
 @Getter
 public class ArchiveConfig {
 
-    /**
-     * 归档 源数据库连接
-     */
-    @Value("${sync.connection.source:}")
-    private String sourceConnection;
-
-    /**
-     * 归档 目标数据库连接
-     */
-    @Value("${sync.connection.target:}")
-    private String targetConnection;
 
     /**
      * 归档 配置表数据库连接
@@ -54,5 +43,10 @@ public class ArchiveConfig {
      */
     @Value("${sync.archive.step.interval.time:50}")
     private Long archiveStepIntervalTime;
+
+    /**
+     * 暂停时间
+     */
+    private Integer archivePauseMs;
 
 }

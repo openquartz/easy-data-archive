@@ -1,4 +1,4 @@
-package com.openquartz.easyarchive.core.rule;
+package com.openquartz.easyarchive.core.rule.entity;
 
 /**
  * 归档任务项
@@ -12,8 +12,8 @@ public interface ArchiveGroupItem {
     Long getGroupId();
 
     /**
-     * ID 列名
-     * @return ID
+     * ID
+     * @return id 列名
      */
     String getIdColumn();
 
@@ -51,7 +51,7 @@ public interface ArchiveGroupItem {
      * 1-启用，0-禁用
      * @return 是否启用
      */
-    boolean enableClean();
+    boolean isEnableClean();
 
     /**
      * 删除数据条件。主要用于乐观锁。删除数据时使用
@@ -63,5 +63,12 @@ public interface ArchiveGroupItem {
      * 1-启用，0-禁用
      * @return 是否启用
      */
-    boolean enableWrite();
+    boolean isEnableWrite();
+
+    /**
+     * 获取暂停时间
+     * @return 暂停时间，单位：毫秒
+     */
+    Integer getPauseMs();
+
 }

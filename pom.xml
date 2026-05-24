@@ -13,8 +13,6 @@
         <module>easyarchive-common</module>
         <module>easyarchive-core</module>
         <module>easyarchive-starter</module>
-        <module>easyarchive-sink-mysql</module>
-        <module>easyarchive-source-mysql</module>
     </modules>
 
     <name>${project.artifactId}</name>

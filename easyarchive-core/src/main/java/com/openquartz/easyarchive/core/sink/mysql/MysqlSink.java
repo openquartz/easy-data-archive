@@ -1,4 +1,4 @@
-package com.openquartz.easyarchive.sink.mysql;
+package com.openquartz.easyarchive.core.sink.mysql;
 
 import com.google.common.base.Stopwatch;
 import java.io.Closeable;
@@ -9,10 +9,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import lombok.Getter;
+
+import com.openquartz.easyarchive.core.connection.ConnectionFactory;
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import com.openquartz.easyarchive.common.api.connection.ConnectionFactory;
 import com.openquartz.easyarchive.common.api.Sink;
 import com.openquartz.easyarchive.common.api.model.DataRecord;
 import com.openquartz.easyarchive.common.util.CollectionUtils;
@@ -28,15 +29,15 @@ public class MysqlSink implements Sink, Closeable {
     private static final String COMMA = ",";
     private static final String QUESTION_MASK = "?";
 
-    private final String connectionUrl;
+    private final ArchiveConnection archiveConnection;
     private Connection connection;
     private String[] columnCache;
 
     @Getter
     private final String tableName;
 
-    public MysqlSink(String connectionUrl, String tableName) {
-        this.connectionUrl = connectionUrl;
+    public MysqlSink(ArchiveConnection archiveConnection, String tableName) {
+        this.archiveConnection = archiveConnection;
         this.tableName = tableName;
     }
 
@@ -47,7 +48,7 @@ public class MysqlSink implements Sink, Closeable {
             return;
         }
         if (connection == null) {
-            connection = ConnectionFactory.create(connectionUrl);
+            connection = ConnectionFactory.create(archiveConnection);
         }
         Stopwatch stopwatch = Stopwatch.createStarted();
         String[] columns = resolveColumns(dataList);

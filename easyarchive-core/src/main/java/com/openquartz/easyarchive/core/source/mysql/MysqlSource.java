@@ -1,28 +1,24 @@
-package com.openquartz.easyarchive.source.mysql;
+package com.openquartz.easyarchive.core.source.mysql;
 
 import com.google.common.base.Joiner;
+import com.openquartz.easyarchive.common.api.model.*;
 import com.openquartz.easyarchive.common.util.ExceptionUtils;
 import java.io.Closeable;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.openquartz.easyarchive.core.connection.ConnectionFactory;
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.jdbc.SqlRunner;
-import com.openquartz.easyarchive.common.api.connection.ConnectionFactory;
-import com.openquartz.easyarchive.common.api.model.IdResolver;
 import com.openquartz.easyarchive.common.api.PageSource;
-import com.openquartz.easyarchive.common.api.model.DataIterator;
-import com.openquartz.easyarchive.common.api.model.DataRecord;
-import com.openquartz.easyarchive.common.api.model.EmptyDataIterator;
-import com.openquartz.easyarchive.common.api.model.FetchDataRecordByIdsFunction;
-import com.openquartz.easyarchive.common.api.model.StepIdDataIterator;
 import com.openquartz.easyarchive.common.util.CollectionUtils;
 import com.openquartz.easyarchive.common.util.StringUtils;
+import org.apache.ibatis.jdbc.SqlRunner;
 
 /**
  * 源表数据读取
@@ -35,25 +31,31 @@ public class MysqlSource implements PageSource, Closeable {
     private static final String COMMA = ",";
     private static final String ID_COLUMN = "ID";
 
-    private final String connectionUrl;
+    private final ArchiveConnection archiveConnection;
     @Getter
-    private final Long group;
+    private final Long groupId;
     @Getter
-    private final String tableName;
+    private final TableInfo tableInfo;
     private final String fetchSql;
     private final boolean enableDelete;
     // 删除条件
     private final String deleteWhere;
 
     private SqlRunner runner;
+    private Connection connection;
 
     private final FetchDataRecordByIdsFunction function;
 
-    public MysqlSource(String connectionUrl, Long group, String tableName, String fetchSql, boolean enableDelete,
-        String deleteWhere) {
-        this.connectionUrl = connectionUrl;
-        this.group = group;
-        this.tableName = tableName;
+    public MysqlSource(ArchiveConnection archiveConnection,
+                       Long groupId,
+                       TableInfo tableInfo,
+                       String fetchSql,
+                       boolean enableDelete,
+                       String deleteWhere) {
+
+        this.archiveConnection = archiveConnection;
+        this.groupId = groupId;
+        this.tableInfo = tableInfo;
         this.fetchSql = fetchSql;
         this.enableDelete = enableDelete;
         this.deleteWhere = deleteWhere;
@@ -61,8 +63,8 @@ public class MysqlSource implements PageSource, Closeable {
         this.function = ids -> {
             try {
                 String fetDataSql = "SELECT * FROM "
-                    + tableName
-                    + " WHERE id IN ("
+                    + tableInfo.getTableName()
+                    + " WHERE "+tableInfo.getIdColum().toUpperCase()+" IN ("
                     + Joiner.on(COMMA).join(ids)
                     + ")";
 
@@ -72,10 +74,6 @@ public class MysqlSource implements PageSource, Closeable {
                 return ExceptionUtils.rethrow(ex);
             }
         };
-    }
-
-    public MysqlSource(String connectionUrl, Long group, String tableName, String fetchSql, boolean enableDelete) {
-        this(connectionUrl, group, tableName, fetchSql, enableDelete, StringUtils.EMPTY);
     }
 
 
@@ -93,7 +91,7 @@ public class MysqlSource implements PageSource, Closeable {
     public DataIterator read(Object start, Object end, Integer exePage, int maxLoadRows, int interval) {
 
         if (this.runner == null) {
-            Connection connection = ConnectionFactory.create(this.connectionUrl);
+            Connection connection = ConnectionFactory.create(archiveConnection);
             this.runner = new SqlRunner(connection);
         }
 
@@ -129,8 +127,8 @@ public class MysqlSource implements PageSource, Closeable {
 
         List<String> ids = data.stream().map(t -> t.getData().get(ID_COLUMN).toString()).collect(Collectors.toList());
         String sql = "DELETE FROM "
-            + this.tableName
-            + " WHERE ID IN ("
+            + this.getTableInfo().getTableName()
+            + " WHERE "+tableInfo.getIdColum().toUpperCase()+" IN ("
             + String.join(COMMA, ids)
             + ")";
         if (StringUtils.isNotBlank(deleteWhere)) {
@@ -141,7 +139,7 @@ public class MysqlSource implements PageSource, Closeable {
         }
 
         int r = runner.delete(sql);
-        log.info("[MysqlSource#clean] delete {} rows from {}", r, tableName);
+        log.info("[MysqlSource#clean] delete {} rows from {}", r, tableInfo.getTableName());
     }
 
     @Override

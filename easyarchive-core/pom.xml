@@ -24,14 +24,10 @@
         </dependency>
 
         <dependency>
-            <groupId>org.svnee</groupId>
-            <artifactId>easyarchive-sink-mysql</artifactId>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.svnee</groupId>
-            <artifactId>easyarchive-source-mysql</artifactId>
-        </dependency>
 
     </dependencies>
 

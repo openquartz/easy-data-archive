@@ -1,11 +1,14 @@
 package com.openquartz.easyarchive.core;
 
+import com.openquartz.easyarchive.common.entity.Pair;
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.executor.ArchiveExecutor;
 import com.openquartz.easyarchive.core.property.ArchiveConfig;
-import com.openquartz.easyarchive.core.rule.ArchiveGroupItem;
-import com.openquartz.easyarchive.core.rule.TableRule;
-import com.openquartz.easyarchive.core.rule.TableRuleLoader;
+import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItem;
+import com.openquartz.easyarchive.core.rule.ArchiveRuleLoader;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,20 +29,19 @@ import com.openquartz.easyarchive.common.util.ExceptionUtils;
 @Slf4j
 public class ArchiveGroupExecutor implements Runnable {
 
-    private final String sourceUrl;
-    private final String targetUrl;
-
-    private final ILock lock;
-    private final TableRuleLoader loader;
-    private final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private final ArchiveRuleLoader loader;
     private final ArchiveConfig archiveConfig;
+    private final ArchiveGroupExecuteTask executeTask;
+    private final Pair<ArchiveConnection,ArchiveConnection> connectionInfo;
 
-    public ArchiveGroupExecutor(ArchiveConfig archiveConfig, ILock lock, TableRuleLoader loader) {
-        this.sourceUrl = archiveConfig.getSourceConnection();
-        this.targetUrl = archiveConfig.getTargetConnection();
-        this.archiveConfig = archiveConfig;
+    public ArchiveGroupExecutor(ArchiveRuleLoader loader,
+                                ArchiveConfig archiveConfig,
+                                ArchiveGroupExecuteTask executeTask,
+                                Pair<ArchiveConnection, ArchiveConnection> connectionInfo) {
         this.loader = loader;
-        this.lock = lock;
+        this.archiveConfig = archiveConfig;
+        this.executeTask = executeTask;
+        this.connectionInfo = connectionInfo;
     }
 
     /**
@@ -48,46 +50,39 @@ public class ArchiveGroupExecutor implements Runnable {
     @Override
     public void run() {
 
-        List<ArchiveGroupItem> configs = loader.load();
+        Date startTime = new Date();
+        try{
 
-        Map<Long, List<ArchiveGroupItem>> configGroup = configs.stream()
-            .collect(Collectors.groupingBy(ArchiveGroupItem::getGroupId));
+            List<ArchiveGroupItem> configs = loader.load();
+            configs.sort(Comparator.comparing(ArchiveGroupItem::getPriority));
 
-        CountDownLatch latch = new CountDownLatch(configGroup.size());
-        for (Entry<Long, List<ArchiveGroupItem>> entry : configGroup.entrySet()) {
-            threadPool.submit(() -> {
-                try {
-                    boolean success = lock.lock(entry.getKey());
-                    if (success) {
-                        List<ArchiveGroupItem> singleGroupConfig = entry.getValue();
-                        singleGroupConfig.sort((Comparator.comparing(ArchiveGroupItem::getPriority)));
-                        try {
-                            execute(singleGroupConfig);
-                        } catch (Exception ex) {
-                            log.error("ArchiveExecutor-archive-error!,Group:{},Ex:", entry.getKey(), ex);
-                        } finally {
-                            lock.unlock(entry.getKey());
-                        }
-                    }
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
+            // 开始执行归档
+            doExecute(configs);
 
-        try {
-            latch.await();
+            // 上报进度
+            doReportExecuteProcess(startTime);
 
-            // shutdown thread pool
-            threadPool.shutdown();
-            threadPool.awaitTermination(100, TimeUnit.SECONDS);
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            ExceptionUtils.rethrow(exception);
+        } catch (Exception ex){
+
+            // 记录异常日志
+
+            // 执行状态
+
+            ExceptionUtils.rethrow(ex);
         }
     }
 
-    private void execute(List<ArchiveGroupItem> rules) {
-        new ArchiveExecutor(sourceUrl, targetUrl, archiveConfig, rules).run();
+    private void doReportExecuteProcess(Date startTime) {
+
+        // 计算执行时间
+
+        // 计算最终处理进度
+
+        // 上报进度
+
+    }
+
+    private void doExecute(List<ArchiveGroupItem> configs) {
+        new ArchiveExecutor(connectionInfo.getKey(),connectionInfo.getValue(),archiveConfig,configs,executeTask.getId()).run();
     }
 }

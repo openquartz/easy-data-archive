@@ -1,11 +1,11 @@
 package com.openquartz.easyarchive.core.expr.cmd;
 
+import com.openquartz.easyarchive.common.constants.Constants;
+import com.openquartz.easyarchive.common.entity.Pair;
+import com.openquartz.easyarchive.common.util.StringUtils;
 import com.openquartz.easyarchive.core.expr.cmd.CommandNode.NodeType;
 import com.openquartz.easyarchive.core.expr.exception.CommandExceptionCode;
-import com.openquartz.easyarchive.common.constant.Constants;
 import com.openquartz.easyarchive.common.exception.Asserts;
-import com.openquartz.easyarchive.common.utils.Pair;
-import com.openquartz.easyarchive.common.utils.StringUtils;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -75,9 +75,7 @@ public final class CommandTreeParser {
         }
 
         String finalExpr = expr;
-        Asserts.isTrueIfLog(!expr.startsWith(String.valueOf(LEFT_BRACE)),
-            () -> log.error("[CommandTreeParser#recursiveParse] parse error! command template illegal! expr:{}",
-                finalExpr),
+        Asserts.isTrue(!expr.startsWith(String.valueOf(LEFT_BRACE)),
             CommandExceptionCode.COMMAND_TEMPLATE_ILLEGAL_ERROR);
 
         CommandNode commandNode = new CommandNode(NodeType.COMMAND);
