@@ -38,7 +38,7 @@ Note: MySQL source and sink implementations are included within the `easyarchive
 ## Build & Development
 
 ### Prerequisites
-- Java 8
+- Java 11
 - Maven 3.x
 
 ### Build Commands

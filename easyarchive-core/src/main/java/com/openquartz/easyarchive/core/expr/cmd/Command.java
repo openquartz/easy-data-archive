@@ -1,7 +1,7 @@
 package com.openquartz.easyarchive.core.expr.cmd;
 
 import com.google.common.base.Splitter;
-import com.openquartz.easyarchive.common.utils.CollectionUtils;
+import com.openquartz.easyarchive.common.util.CollectionUtils;
 import java.util.List;
 
 /**

@@ -26,7 +26,7 @@
 
         <mysql.version>5.1.49</mysql.version>
         <mybatis.version>3.5.0</mybatis.version>
-        <spring-boot.version>2.3.2.RELEASE</spring-boot.version>
+        <spring-boot.version>2.7.18</spring-boot.version>
 
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
@@ -72,13 +72,7 @@
 
             <dependency>
                 <groupId>org.svnee</groupId>
-                <artifactId>easyarchive-source-mysql</artifactId>
-                <version>${revision}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.svnee</groupId>
-                <artifactId>easyarchive-sink-mysql</artifactId>
+                <artifactId>easyarchive-core</artifactId>
                 <version>${revision}</version>
             </dependency>
 

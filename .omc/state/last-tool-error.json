@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"mvn compile -pl easyarchive-starter -Dmaven.javadoc.skip=true -q\",\"timeout\":60000,\"description\":\"再次尝试编译starter模块\"}",
+  "error": "Exit code 1\n[ERROR] COMPILATION ERROR : \n[ERROR] /Users/jackxu/Documents/Code/local/easy-archive-master/easyarchive-starter/src/main/java/com/openquartz/easyarchive/connection/factory/ArchiveConnectionFactory.java:[3,52] 程序包com.openquartz.easyarchive.connection.entity不存在\n[ERROR] /Users/jackxu/Documents/Code/local/easy-archive-master/easyarchive-starter/src/main/java/com/openquartz/easyarchive/connection/factory/ArchiveConnectionFactory.java:[13,19] 找不到符号\n  符号:   类 ArchiveConnection\n  位置: 类 com.o...",
+  "timestamp": "2026-05-24T03:59:13.893Z",
+  "retry_count": 1
+}

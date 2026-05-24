@@ -97,19 +97,16 @@ public class ArchiveGroupItemById extends BaseEntity implements ArchiveGroupItem
 
     @Override
     public boolean valid() {
-        // 待实现
-        return false;
+        return enableStatus != null && enableStatus == 0;
     }
 
     @Override
     public boolean isEnableClean() {
-        // 待实现
-        return false;
+        return enableClean != null && enableClean == 0;
     }
 
     @Override
     public boolean isEnableWrite() {
-        // 待实现
-        return false;
+        return enableWrite != null && enableWrite == 0;
     }
 }
