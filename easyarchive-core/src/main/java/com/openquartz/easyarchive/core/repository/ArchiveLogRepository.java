@@ -22,5 +22,7 @@ public interface ArchiveLogRepository {
 
     int countLogsByTaskId(Long taskId, String executePhase);
 
+    void updateTaskStatus(Long taskId, int status);
+
     int deleteByRetentionDays(int retentionDays);
 }

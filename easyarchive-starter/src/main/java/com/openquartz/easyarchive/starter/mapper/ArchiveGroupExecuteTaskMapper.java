@@ -20,5 +20,7 @@ public interface ArchiveGroupExecuteTaskMapper {
 
     int count(@Param("status") String status);
 
+    int updateExecuteStatus(@Param("id") Long id, @Param("status") Integer status);
+
     int deleteByRetentionDays(@Param("retentionDays") int retentionDays);
 }
