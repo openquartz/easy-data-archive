@@ -15,6 +15,8 @@ import java.util.Date;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import com.openquartz.easyarchive.common.util.ExceptionUtils;
+import com.openquartz.easyarchive.core.exception.TaskCancelledException;
+import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 
 @Slf4j
 public class ArchiveGroupExecutor implements Runnable {
@@ -24,17 +26,20 @@ public class ArchiveGroupExecutor implements Runnable {
     private final ArchiveGroupExecuteTask executeTask;
     private final Pair<ArchiveConnection, ArchiveConnection> connectionInfo;
     private final ArchiveEventPublisher publisher;
+    private final ArchiveLogRepository archiveLogRepository;
 
     public ArchiveGroupExecutor(ArchiveRuleLoader loader,
                                 ArchiveConfig archiveConfig,
                                 ArchiveGroupExecuteTask executeTask,
                                 Pair<ArchiveConnection, ArchiveConnection> connectionInfo,
-                                ArchiveEventPublisher publisher) {
+                                ArchiveEventPublisher publisher,
+                                ArchiveLogRepository archiveLogRepository) {
         this.loader = loader;
         this.archiveConfig = archiveConfig;
         this.executeTask = executeTask;
         this.connectionInfo = connectionInfo;
         this.publisher = publisher;
+        this.archiveLogRepository = archiveLogRepository;
     }
 
     @Override
@@ -62,6 +67,15 @@ public class ArchiveGroupExecutor implements Runnable {
             log.info("[ArchiveGroupExecutor#run] archive completed, taskId:{}, elapsed:{}ms",
                 executeTask.getId(), elapsed);
 
+        } catch (TaskCancelledException ex) {
+            long elapsed = System.currentTimeMillis() - startMs;
+
+            publisher.publish(new TaskEndEvent(
+                executeTask.getId(), executeTask.getGroupId(),
+                false, 0L, elapsed, "Task cancelled", true));
+
+            log.info("[ArchiveGroupExecutor#run] archive cancelled, taskId:{}", executeTask.getId());
+
         } catch (Exception ex) {
             long elapsed = System.currentTimeMillis() - startMs;
 
@@ -76,7 +90,7 @@ public class ArchiveGroupExecutor implements Runnable {
 
     private long doExecute(List<ArchiveGroupItem> configs) {
         ArchiveExecutor executor = new ArchiveExecutor(connectionInfo.getKey(), connectionInfo.getValue(),
-            archiveConfig, configs, executeTask.getId(), executeTask.getGroupId(), publisher);
+            archiveConfig, configs, executeTask.getId(), executeTask.getGroupId(), publisher, archiveLogRepository);
         executor.run();
         return executor.getTotalProcessRecords();
     }
