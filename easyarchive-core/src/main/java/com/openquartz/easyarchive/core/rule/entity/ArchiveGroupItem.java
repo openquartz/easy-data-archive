@@ -6,6 +6,12 @@ package com.openquartz.easyarchive.core.rule.entity;
 public interface ArchiveGroupItem {
 
     /**
+     * ID
+     * @return id
+     */
+    Long getId();
+
+    /**
      * 归档分组ID
      * @return ID
      */

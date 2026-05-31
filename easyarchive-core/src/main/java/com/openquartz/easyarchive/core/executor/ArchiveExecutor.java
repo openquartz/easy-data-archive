@@ -8,6 +8,7 @@ import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.event.ArchiveEventPublisher;
 import com.openquartz.easyarchive.core.event.RuleEndEvent;
 import com.openquartz.easyarchive.core.event.RuleStartEvent;
+import com.openquartz.easyarchive.core.event.TaskProgressEvent;
 import com.openquartz.easyarchive.core.expr.ExpressionService;
 import com.openquartz.easyarchive.core.property.ArchiveConfig;
 import java.util.Date;
@@ -25,6 +26,9 @@ import com.openquartz.easyarchive.core.SyncExecutor;
 import com.openquartz.easyarchive.core.sink.mysql.MysqlSink;
 import com.openquartz.easyarchive.core.source.mysql.MysqlSource;
 
+/**
+ * 归档执行任务
+ */
 @Slf4j
 public class ArchiveExecutor implements Runnable {
 
@@ -35,31 +39,43 @@ public class ArchiveExecutor implements Runnable {
     private final Long taskId;
     private final ArchiveEventPublisher publisher;
 
+    private final Long groupId;
+
+    private Long currentRuleId;
+    private String currentSourceTable;
+    private long totalProcessRecords;
+    private long lastProgressUpdateTime = 0;
+
     public ArchiveExecutor(ArchiveConnection sourceConnection,
                            ArchiveConnection sinkConnection,
                            ArchiveConfig archiveConfig,
                            List<ArchiveGroupItem> ruleList,
                            Long taskId,
+                           Long groupId,
                            ArchiveEventPublisher publisher) {
         this.sourceConnection = sourceConnection;
         this.sinkConnection = sinkConnection;
         this.archiveConfig = archiveConfig;
         this.ruleList = ruleList;
         this.taskId = taskId;
+        this.groupId = groupId;
         this.publisher = publisher;
     }
 
     @Override
     public void run() {
 
-        long totalProcessRecords = 0;
         long startTime = System.currentTimeMillis();
 
         for (ArchiveGroupItem rule : ruleList) {
 
+            // 校验是否被取消和中断
             checkCancellation();
 
             String ruleType = (rule instanceof ArchiveGroupItemByTime) ? "TIME" : "ID";
+
+            this.currentRuleId = rule.getId();
+            this.currentSourceTable = ExpressionService.getInstance().parse(rule.getSourceTable());
 
             publisher.publish(new RuleStartEvent(
                 taskId, rule.getGroupId(),
@@ -86,11 +102,13 @@ public class ArchiveExecutor implements Runnable {
                         Date startDate = DateUtils.floorDay(byTimeRule.getStartTime());
 
                         for (Date curDate = startDate; Objects.requireNonNull(curDate).compareTo(endDate) < 0; ) {
+                            // 校验是否被取消和中断
                             checkCancellation();
                             Date curEndDate = DateUtils.addHours(curDate, 1);
                             int batchRows = executor.execute(curDate, curEndDate, byTimeRule.getStepCount());
                             executeRows += batchRows;
                             totalProcessRecords += batchRows;
+                            // 上报进度
                             updateProcess(totalProcessRecords, startTime);
                             curDate = curEndDate;
                         }
@@ -104,11 +122,13 @@ public class ArchiveExecutor implements Runnable {
                         Long endId = Long.valueOf(endIdStr);
 
                         while (Objects.requireNonNull(startId).compareTo(endId) < 0) {
+                            // 校验是否被取消和中断
                             checkCancellation();
                             Long curEndId = startId + byIdRule.getStepRounds();
                             int batchRows = executor.execute(startId, curEndId, byIdRule.getStepCount());
                             executeRows += batchRows;
                             totalProcessRecords += batchRows;
+                            // 上报进度
                             updateProcess(totalProcessRecords, startTime);
                             startId = curEndId;
                         }
@@ -146,7 +166,16 @@ public class ArchiveExecutor implements Runnable {
     }
 
     private void updateProcess(long totalProcessRecords, long startTime) {
-        // 更新进度到执行任务 @TODO
+        long now = System.currentTimeMillis();
+        if (now - lastProgressUpdateTime < archiveConfig.getProgressUpdateIntervalMs()) {
+            return;
+        }
+        lastProgressUpdateTime = now;
+        long elapsedMs = now - startTime;
+        publisher.publish(new TaskProgressEvent(
+            taskId, groupId, totalProcessRecords, elapsedMs,
+            currentRuleId, currentSourceTable
+        ));
     }
 
     private Sink createSink(ArchiveGroupItem rule, ArchiveConnection targetConnection) {
@@ -161,6 +190,10 @@ public class ArchiveExecutor implements Runnable {
             return rule.getPauseMs();
         }
         return archiveConfig.getArchivePauseMs();
+    }
+
+    public long getTotalProcessRecords() {
+        return totalProcessRecords;
     }
 
     private void checkCancellation() {
