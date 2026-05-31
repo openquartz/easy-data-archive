@@ -46,8 +46,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
         <dependency>
@@ -56,13 +55,18 @@
         </dependency>
 
         <dependency>
-            <groupId>org.svnee</groupId>
-            <artifactId>easyarchive-core</artifactId>
-            <version>${revision}</version>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.9.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
-
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>

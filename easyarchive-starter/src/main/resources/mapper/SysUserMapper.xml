@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.openquartz.easyarchive.starter.mapper.SysUserMapper">
+
+    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.starter.model.entity.SysUser">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="real_name" property="realName"/>
+        <result column="mobile" property="mobile"/>
+        <result column="email" property="email"/>
+        <result column="status" property="status"/>
+        <result column="last_login_time" property="lastLoginTime"/>
+        <result column="remark" property="remark"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="updated_time" property="updatedTime"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="updater_id" property="updaterId"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, username, password, real_name, mobile, email, status,
+        last_login_time, remark, created_time, updated_time, creator_id, updater_id, deleted
+    </sql>
+
+    <sql id="Where_Clause">
+        <where>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            AND deleted = 0
+        </where>
+    </sql>
+
+    <insert id="insert" parameterType="com.openquartz.easyarchive.starter.model.entity.SysUser" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_user (
+            username, password, real_name, mobile, email, status,
+            last_login_time, remark, creator_id, updater_id
+        ) VALUES (
+            #{username}, #{password}, #{realName}, #{mobile}, #{email}, #{status},
+            #{lastLoginTime}, #{remark}, #{creatorId}, #{updaterId}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.openquartz.easyarchive.starter.model.entity.SysUser">
+        UPDATE sys_user
+        <set>
+            <if test="password != null">password = #{password},</if>
+            <if test="realName != null">real_name = #{realName},</if>
+            <if test="mobile != null">mobile = #{mobile},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="lastLoginTime != null">last_login_time = #{lastLoginTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updaterId != null">updater_id = #{updaterId},</if>
+            updated_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <update id="deleteById">
+        UPDATE sys_user
+        SET deleted = 1, updated_time = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM sys_user
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <select id="selectByUsername" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM sys_user
+        WHERE username = #{username} AND deleted = 0
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM sys_user
+        <include refid="Where_Clause"/>
+        ORDER BY id DESC
+    </select>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM sys_user
+        <include refid="Where_Clause"/>
+        ORDER BY id DESC
+        LIMIT #{start}, #{size}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM sys_user
+        <include refid="Where_Clause"/>
+    </select>
+
+</mapper>
