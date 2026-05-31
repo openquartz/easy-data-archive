@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .antMatchers("/api/v1/auth/login", "/api/v1/auth/logout").permitAll()
                 .antMatchers("/actuator/health", "/actuator/info").permitAll()
+                .antMatchers("/api/v1/task-log/**").permitAll()
                 .antMatchers("/api/v1/**").authenticated()
                 .anyRequest().authenticated();
 
