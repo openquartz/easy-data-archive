@@ -17,7 +17,7 @@ public class EmptySink implements Sink, Cloneable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
 
     }
 }

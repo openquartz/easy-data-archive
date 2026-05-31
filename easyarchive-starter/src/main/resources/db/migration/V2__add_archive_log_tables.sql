@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `ea_archive_group_execute_task` (
     `group_id` BIGINT NOT NULL COMMENT '归档分组 ID',
     `start_time` DATETIME NULL COMMENT '执行开始时间',
     `end_time` DATETIME NULL COMMENT '执行结束时间',
-    `execute_status` VARCHAR(16) NOT NULL DEFAULT 'WAITING' COMMENT 'WAITING/RUNNING/SUCCESS/FAILED',
+    `execute_status` INT NOT NULL DEFAULT 0 COMMENT '0-等待 1-运行中 2-成功 3-失败',
     `error_msg` VARCHAR(1000) NULL COMMENT '执行异常信息',
     `processed_records` BIGINT NOT NULL DEFAULT 0 COMMENT '已处理记录数',
     `processed_speed` DECIMAL(18,2) NULL COMMENT '处理速度(记录/秒)',
