@@ -76,6 +76,12 @@
         </where>
     </select>
 
+    <update id="updateExecuteStatus">
+        UPDATE ea_archive_group_execute_task
+        SET execute_status = #{status}, updated_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
     <delete id="deleteByRetentionDays">
         UPDATE ea_archive_group_execute_task
         SET deleted = id, updated_time = NOW()

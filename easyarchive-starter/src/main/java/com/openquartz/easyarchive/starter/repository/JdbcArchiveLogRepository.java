@@ -59,6 +59,11 @@ public class JdbcArchiveLogRepository implements ArchiveLogRepository {
     }
 
     @Override
+    public void updateTaskStatus(Long taskId, int status) {
+        executeTaskMapper.updateExecuteStatus(taskId, status);
+    }
+
+    @Override
     public int deleteByRetentionDays(int retentionDays) {
         int taskLogs = taskLogMapper.deleteByRetentionDays(retentionDays);
         int tasks = executeTaskMapper.deleteByRetentionDays(retentionDays);
