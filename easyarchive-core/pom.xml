@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.svnee</groupId>
+        <groupId>com.openquartz</groupId>
         <artifactId>easy-archive</artifactId>
         <version>${revision}</version>
     </parent>
@@ -19,7 +19,7 @@
     <dependencies>
 
         <dependency>
-            <groupId>org.svnee</groupId>
+            <groupId>com.openquartz</groupId>
             <artifactId>easyarchive-common</artifactId>
         </dependency>
 
@@ -28,6 +28,10 @@
             <artifactId>mybatis</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+        </dependency>
 
     </dependencies>
 
