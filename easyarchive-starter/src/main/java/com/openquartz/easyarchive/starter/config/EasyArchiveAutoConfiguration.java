@@ -2,6 +2,8 @@ package com.openquartz.easyarchive.starter.config;
 
 import com.openquartz.easyarchive.connection.factory.ArchiveConnectionFactory;
 import com.openquartz.easyarchive.connection.property.ConnectionProperties;
+import com.openquartz.easyarchive.core.connection.ConnectionFactory;
+import com.openquartz.easyarchive.core.connection.ConnectionPoolConfig;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.event.ArchiveEventPublisher;
 import com.openquartz.easyarchive.core.event.DefaultArchiveEventPublisher;
@@ -32,6 +34,17 @@ public class EasyArchiveAutoConfiguration {
     public EasyArchiveAutoConfiguration(ArchiveConfig archiveConfig, ConnectionProperties connectionProperties) {
         this.archiveConfig = archiveConfig;
         this.connectionProperties = connectionProperties;
+        ConnectionFactory.init(toPoolConfig(connectionProperties.getPool()));
+    }
+
+    private ConnectionPoolConfig toPoolConfig(ConnectionProperties.PoolProperties pool) {
+        ConnectionPoolConfig config = new ConnectionPoolConfig();
+        config.setMaximumPoolSize(pool.getMaximumPoolSize());
+        config.setMinimumIdle(pool.getMinimumIdle());
+        config.setConnectionTimeout(pool.getConnectionTimeout());
+        config.setIdleTimeout(pool.getIdleTimeout());
+        config.setMaxLifetime(pool.getMaxLifetime());
+        return config;
     }
 
     @Bean
