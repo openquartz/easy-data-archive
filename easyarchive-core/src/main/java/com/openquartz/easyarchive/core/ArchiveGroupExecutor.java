@@ -39,7 +39,6 @@ public class ArchiveGroupExecutor implements Runnable {
 
     @Override
     public void run() {
-        Date startTime = new Date();
         long startMs = System.currentTimeMillis();
 
         try {
@@ -52,13 +51,13 @@ public class ArchiveGroupExecutor implements Runnable {
             publisher.publish(new TaskStartEvent(
                 executeTask.getId(), executeTask.getGroupId(), configs.size()));
 
-            doExecute(configs);
+            long totalRows = doExecute(configs);
 
             long elapsed = System.currentTimeMillis() - startMs;
 
             publisher.publish(new TaskEndEvent(
                 executeTask.getId(), executeTask.getGroupId(),
-                true, 0L, elapsed, null));
+                true, totalRows, elapsed, null));
 
             log.info("[ArchiveGroupExecutor#run] archive completed, taskId:{}, elapsed:{}ms",
                 executeTask.getId(), elapsed);
@@ -75,8 +74,10 @@ public class ArchiveGroupExecutor implements Runnable {
         }
     }
 
-    private void doExecute(List<ArchiveGroupItem> configs) {
-        new ArchiveExecutor(connectionInfo.getKey(), connectionInfo.getValue(),
-            archiveConfig, configs, executeTask.getId(), publisher).run();
+    private long doExecute(List<ArchiveGroupItem> configs) {
+        ArchiveExecutor executor = new ArchiveExecutor(connectionInfo.getKey(), connectionInfo.getValue(),
+            archiveConfig, configs, executeTask.getId(), executeTask.getGroupId(), publisher);
+        executor.run();
+        return executor.getTotalProcessRecords();
     }
 }
