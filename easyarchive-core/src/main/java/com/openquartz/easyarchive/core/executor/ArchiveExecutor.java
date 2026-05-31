@@ -11,6 +11,9 @@ import com.openquartz.easyarchive.core.event.RuleStartEvent;
 import com.openquartz.easyarchive.core.event.TaskProgressEvent;
 import com.openquartz.easyarchive.core.expr.ExpressionService;
 import com.openquartz.easyarchive.core.property.ArchiveConfig;
+import com.openquartz.easyarchive.core.exception.TaskCancelledException;
+import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
+import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -40,6 +43,7 @@ public class ArchiveExecutor implements Runnable {
     private final ArchiveEventPublisher publisher;
 
     private final Long groupId;
+    private final ArchiveLogRepository archiveLogRepository;
 
     private Long currentRuleId;
     private String currentSourceTable;
@@ -52,7 +56,8 @@ public class ArchiveExecutor implements Runnable {
                            List<ArchiveGroupItem> ruleList,
                            Long taskId,
                            Long groupId,
-                           ArchiveEventPublisher publisher) {
+                           ArchiveEventPublisher publisher,
+                           ArchiveLogRepository archiveLogRepository) {
         this.sourceConnection = sourceConnection;
         this.sinkConnection = sinkConnection;
         this.archiveConfig = archiveConfig;
@@ -60,6 +65,7 @@ public class ArchiveExecutor implements Runnable {
         this.taskId = taskId;
         this.groupId = groupId;
         this.publisher = publisher;
+        this.archiveLogRepository = archiveLogRepository;
     }
 
     @Override
@@ -197,6 +203,17 @@ public class ArchiveExecutor implements Runnable {
     }
 
     private void checkCancellation() {
-        // TODO 检查任务是否已经被取消。
+        try {
+            ArchiveGroupExecuteTask task = archiveLogRepository.queryTaskById(taskId);
+            if (task != null && task.getExecuteStatus() != null
+                    && task.getExecuteStatus() == ArchiveGroupExecuteTask.STATUS_CANCELLING) {
+                throw new TaskCancelledException(taskId);
+            }
+        } catch (TaskCancelledException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("[ArchiveExecutor] Failed to check cancellation status for task {}: {}",
+                    taskId, e.getMessage());
+        }
     }
 }
