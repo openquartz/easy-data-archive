@@ -49,4 +49,16 @@ public class ArchiveConfig {
      */
     private Integer archivePauseMs;
 
+    /**
+     * 是否启用执行日志
+     */
+    @Value("${sync.log.enabled:true}")
+    private boolean logEnabled;
+
+    /**
+     * 日志保留天数
+     */
+    @Value("${sync.log.retention-days:30}")
+    private int logRetentionDays;
+
 }
