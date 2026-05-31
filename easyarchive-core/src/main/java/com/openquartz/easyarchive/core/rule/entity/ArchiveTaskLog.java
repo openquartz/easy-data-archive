@@ -20,7 +20,7 @@ public class ArchiveTaskLog extends BaseEntity {
     /**
      * 日志类型
      */
-    private Integer logType;
+    private String logType;
 
     /**
      * 日志级别
@@ -45,7 +45,7 @@ public class ArchiveTaskLog extends BaseEntity {
     /**
      * 处理速度
      */
-    private Long processSpeed;
+    private java.math.BigDecimal processSpeed;
 
     /**
      * 执行阶段
