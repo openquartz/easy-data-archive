@@ -11,4 +11,6 @@ public interface ArchiveTaskLogService {
     Map<String, Object> queryLogsByTaskId(Long taskId, int page, int size, String executePhase);
 
     int cleanup(int retentionDays);
+
+    void cancelTask(Long taskId, String cancelReason);
 }
