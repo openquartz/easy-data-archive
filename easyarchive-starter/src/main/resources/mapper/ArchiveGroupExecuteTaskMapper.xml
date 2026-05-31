@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper">
+
+    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask">
+        <id column="id" property="id"/>
+        <result column="group_id" property="groupId"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="execute_status" property="executeStatus"/>
+        <result column="error_msg" property="errorMsg"/>
+        <result column="processed_records" property="processedRecords"/>
+        <result column="processed_speed" property="processedSpeed"/>
+        <result column="heartbeat_time" property="heartbeatTime"/>
+        <result column="finished_flag" property="finishedFlag"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="updated_time" property="updatedTime"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="updater_id" property="updaterId"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, group_id, start_time, end_time, execute_status, error_msg,
+        processed_records, processed_speed, heartbeat_time, finished_flag,
+        created_time, updated_time, creator_id, updater_id, deleted
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ea_archive_group_execute_task (
+            group_id, start_time, execute_status, processed_records
+        ) VALUES (
+            #{groupId}, #{startTime}, #{executeStatus}, #{processedRecords}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE ea_archive_group_execute_task
+        <set>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="executeStatus != null">execute_status = #{executeStatus},</if>
+            <if test="errorMsg != null">error_msg = #{errorMsg},</if>
+            <if test="processedRecords != null">processed_records = #{processedRecords},</if>
+            <if test="processedSpeed != null">processed_speed = #{processedSpeed},</if>
+            <if test="heartbeatTime != null">heartbeat_time = #{heartbeatTime},</if>
+            <if test="finishedFlag != null">finished_flag = #{finishedFlag},</if>
+            updated_time = NOW()
+        </set>
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_execute_task
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_execute_task
+        <where>
+            <if test="status != null and status != ''">AND execute_status = #{status}</if>
+            AND deleted = 0
+        </where>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_group_execute_task
+        <where>
+            <if test="status != null and status != ''">AND execute_status = #{status}</if>
+            AND deleted = 0
+        </where>
+    </select>
+
+    <delete id="deleteByRetentionDays">
+        UPDATE ea_archive_group_execute_task
+        SET deleted = id, updated_time = NOW()
+        WHERE deleted = 0
+          AND start_time &lt; DATE_SUB(NOW(), INTERVAL #{retentionDays} DAY)
+    </delete>
+
+</mapper>

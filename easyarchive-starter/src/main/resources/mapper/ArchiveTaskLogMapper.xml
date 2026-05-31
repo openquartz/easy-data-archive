@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openquartz.easyarchive.starter.mapper.ArchiveTaskLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog">
+        <id column="id" property="id"/>
+        <result column="task_id" property="taskId"/>
+        <result column="log_type" property="logType"/>
+        <result column="log_level" property="logLevel"/>
+        <result column="log_content" property="logContent"/>
+        <result column="log_time" property="logTime"/>
+        <result column="processed_count" property="processedCount"/>
+        <result column="process_speed" property="processSpeed"/>
+        <result column="execute_phase" property="executePhase"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="updated_time" property="updatedTime"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="updater_id" property="updaterId"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, task_id, log_type, log_level, log_content, log_time,
+        processed_count, process_speed, execute_phase,
+        created_time, updated_time, creator_id, updater_id, deleted
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ea_archive_task_log (
+            task_id, log_type, log_level, log_content, log_time,
+            processed_count, process_speed, execute_phase
+        ) VALUES (
+            #{taskId}, #{logType}, #{logLevel}, #{logContent}, #{logTime},
+            #{processedCount}, #{processSpeed}, #{executePhase}
+        )
+    </insert>
+
+    <select id="selectByTaskId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_task_log
+        <where>
+            task_id = #{taskId}
+            <if test="executePhase != null and executePhase != ''">
+                AND execute_phase = #{executePhase}
+            </if>
+            AND deleted = 0
+        </where>
+        ORDER BY id ASC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countByTaskId" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_task_log
+        <where>
+            task_id = #{taskId}
+            <if test="executePhase != null and executePhase != ''">
+                AND execute_phase = #{executePhase}
+            </if>
+            AND deleted = 0
+        </where>
+    </select>
+
+    <delete id="deleteByRetentionDays">
+        UPDATE ea_archive_task_log
+        SET deleted = id, updated_time = NOW()
+        WHERE deleted = 0
+          AND log_time &lt; DATE_SUB(NOW(), INTERVAL #{retentionDays} DAY)
+    </delete>
+
+</mapper>
