@@ -51,4 +51,19 @@ public class ArchiveTaskLogController {
         log.info("[ArchiveTaskLogController] cleanup deleted {} records, retentionDays:{}", deleted, retentionDays);
         return ApiResponse.success(deleted);
     }
+
+    @PostMapping("/tasks/{taskId}/cancel")
+    public ApiResponse<Object> cancelTask(
+            @PathVariable Long taskId,
+            @RequestBody(required = false) Map<String, String> body) {
+        try {
+            String reason = body != null ? body.get("cancelReason") : null;
+            taskLogService.cancelTask(taskId, reason);
+            return ApiResponse.success("取消请求已提交");
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error("NOT_FOUND", e.getMessage());
+        } catch (IllegalStateException e) {
+            return ApiResponse.error("INVALID_STATUS", e.getMessage());
+        }
+    }
 }
