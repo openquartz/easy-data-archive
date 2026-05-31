@@ -10,7 +10,7 @@ import java.util.Date;
 /**
  * 归档执行任务
  *
- * execute_status: 0-等待 1-运行中 2-成功 3-失败
+ * execute_status: 0-等待 1-运行中 2-成功 3-失败 4-取消中 5-已取消
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -20,6 +20,8 @@ public class ArchiveGroupExecuteTask extends BaseEntity {
     public static final int STATUS_RUNNING = 1;
     public static final int STATUS_SUCCESS = 2;
     public static final int STATUS_FAILED = 3;
+    public static final int STATUS_CANCELLING = 4;
+    public static final int STATUS_CANCELLED = 5;
 
     private Long id;
 
@@ -40,7 +42,7 @@ public class ArchiveGroupExecuteTask extends BaseEntity {
     private Date endTime;
 
     /**
-     * 执行状态: 0-等待 1-运行中 2-成功 3-失败
+     * 执行状态: 0-等待 1-运行中 2-成功 3-失败 4-取消中 5-已取消
      */
     private Integer executeStatus;
 
@@ -72,6 +74,8 @@ public class ArchiveGroupExecuteTask extends BaseEntity {
 
     public boolean isTerminal() {
         return executeStatus != null
-                && (executeStatus == STATUS_SUCCESS || executeStatus == STATUS_FAILED);
+                && (executeStatus == STATUS_SUCCESS
+                    || executeStatus == STATUS_FAILED
+                    || executeStatus == STATUS_CANCELLED);
     }
 }
