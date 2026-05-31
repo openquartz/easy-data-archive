@@ -20,6 +20,8 @@ public class ArchiveTaskLogController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String status) {
+        page = Math.max(1, page);
+        size = Math.min(Math.max(1, size), 500);
         return ApiResponse.success(taskLogService.queryTasks(page, size, status));
     }
 
@@ -38,6 +40,8 @@ public class ArchiveTaskLogController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "50") int size,
             @RequestParam(required = false) String executePhase) {
+        page = Math.max(1, page);
+        size = Math.min(Math.max(1, size), 500);
         return ApiResponse.success(taskLogService.queryLogsByTaskId(taskId, page, size, executePhase));
     }
 

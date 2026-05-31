@@ -6,6 +6,7 @@ import com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int cleanup(int retentionDays) {
         return archiveLogRepository.deleteByRetentionDays(retentionDays);
     }
