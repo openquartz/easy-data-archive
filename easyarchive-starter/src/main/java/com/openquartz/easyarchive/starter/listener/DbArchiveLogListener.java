@@ -56,22 +56,35 @@ public class DbArchiveLogListener implements ArchiveEventListener {
         ArchiveGroupExecuteTask task = new ArchiveGroupExecuteTask();
         task.setId(event.getTaskId());
         task.setEndTime(new Date(event.getTimestamp()));
-        task.setExecuteStatus(event.isSuccess() ? 2 : 3);
         task.setProcessedRecords(event.getTotalRows());
-        task.setFinishedFlag(event.isSuccess() ? event.getTaskId() : 0L);
-        if (event.getElapsedMs() > 0) {
-            task.setProcessedSpeed(BigDecimal.valueOf(event.getTotalRows() * 1000.0 / event.getElapsedMs()));
-        }
-        if (!event.isSuccess() && event.getErrorMsg() != null) {
-            task.setErrorMsg(event.getErrorMsg());
-        }
-        repository.updateTaskExecution(task);
 
-        String content = event.isSuccess()
-                ? "任务完成，总行数:" + event.getTotalRows() + "，耗时:" + event.getElapsedMs() + "ms"
-                : "任务失败:" + event.getErrorMsg();
-        String logType = event.isSuccess() ? "FINISH" : "ERROR";
-        String level = event.isSuccess() ? "INFO" : "ERROR";
+        String content;
+        String logType;
+        String level;
+
+        if (event.isCancelled()) {
+            task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_CANCELLED);
+            task.setFinishedFlag(0L);
+            content = "任务已取消" + (event.getErrorMsg() != null ? ":" + event.getErrorMsg() : "");
+            logType = "CANCEL";
+            level = "WARN";
+        } else {
+            task.setExecuteStatus(event.isSuccess() ? 2 : 3);
+            task.setFinishedFlag(event.isSuccess() ? event.getTaskId() : 0L);
+            if (event.getElapsedMs() > 0) {
+                task.setProcessedSpeed(BigDecimal.valueOf(event.getTotalRows() * 1000.0 / event.getElapsedMs()));
+            }
+            if (!event.isSuccess() && event.getErrorMsg() != null) {
+                task.setErrorMsg(event.getErrorMsg());
+            }
+            content = event.isSuccess()
+                    ? "任务完成，总行数:" + event.getTotalRows() + "，耗时:" + event.getElapsedMs() + "ms"
+                    : "任务失败:" + event.getErrorMsg();
+            logType = event.isSuccess() ? "FINISH" : "ERROR";
+            level = event.isSuccess() ? "INFO" : "ERROR";
+        }
+
+        repository.updateTaskExecution(task);
         saveLog(event.getTaskId(), logType, level, content,
                 "TASK_END", event.getTotalRows(), BigDecimal.ZERO, new Date(event.getTimestamp()));
     }
