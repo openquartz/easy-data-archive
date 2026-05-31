@@ -5,14 +5,15 @@ import com.openquartz.easyarchive.common.api.model.TableInfo;
 import com.openquartz.easyarchive.common.util.DateUtils;
 import com.openquartz.easyarchive.common.util.ExceptionUtils;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
+import com.openquartz.easyarchive.core.event.ArchiveEventPublisher;
+import com.openquartz.easyarchive.core.event.RuleEndEvent;
+import com.openquartz.easyarchive.core.event.RuleStartEvent;
 import com.openquartz.easyarchive.core.expr.ExpressionService;
 import com.openquartz.easyarchive.core.property.ArchiveConfig;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItem;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemById;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
@@ -24,11 +25,6 @@ import com.openquartz.easyarchive.core.SyncExecutor;
 import com.openquartz.easyarchive.core.sink.mysql.MysqlSink;
 import com.openquartz.easyarchive.core.source.mysql.MysqlSource;
 
-/**
- * ArchiveExecutor
- *
- * @author svnee
- */
 @Slf4j
 public class ArchiveExecutor implements Runnable {
 
@@ -37,22 +33,22 @@ public class ArchiveExecutor implements Runnable {
     private final ArchiveConfig archiveConfig;
     private final List<ArchiveGroupItem> ruleList;
     private final Long taskId;
+    private final ArchiveEventPublisher publisher;
 
     public ArchiveExecutor(ArchiveConnection sourceConnection,
                            ArchiveConnection sinkConnection,
                            ArchiveConfig archiveConfig,
                            List<ArchiveGroupItem> ruleList,
-                           Long taskId) {
+                           Long taskId,
+                           ArchiveEventPublisher publisher) {
         this.sourceConnection = sourceConnection;
         this.sinkConnection = sinkConnection;
         this.archiveConfig = archiveConfig;
         this.ruleList = ruleList;
         this.taskId = taskId;
+        this.publisher = publisher;
     }
 
-    /**
-     * run execute
-     */
     @Override
     public void run() {
 
@@ -61,10 +57,13 @@ public class ArchiveExecutor implements Runnable {
 
         for (ArchiveGroupItem rule : ruleList) {
 
-            // 检查任务是否被取消
             checkCancellation();
 
-            // 开始打印日志
+            String ruleType = (rule instanceof ArchiveGroupItemByTime) ? "TIME" : "ID";
+
+            publisher.publish(new RuleStartEvent(
+                taskId, rule.getGroupId(),
+                rule.getSourceTable(), rule.getTargetTable(), ruleType));
 
             Stopwatch watch = Stopwatch.createStarted();
             int executeRows = 0;
@@ -81,96 +80,73 @@ public class ArchiveExecutor implements Runnable {
                      Sink sink = createSink(rule, sinkConnection);
                      SyncExecutor executor = new SyncExecutor(archiveConfig, reader, sink, effectivePauseMs)) {
 
-                    // 按照时间滚动
                     if (rule instanceof ArchiveGroupItemByTime) {
-
                         ArchiveGroupItemByTime byTimeRule = (ArchiveGroupItemByTime) rule;
                         Date endDate = DateUtils.floorDay(DateUtils.addDays(new Date(), -byTimeRule.getKeepDay()));
                         Date startDate = DateUtils.floorDay(byTimeRule.getStartTime());
 
-                        // 记录执行日志
-
                         for (Date curDate = startDate; Objects.requireNonNull(curDate).compareTo(endDate) < 0; ) {
-
-                            // 检查任务是否被执行取消
                             checkCancellation();
-
                             Date curEndDate = DateUtils.addHours(curDate, 1);
                             int batchRows = executor.execute(curDate, curEndDate, byTimeRule.getStepCount());
                             executeRows += batchRows;
                             totalProcessRecords += batchRows;
-
-                            // 更新进度
-                            updateProcess(totalProcessRecords,startTime);
-
+                            updateProcess(totalProcessRecords, startTime);
                             curDate = curEndDate;
                         }
                     }
 
-                    // 按照id 进行滚动
-                    if (rule instanceof ArchiveGroupItemById){
-
+                    if (rule instanceof ArchiveGroupItemById) {
                         ArchiveGroupItemById byIdRule = (ArchiveGroupItemById) rule;
-
                         String startIdStr = ExpressionService.getInstance().parse(byIdRule.getStartId());
                         Long startId = Long.valueOf(startIdStr);
                         String endIdStr = ExpressionService.getInstance().parse(byIdRule.getEndId());
                         Long endId = Long.valueOf(endIdStr);
 
-                        // 记录执行日志
-
-                        while(Objects.requireNonNull(startId).compareTo(endId)<0){
-
-                            // 校验是否被取消
+                        while (Objects.requireNonNull(startId).compareTo(endId) < 0) {
                             checkCancellation();
-
                             Long curEndId = startId + byIdRule.getStepRounds();
                             int batchRows = executor.execute(startId, curEndId, byIdRule.getStepCount());
-
                             executeRows += batchRows;
                             totalProcessRecords += batchRows;
-
-                            // 更新进度
                             updateProcess(totalProcessRecords, startTime);
-
                             startId = curEndId;
                         }
                     }
 
                     watch.stop();
-
-
-                    // 执行时间 统计总耗时
                     long elapsedMilliseconds = watch.elapsed(TimeUnit.MILLISECONDS);
-                    log.info("[ArchiveExecutor]{}->{},execute error!,archive-rows:{},take {}ms",
-                        rule.getSourceTable(),
-                        rule.getTargetTable(),
-                        executeRows,
-                        elapsedMilliseconds);
 
-                    // 记录进度
+                    log.info("[ArchiveExecutor] {} -> {}, execute completed, archive-rows:{}, take {}ms",
+                        rule.getSourceTable(), rule.getTargetTable(), executeRows, elapsedMilliseconds);
 
-                    // 记录执行日志
+                    publisher.publish(new RuleEndEvent(
+                        taskId, rule.getGroupId(),
+                        rule.getSourceTable(), rule.getTargetTable(),
+                        ruleType, true, executeRows, elapsedMilliseconds, null));
 
                 } catch (Exception e) {
-
                     watch.stop();
                     long elapsed = watch.elapsed(TimeUnit.MILLISECONDS);
-                    // 拼接执行日志
 
-                    log.error("[ArchiveExecutor]{}->{},execute error", rule.getSourceTable(), rule.getTargetTable(), e);
+                    publisher.publish(new RuleEndEvent(
+                        taskId, rule.getGroupId(),
+                        rule.getSourceTable(), rule.getTargetTable(),
+                        ruleType, false, executeRows, elapsed, e.getMessage()));
 
+                    log.error("[ArchiveExecutor] {} -> {}, execute error",
+                        rule.getSourceTable(), rule.getTargetTable(), e);
                     ExceptionUtils.rethrow(e);
                 }
             } catch (Exception ex) {
-                log.error("[ArchiveExecutor]{},execute error!", rule.getSourceTable(), ex);
+                log.error("[ArchiveExecutor] {}, execute error!", rule.getSourceTable(), ex);
                 throw ex;
             }
         }
     }
 
     private void updateProcess(long totalProcessRecords, long startTime) {
-        // 更新进度 ToDo
+        // 更新进度到执行任务 @TODO
     }
 
     private Sink createSink(ArchiveGroupItem rule, ArchiveConnection targetConnection) {
@@ -188,6 +164,6 @@ public class ArchiveExecutor implements Runnable {
     }
 
     private void checkCancellation() {
-
+        // TODO 检查任务是否已经被取消。
     }
 }
