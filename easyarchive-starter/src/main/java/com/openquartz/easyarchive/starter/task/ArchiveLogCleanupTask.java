@@ -4,12 +4,14 @@ import com.openquartz.easyarchive.core.property.ArchiveConfig;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "sync.log.enabled", havingValue = "true", matchIfMissing = true)
 public class ArchiveLogCleanupTask {
 
     private final ArchiveTaskLogService taskLogService;

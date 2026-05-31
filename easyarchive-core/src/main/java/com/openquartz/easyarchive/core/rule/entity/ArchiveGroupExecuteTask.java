@@ -4,14 +4,22 @@ import com.openquartz.easyarchive.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
  * 归档执行任务
+ *
+ * execute_status: 0-等待 1-运行中 2-成功 3-失败
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ArchiveGroupExecuteTask extends BaseEntity {
+
+    public static final int STATUS_WAITING = 0;
+    public static final int STATUS_RUNNING = 1;
+    public static final int STATUS_SUCCESS = 2;
+    public static final int STATUS_FAILED = 3;
 
     private Long id;
 
@@ -32,7 +40,7 @@ public class ArchiveGroupExecuteTask extends BaseEntity {
     private Date endTime;
 
     /**
-     * 执行状态
+     * 执行状态: 0-等待 1-运行中 2-成功 3-失败
      */
     private Integer executeStatus;
 
@@ -49,7 +57,7 @@ public class ArchiveGroupExecuteTask extends BaseEntity {
     /**
      * 处理速度，(记录/秒)
      */
-    private Double processedSpeed;
+    private BigDecimal processedSpeed;
 
     /**
      * 最新心跳时间点
@@ -62,7 +70,8 @@ public class ArchiveGroupExecuteTask extends BaseEntity {
      */
     private Long finishedFlag;
 
-    private void wrapFinishedFlag(){
-        // 如果 执行状态 进入终态则设置为id 否则为0
+    public boolean isTerminal() {
+        return executeStatus != null
+                && (executeStatus == STATUS_SUCCESS || executeStatus == STATUS_FAILED);
     }
 }

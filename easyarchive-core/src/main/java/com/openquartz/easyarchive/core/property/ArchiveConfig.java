@@ -2,14 +2,12 @@ package com.openquartz.easyarchive.core.property;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 /**
  * ArchiveConfig
  *
  * @author svnee
  */
-@Component
 @Getter
 public class ArchiveConfig {
 
@@ -47,6 +45,7 @@ public class ArchiveConfig {
     /**
      * 暂停时间
      */
+    @Value("${sync.archive.pause.ms:100}")
     private Integer archivePauseMs;
 
     /**

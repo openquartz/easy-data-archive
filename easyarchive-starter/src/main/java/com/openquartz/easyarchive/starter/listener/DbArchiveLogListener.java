@@ -39,9 +39,9 @@ public class DbArchiveLogListener implements ArchiveEventListener {
         task.setId(event.getTaskId());
         task.setGroupId(event.getGroupId());
         task.setStartTime(new Date(event.getTimestamp()));
-        task.setExecuteStatus(0);
+        task.setExecuteStatus(1);
         task.setProcessedRecords(0L);
-        repository.updateTaskExecution(task);
+        repository.saveTaskExecution(task);
 
         saveLog(event.getTaskId(), "START", "INFO",
                 "任务开始，规则数:" + event.getRuleCount(),
@@ -52,11 +52,11 @@ public class DbArchiveLogListener implements ArchiveEventListener {
         ArchiveGroupExecuteTask task = new ArchiveGroupExecuteTask();
         task.setId(event.getTaskId());
         task.setEndTime(new Date(event.getTimestamp()));
-        task.setExecuteStatus(event.isSuccess() ? 1 : 2);
+        task.setExecuteStatus(event.isSuccess() ? 2 : 3);
         task.setProcessedRecords(event.getTotalRows());
         task.setFinishedFlag(event.isSuccess() ? event.getTaskId() : 0L);
         if (event.getElapsedMs() > 0) {
-            task.setProcessedSpeed(event.getTotalRows() * 1000.0 / event.getElapsedMs());
+            task.setProcessedSpeed(BigDecimal.valueOf(event.getTotalRows() * 1000.0 / event.getElapsedMs()));
         }
         if (!event.isSuccess() && event.getErrorMsg() != null) {
             task.setErrorMsg(event.getErrorMsg());
