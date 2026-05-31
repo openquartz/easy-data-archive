@@ -4,6 +4,7 @@ import com.openquartz.easyarchive.core.event.ArchiveEvent;
 import com.openquartz.easyarchive.core.event.RuleEndEvent;
 import com.openquartz.easyarchive.core.event.RuleStartEvent;
 import com.openquartz.easyarchive.core.event.TaskEndEvent;
+import com.openquartz.easyarchive.core.event.TaskProgressEvent;
 import com.openquartz.easyarchive.core.event.TaskStartEvent;
 import com.openquartz.easyarchive.core.listener.ArchiveEventListener;
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 
 @Slf4j
@@ -31,6 +33,8 @@ public class DbArchiveLogListener implements ArchiveEventListener {
             handleRuleStart((RuleStartEvent) event);
         } else if (event instanceof RuleEndEvent) {
             handleRuleEnd((RuleEndEvent) event);
+        } else if (event instanceof TaskProgressEvent) {
+            handleTaskProgress((TaskProgressEvent) event);
         }
     }
 
@@ -92,6 +96,29 @@ public class DbArchiveLogListener implements ArchiveEventListener {
         String level = event.isSuccess() ? "INFO" : "ERROR";
         saveLog(event.getTaskId(), logType, level, content,
                 "RULE_END", event.getProcessedRows(), speed, new Date(event.getTimestamp()));
+    }
+
+    private void handleTaskProgress(TaskProgressEvent event) {
+        ArchiveGroupExecuteTask task = repository.queryTaskById(event.getTaskId());
+        if (task == null || task.isTerminal()) {
+            return;
+        }
+
+        BigDecimal speed = BigDecimal.ZERO;
+        if (event.getElapsedMs() > 0) {
+            speed = BigDecimal.valueOf(event.getProcessedRecords() * 1000.0 / event.getElapsedMs())
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
+
+        task.setProcessedRecords(event.getProcessedRecords());
+        task.setProcessedSpeed(speed);
+        task.setHeartbeatTime(new Date());
+        repository.updateTaskExecution(task);
+
+        String content = String.format("进度: 已处理 %d 行, 速度 %s 行/秒, 当前表: %s",
+                event.getProcessedRecords(), speed, event.getSourceTable());
+        saveLog(event.getTaskId(), "PROGRESS", "INFO", content,
+                "TASK_PROGRESS", event.getProcessedRecords(), speed, new Date(event.getTimestamp()));
     }
 
     private void saveLog(Long taskId, String logType, String logLevel,
