@@ -60,4 +60,10 @@ public class ArchiveConfig {
     @Value("${sync.log.retention-days:30}")
     private int logRetentionDays;
 
+    /**
+     * 进度更新间隔(毫秒)
+     */
+    @Value("${sync.archive.progress.update.interval.ms:5000}")
+    private Long progressUpdateIntervalMs;
+
 }
