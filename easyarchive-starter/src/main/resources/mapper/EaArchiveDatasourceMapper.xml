@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.openquartz.easyarchive.starter.mapper.EaArchiveDatasourceMapper">
+
+    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.starter.model.entity.EaArchiveDatasource">
+        <id column="id" property="id"/>
+        <result column="datasource_code" property="datasourceCode"/>
+        <result column="datasource_name" property="datasourceName"/>
+        <result column="datasource_type" property="datasourceType"/>
+        <result column="jdbc_url" property="jdbcUrl"/>
+        <result column="username" property="username"/>
+        <result column="password_cipher" property="passwordCipher"/>
+        <result column="schema_name" property="schemaName"/>
+        <result column="status" property="status"/>
+        <result column="last_check_time" property="lastCheckTime"/>
+        <result column="owner_user_id" property="ownerUserId"/>
+        <result column="remark" property="remark"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="updated_time" property="updatedTime"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="updater_id" property="updaterId"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, datasource_code, datasource_name, datasource_type, jdbc_url, username,
+        password_cipher, schema_name, status, last_check_time, owner_user_id, remark,
+        created_time, updated_time, creator_id, updater_id, deleted
+    </sql>
+
+    <sql id="Where_Clause">
+        <where>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="ownerUserId != null">
+                AND owner_user_id = #{ownerUserId}
+            </if>
+            AND deleted = 0
+        </where>
+    </sql>
+
+    <insert id="insert" parameterType="com.openquartz.easyarchive.starter.model.entity.EaArchiveDatasource" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ea_archive_datasource (
+            datasource_code, datasource_name, datasource_type, jdbc_url, username,
+            password_cipher, schema_name, status, owner_user_id, remark, creator_id, updater_id
+        ) VALUES (
+            #{datasourceCode}, #{datasourceName}, #{datasourceType}, #{jdbcUrl}, #{username},
+            #{passwordCipher}, #{schemaName}, #{status}, #{ownerUserId}, #{remark}, #{creatorId}, #{updaterId}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.openquartz.easyarchive.starter.model.entity.EaArchiveDatasource">
+        UPDATE ea_archive_datasource
+        <set>
+            <if test="datasourceName != null">datasource_name = #{datasourceName},</if>
+            <if test="datasourceType != null">datasource_type = #{datasourceType},</if>
+            <if test="jdbcUrl != null">jdbc_url = #{jdbcUrl},</if>
+            <if test="username != null">username = #{username},</if>
+            <if test="passwordCipher != null">password_cipher = #{passwordCipher},</if>
+            <if test="schemaName != null">schema_name = #{schemaName},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="lastCheckTime != null">last_check_time = #{lastCheckTime},</if>
+            <if test="ownerUserId != null">owner_user_id = #{ownerUserId},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updaterId != null">updater_id = #{updaterId},</if>
+            updated_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <update id="deleteById">
+        UPDATE ea_archive_datasource
+        SET deleted = 1, updated_time = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_datasource
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_datasource
+        WHERE datasource_code = #{datasourceCode} AND deleted = 0
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_datasource
+        <include refid="Where_Clause"/>
+        ORDER BY id DESC
+    </select>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_datasource
+        <include refid="Where_Clause"/>
+        ORDER BY id DESC
+        LIMIT #{start}, #{size}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_datasource
+        <include refid="Where_Clause"/>
+    </select>
+
+</mapper>
