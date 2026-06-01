@@ -7,7 +7,6 @@ export interface Datasource {
   datasourceType: string;
   jdbcUrl: string;
   username: string;
-  passwordCipher?: string;
   schemaName?: string;
   status: number;
   lastCheckTime?: string;

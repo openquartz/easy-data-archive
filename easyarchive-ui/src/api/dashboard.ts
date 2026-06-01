@@ -1,7 +1,8 @@
 import { http } from "../utils/http";
 
 export interface DashboardStatusCount {
-  executeStatus: number;
+  status?: number;
+  executeStatus?: number;
   count: number;
 }
 

@@ -10,7 +10,11 @@ const overview = ref<DashboardOverview | null>(null);
 const statusCountMap = computed(() => {
   const result = new Map<number, number>();
   for (const item of overview.value?.taskStatusCounts || []) {
-    result.set(Number(item.executeStatus), Number(item.count) || 0);
+    const status = item.executeStatus ?? item.status;
+    if (status === undefined || status === null) {
+      continue;
+    }
+    result.set(Number(status), Number(item.count) || 0);
   }
   return result;
 });
