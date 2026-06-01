@@ -108,4 +108,11 @@
         <include refid="Where_Clause"/>
     </select>
 
+    <select id="countByStatus" resultType="map">
+        SELECT status, COUNT(1) AS count
+        FROM ea_archive_datasource
+        WHERE deleted = 0
+        GROUP BY status
+    </select>
+
 </mapper>

@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 数据源Mapper
@@ -28,5 +29,7 @@ public interface EaArchiveDatasourceMapper {
                                         @Param("status") Integer status, @Param("ownerUserId") Long ownerUserId);
 
     int count(@Param("status") Integer status, @Param("ownerUserId") Long ownerUserId);
+
+    List<Map<String, Object>> countByStatus();
 
 }
