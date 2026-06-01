@@ -1,5 +1,8 @@
 package com.openquartz.easyarchive.core.exception;
 
+import lombok.Getter;
+
+@Getter
 public class TaskCancelledException extends RuntimeException {
 
     private final Long taskId;
@@ -14,7 +17,4 @@ public class TaskCancelledException extends RuntimeException {
         this.taskId = taskId;
     }
 
-    public Long getTaskId() {
-        return taskId;
-    }
 }
