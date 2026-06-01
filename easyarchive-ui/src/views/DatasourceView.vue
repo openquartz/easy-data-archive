@@ -19,8 +19,10 @@ import { computed, ref } from "vue";
 const loading = ref(false);
 const list = ref<Datasource[]>([]);
 const errorMessage = ref("");
-const feedbackMessage = ref("");
-const busyId = ref<number | null>(null);
+const successMessage = ref("");
+const actionErrorMessage = ref("");
+const busyRows = ref(new Set<number>());
+const busyActions = ref(new Set<string>());
 
 const dialogVisible = ref(false);
 const dialogMode = ref<"create" | "edit">("create");
@@ -28,6 +30,9 @@ const dialogSubmitting = ref(false);
 const activeItem = ref<Datasource | null>(null);
 
 const emptyText = computed(() => (loading.value ? "Loading datasources..." : "No datasource records."));
+const getActionKey = (action: string, id: number): string => `${action}:${id}`;
+const isRowBusy = (id: number): boolean => busyRows.value.has(id);
+const isActionBusy = (action: string, id: number): boolean => busyActions.value.has(getActionKey(action, id));
 
 async function loadData(): Promise<void> {
   loading.value = true;
@@ -58,42 +63,56 @@ async function submitForm(payload: DatasourcePayload): Promise<void> {
     return;
   }
   dialogSubmitting.value = true;
-  feedbackMessage.value = "";
+  successMessage.value = "";
+  actionErrorMessage.value = "";
   try {
     if (dialogMode.value === "create") {
       await createDatasourceApi(payload);
-      feedbackMessage.value = "Datasource created.";
+      successMessage.value = "Datasource created.";
     } else if (activeItem.value) {
       await updateDatasourceApi(activeItem.value.id, payload);
-      feedbackMessage.value = "Datasource updated.";
+      successMessage.value = "Datasource updated.";
     }
     dialogVisible.value = false;
     await loadData();
   } catch (error) {
-    feedbackMessage.value = error instanceof Error ? error.message : "Save failed";
+    actionErrorMessage.value = error instanceof Error ? error.message : "Save failed";
   } finally {
     dialogSubmitting.value = false;
   }
 }
 
 async function toggleStatus(item: Datasource): Promise<void> {
+  if (isRowBusy(item.id) || isActionBusy("toggleStatus", item.id)) {
+    return;
+  }
   const nextStatus = item.status === 1 ? 0 : 1;
-  busyId.value = item.id;
-  feedbackMessage.value = "";
+  const actionKey = getActionKey("toggleStatus", item.id);
+  busyRows.value.add(item.id);
+  busyActions.value.add(actionKey);
+  successMessage.value = "";
+  actionErrorMessage.value = "";
   try {
     await updateDatasourceStatusApi(item.id, nextStatus);
-    feedbackMessage.value = "Datasource status updated.";
+    successMessage.value = "Datasource status updated.";
     await loadData();
   } catch (error) {
-    feedbackMessage.value = error instanceof Error ? error.message : "Status update failed";
+    actionErrorMessage.value = error instanceof Error ? error.message : "Status update failed";
   } finally {
-    busyId.value = null;
+    busyActions.value.delete(actionKey);
+    busyRows.value.delete(item.id);
   }
 }
 
 async function testConnection(item: Datasource): Promise<void> {
-  busyId.value = item.id;
-  feedbackMessage.value = "";
+  if (isRowBusy(item.id) || isActionBusy("testConnection", item.id)) {
+    return;
+  }
+  const actionKey = getActionKey("testConnection", item.id);
+  busyRows.value.add(item.id);
+  busyActions.value.add(actionKey);
+  successMessage.value = "";
+  actionErrorMessage.value = "";
   try {
     const ok = await testDatasourceConnectionApi({
       datasourceCode: item.datasourceCode,
@@ -107,11 +126,16 @@ async function testConnection(item: Datasource): Promise<void> {
       ownerUserId: item.ownerUserId,
       remark: item.remark
     });
-    feedbackMessage.value = ok ? "Connection test passed." : "Connection test failed.";
+    if (ok) {
+      successMessage.value = "Connection test passed.";
+    } else {
+      actionErrorMessage.value = "Connection test failed.";
+    }
   } catch (error) {
-    feedbackMessage.value = error instanceof Error ? error.message : "Connection test failed";
+    actionErrorMessage.value = error instanceof Error ? error.message : "Connection test failed";
   } finally {
-    busyId.value = null;
+    busyActions.value.delete(actionKey);
+    busyRows.value.delete(item.id);
   }
 }
 
@@ -127,7 +151,8 @@ void loadData();
         <button class="btn btn--primary" :disabled="loading" @click="openCreate">New Datasource</button>
       </div>
     </header>
-    <p v-if="feedbackMessage" class="feedback">{{ feedbackMessage }}</p>
+    <p v-if="successMessage" class="feedback">{{ successMessage }}</p>
+    <p v-if="actionErrorMessage" class="error">{{ actionErrorMessage }}</p>
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <div v-if="loading" class="empty">{{ emptyText }}</div>
     <div v-else-if="!list.length" class="empty">{{ emptyText }}</div>
@@ -152,12 +177,12 @@ void loadData();
           <td>{{ item.username }}</td>
           <td><span :class="getStatusTagClass(datasourceStatusDictionary, item.status)">{{ getStatusLabel(datasourceStatusDictionary, item.status) }}</span></td>
           <td class="row-actions">
-            <button class="btn btn--subtle" :disabled="busyId === item.id" @click="openEdit(item)">Edit</button>
-            <button class="btn btn--subtle" :disabled="busyId === item.id" @click="toggleStatus(item)">
+            <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">Edit</button>
+            <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
               {{ item.status === 1 ? "Disable" : "Enable" }}
             </button>
-            <button class="btn btn--subtle" :disabled="busyId === item.id" @click="testConnection(item)">
-              {{ busyId === item.id ? "Testing..." : "Test" }}
+            <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="testConnection(item)">
+              {{ isActionBusy("testConnection", item.id) ? "Testing..." : "Test" }}
             </button>
           </td>
         </tr>

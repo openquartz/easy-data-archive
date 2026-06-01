@@ -26,6 +26,7 @@ const form = reactive<DatasourcePayload>({
   remark: ""
 });
 const errorMessage = ref("");
+const datasourceCodePattern = /^[A-Za-z][A-Za-z0-9_-]{1,63}$/;
 
 const title = computed(() => (props.mode === "create" ? "Create Datasource" : "Edit Datasource"));
 
@@ -59,8 +60,15 @@ watch(
 );
 
 function validate(): boolean {
-  if (!form.datasourceCode?.trim()) {
+  const datasourceCode = form.datasourceCode?.trim() || "";
+  const jdbcUrl = form.jdbcUrl?.trim() || "";
+
+  if (!datasourceCode) {
     errorMessage.value = "Datasource code is required";
+    return false;
+  }
+  if (!datasourceCodePattern.test(datasourceCode)) {
+    errorMessage.value = "Datasource code must be 2-64 chars, start with a letter, and use letters, numbers, _ or -";
     return false;
   }
   if (!form.datasourceName?.trim()) {
@@ -71,8 +79,12 @@ function validate(): boolean {
     errorMessage.value = "Datasource type is required";
     return false;
   }
-  if (!form.jdbcUrl?.trim()) {
+  if (!jdbcUrl) {
     errorMessage.value = "JDBC URL is required";
+    return false;
+  }
+  if (!jdbcUrl.toLowerCase().startsWith("jdbc:")) {
+    errorMessage.value = "JDBC URL must start with jdbc:";
     return false;
   }
   if (!form.username?.trim()) {
