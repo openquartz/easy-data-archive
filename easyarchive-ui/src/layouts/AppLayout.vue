@@ -6,6 +6,7 @@
         <RouterLink class="nav__item" to="/">Dashboard</RouterLink>
         <RouterLink class="nav__item" to="/datasources">Datasources</RouterLink>
         <RouterLink class="nav__item" to="/users">Users</RouterLink>
+        <RouterLink class="nav__item" to="/tasks">Tasks</RouterLink>
       </nav>
     </aside>
     <div class="app-shell__main">
