@@ -89,4 +89,28 @@
           AND start_time &lt; DATE_SUB(NOW(), INTERVAL #{retentionDays} DAY)
     </delete>
 
+    <select id="countByExecuteStatus" resultType="map">
+        SELECT execute_status AS status, COUNT(1) AS count
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+        GROUP BY execute_status
+    </select>
+
+    <select id="selectRecentTasks" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+        ORDER BY id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectFailedTasks" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+          AND execute_status = 3
+        ORDER BY id DESC
+        LIMIT #{limit}
+    </select>
+
 </mapper>
