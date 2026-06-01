@@ -116,35 +116,37 @@ void loadData();
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <div v-if="loading" class="empty">{{ emptyText }}</div>
     <div v-else-if="!list.length" class="empty">{{ emptyText }}</div>
-    <table v-else class="table">
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Real Name</th>
-          <th>Email</th>
-          <th>Mobile</th>
-          <th>Status</th>
-          <th>Last Login</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in list" :key="item.id">
-          <td>{{ item.username }}</td>
-          <td>{{ item.realName || "-" }}</td>
-          <td>{{ item.email || "-" }}</td>
-          <td>{{ item.mobile || "-" }}</td>
-          <td><span :class="getStatusTagClass(userStatusDictionary, item.status)">{{ getStatusLabel(userStatusDictionary, item.status) }}</span></td>
-          <td>{{ item.lastLoginTime || "-" }}</td>
-          <td class="row-actions">
-            <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">Edit</button>
-            <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
-              {{ item.status === 1 ? "Disable" : "Enable" }}
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Real Name</th>
+            <th>Email</th>
+            <th>Mobile</th>
+            <th>Status</th>
+            <th>Last Login</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in list" :key="item.id">
+            <td>{{ item.username }}</td>
+            <td>{{ item.realName || "-" }}</td>
+            <td>{{ item.email || "-" }}</td>
+            <td>{{ item.mobile || "-" }}</td>
+            <td><span :class="getStatusTagClass(userStatusDictionary, item.status)">{{ getStatusLabel(userStatusDictionary, item.status) }}</span></td>
+            <td>{{ item.lastLoginTime || "-" }}</td>
+            <td class="row-actions">
+              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">Edit</button>
+              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
+                {{ item.status === 1 ? "Disable" : "Enable" }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <UserFormDialog
       :visible="dialogVisible"

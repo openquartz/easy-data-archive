@@ -153,30 +153,32 @@ onBeforeUnmount(() => {
     <h2 class="section-title">Logs</h2>
     <div v-if="loadingLogs" class="empty">{{ emptyLogText }}</div>
     <div v-else-if="!logs.length" class="empty">{{ emptyLogText }}</div>
-    <table v-else class="table">
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Level</th>
-          <th>Type</th>
-          <th>Phase</th>
-          <th>Processed</th>
-          <th>Speed</th>
-          <th>Content</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in logs" :key="item.id">
-          <td>{{ item.logTime || "-" }}</td>
-          <td>{{ item.logLevel || "-" }}</td>
-          <td>{{ item.logType || "-" }}</td>
-          <td>{{ item.executePhase || "-" }}</td>
-          <td>{{ item.processedCount ?? "-" }}</td>
-          <td>{{ item.processSpeed ?? "-" }}</td>
-          <td>{{ item.logContent || "-" }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Level</th>
+            <th>Type</th>
+            <th>Phase</th>
+            <th>Processed</th>
+            <th>Speed</th>
+            <th>Content</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in logs" :key="item.id">
+            <td>{{ item.logTime || "-" }}</td>
+            <td>{{ item.logLevel || "-" }}</td>
+            <td>{{ item.logType || "-" }}</td>
+            <td>{{ item.executePhase || "-" }}</td>
+            <td>{{ item.processedCount ?? "-" }}</td>
+            <td>{{ item.processSpeed ?? "-" }}</td>
+            <td>{{ item.logContent || "-" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <footer class="pager">
       <span>Page {{ logPage }} / {{ logTotalPages }} · Total {{ logTotal }}</span>
       <div class="actions">

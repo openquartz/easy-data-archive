@@ -156,38 +156,40 @@ void loadData();
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <div v-if="loading" class="empty">{{ emptyText }}</div>
     <div v-else-if="!list.length" class="empty">{{ emptyText }}</div>
-    <table v-else class="table">
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>Name</th>
-          <th>Type</th>
-          <th>JDBC URL</th>
-          <th>Username</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in list" :key="item.id">
-          <td>{{ item.datasourceCode }}</td>
-          <td>{{ item.datasourceName }}</td>
-          <td>{{ item.datasourceType }}</td>
-          <td class="truncate" :title="item.jdbcUrl">{{ item.jdbcUrl }}</td>
-          <td>{{ item.username }}</td>
-          <td><span :class="getStatusTagClass(datasourceStatusDictionary, item.status)">{{ getStatusLabel(datasourceStatusDictionary, item.status) }}</span></td>
-          <td class="row-actions">
-            <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">Edit</button>
-            <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
-              {{ item.status === 1 ? "Disable" : "Enable" }}
-            </button>
-            <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="testConnection(item)">
-              {{ isActionBusy("testConnection", item.id) ? "Testing..." : "Test" }}
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>JDBC URL</th>
+            <th>Username</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in list" :key="item.id">
+            <td>{{ item.datasourceCode }}</td>
+            <td>{{ item.datasourceName }}</td>
+            <td>{{ item.datasourceType }}</td>
+            <td class="truncate" :title="item.jdbcUrl">{{ item.jdbcUrl }}</td>
+            <td>{{ item.username }}</td>
+            <td><span :class="getStatusTagClass(datasourceStatusDictionary, item.status)">{{ getStatusLabel(datasourceStatusDictionary, item.status) }}</span></td>
+            <td class="row-actions">
+              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">Edit</button>
+              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
+                {{ item.status === 1 ? "Disable" : "Enable" }}
+              </button>
+              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="testConnection(item)">
+                {{ isActionBusy("testConnection", item.id) ? "Testing..." : "Test" }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <DatasourceFormDialog
       :visible="dialogVisible"

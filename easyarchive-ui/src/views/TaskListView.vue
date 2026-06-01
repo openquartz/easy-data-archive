@@ -102,34 +102,36 @@ onBeforeRouteLeave(() => {
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <div v-if="loading" class="empty">{{ emptyText }}</div>
     <div v-else-if="!list.length" class="empty">{{ emptyText }}</div>
-    <table v-else class="table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Group ID</th>
-          <th>Status</th>
-          <th>Processed</th>
-          <th>Speed</th>
-          <th>Start Time</th>
-          <th>End Time</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in list" :key="item.id">
-          <td>{{ item.id }}</td>
-          <td>{{ item.groupId }}</td>
-          <td><TaskStatusTag :status="item.executeStatus" /></td>
-          <td>{{ item.processedRecords ?? 0 }}</td>
-          <td>{{ item.processedSpeed ?? "-" }}</td>
-          <td>{{ item.startTime || "-" }}</td>
-          <td>{{ item.endTime || "-" }}</td>
-          <td>
-            <button class="btn btn--subtle" @click="goDetail(item.id)">Detail</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Group ID</th>
+            <th>Status</th>
+            <th>Processed</th>
+            <th>Speed</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in list" :key="item.id">
+            <td>{{ item.id }}</td>
+            <td>{{ item.groupId }}</td>
+            <td><TaskStatusTag :status="item.executeStatus" /></td>
+            <td>{{ item.processedRecords ?? 0 }}</td>
+            <td>{{ item.processedSpeed ?? "-" }}</td>
+            <td>{{ item.startTime || "-" }}</td>
+            <td>{{ item.endTime || "-" }}</td>
+            <td>
+              <button class="btn btn--subtle" @click="goDetail(item.id)">Detail</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <footer class="pager">
       <span>Page {{ page }} / {{ totalPages }} · Total {{ total }}</span>
