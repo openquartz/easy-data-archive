@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { onBeforeRouteLeave, useRouter } from "vue-router";
 import { getTasksApi, type TaskItem } from "../api/task";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
 import { createPolling } from "../utils/polling";
@@ -77,6 +77,10 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  poller.stop();
+});
+
+onBeforeRouteLeave(() => {
   poller.stop();
 });
 </script>
