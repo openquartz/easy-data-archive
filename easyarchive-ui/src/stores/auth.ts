@@ -7,12 +7,15 @@ export const useAuthStore = defineStore("auth", () => {
   const token = ref<string>(localStorage.getItem(AUTH_TOKEN_KEY) || "");
   const username = ref<string>("");
   const profile = ref<UserProfile | null>(null);
+  const sessionHydrated = ref<boolean>(false);
+  const sessionHydrationPromise = ref<Promise<boolean> | null>(null);
 
   const isAuthenticated = computed(() => token.value.length > 0);
 
   function setAuth(nextToken: string, nextUsername = ""): void {
     token.value = nextToken;
     username.value = nextUsername;
+    sessionHydrated.value = false;
     localStorage.setItem(AUTH_TOKEN_KEY, nextToken);
   }
 
@@ -20,6 +23,8 @@ export const useAuthStore = defineStore("auth", () => {
     token.value = "";
     username.value = "";
     profile.value = null;
+    sessionHydrated.value = false;
+    sessionHydrationPromise.value = null;
     localStorage.removeItem(AUTH_TOKEN_KEY);
   }
 
@@ -46,7 +51,32 @@ export const useAuthStore = defineStore("auth", () => {
     const me = await meApi();
     profile.value = me;
     username.value = me.username;
+    sessionHydrated.value = true;
     return me;
+  }
+
+  async function ensureSession(): Promise<boolean> {
+    if (!token.value) {
+      sessionHydrated.value = false;
+      return false;
+    }
+    if (sessionHydrated.value) {
+      return true;
+    }
+    if (!sessionHydrationPromise.value) {
+      sessionHydrationPromise.value = (async () => {
+        try {
+          await fetchMe();
+          return true;
+        } catch {
+          clearAuth();
+          return false;
+        } finally {
+          sessionHydrationPromise.value = null;
+        }
+      })();
+    }
+    return sessionHydrationPromise.value;
   }
 
   return {
@@ -54,10 +84,12 @@ export const useAuthStore = defineStore("auth", () => {
     username,
     profile,
     isAuthenticated,
+    sessionHydrated,
     setAuth,
     clearAuth,
     login,
     logout,
-    fetchMe
+    fetchMe,
+    ensureSession
   };
 });
