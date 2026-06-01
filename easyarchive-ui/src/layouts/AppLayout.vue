@@ -4,6 +4,8 @@
       <div class="brand">EasyArchive</div>
       <nav class="nav">
         <RouterLink class="nav__item" to="/">Dashboard</RouterLink>
+        <RouterLink class="nav__item" to="/datasources">Datasources</RouterLink>
+        <RouterLink class="nav__item" to="/users">Users</RouterLink>
       </nav>
     </aside>
     <div class="app-shell__main">
