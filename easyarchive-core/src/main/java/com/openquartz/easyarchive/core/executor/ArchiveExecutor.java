@@ -22,6 +22,7 @@ import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItem;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemById;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
 import com.openquartz.easyarchive.core.sink.EmptySink;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import com.openquartz.easyarchive.common.api.Sink;
 import com.openquartz.easyarchive.common.api.PageSource;
@@ -47,6 +48,7 @@ public class ArchiveExecutor implements Runnable {
 
     private Long currentRuleId;
     private String currentSourceTable;
+    @Getter
     private long totalProcessRecords;
     private long lastProgressUpdateTime = 0;
 
@@ -196,10 +198,6 @@ public class ArchiveExecutor implements Runnable {
             return rule.getPauseMs();
         }
         return archiveConfig.getArchivePauseMs();
-    }
-
-    public long getTotalProcessRecords() {
-        return totalProcessRecords;
     }
 
     private void checkCancellation() {
