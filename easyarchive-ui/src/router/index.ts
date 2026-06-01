@@ -38,11 +38,21 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return { name: "login", query: { redirect: to.fullPath } };
+  if (to.meta.requiresAuth) {
+    if (!authStore.isAuthenticated) {
+      return { name: "login", query: { redirect: to.fullPath } };
+    }
+    const sessionOk = await authStore.ensureSession();
+    if (!sessionOk) {
+      return { name: "login", query: { redirect: to.fullPath } };
+    }
   }
 
   if (to.name === "login" && authStore.isAuthenticated) {
+    const sessionOk = await authStore.ensureSession();
+    if (!sessionOk) {
+      return true;
+    }
     return { name: "home" };
   }
 
@@ -50,6 +60,8 @@ router.beforeEach(async (to) => {
 });
 
 window.addEventListener(AUTH_EXPIRED_EVENT, () => {
+  const authStore = useAuthStore();
+  authStore.clearAuth();
   const current = router.currentRoute.value;
   if (current.name !== "login") {
     router.push({ name: "login", query: { redirect: current.fullPath } });

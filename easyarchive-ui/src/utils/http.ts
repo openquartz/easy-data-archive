@@ -35,16 +35,20 @@ client.interceptors.request.use((config) => {
 });
 
 client.interceptors.response.use(
-  <T>(response: { data: ApiResponse<T>; status: number }) => {
-    const payload = response.data;
-    if (!payload || payload.code !== API_SUCCESS_CODE) {
-      throw createApiError(payload?.message || "Request failed", {
-        status: response.status,
-        code: payload?.code,
-        requestId: payload?.requestId
-      });
+  <T>(response: { data: ApiResponse<T> | T | null; status: number }) => {
+    const payload = response.data as ApiResponse<T> | T | null;
+    if (payload && typeof payload === "object" && "code" in payload) {
+      const envelope = payload as ApiResponse<T>;
+      if (envelope.code !== API_SUCCESS_CODE) {
+        throw createApiError(envelope.message || "Request failed", {
+          status: response.status,
+          code: envelope.code,
+          requestId: envelope.requestId
+        });
+      }
+      return envelope.data;
     }
-    return payload.data;
+    return payload as T;
   },
   (error: AxiosError<ApiResponse<unknown>>) => {
     const status = error.response?.status;
