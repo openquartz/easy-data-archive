@@ -4,7 +4,6 @@ import {
   type Datasource,
   type DatasourcePayload,
   getDatasourcesApi,
-  testDatasourceConnectionApi,
   updateDatasourceApi,
   updateDatasourceStatusApi
 } from "../api/datasource";
@@ -114,23 +113,9 @@ async function testConnection(item: Datasource): Promise<void> {
   successMessage.value = "";
   actionErrorMessage.value = "";
   try {
-    const ok = await testDatasourceConnectionApi({
-      datasourceCode: item.datasourceCode,
-      datasourceName: item.datasourceName,
-      datasourceType: item.datasourceType,
-      jdbcUrl: item.jdbcUrl,
-      username: item.username,
-      passwordCipher: item.passwordCipher,
-      schemaName: item.schemaName,
-      status: item.status,
-      ownerUserId: item.ownerUserId,
-      remark: item.remark
-    });
-    if (ok) {
-      successMessage.value = "Connection test passed.";
-    } else {
-      actionErrorMessage.value = "Connection test failed.";
-    }
+    actionErrorMessage.value = "";
+    actionErrorMessage.value = "For security, edit datasource and provide password before testing connection.";
+    openEdit(item);
   } catch (error) {
     actionErrorMessage.value = error instanceof Error ? error.message : "Connection test failed";
   } finally {
