@@ -25,6 +25,9 @@ const form = reactive<UserPayload>({
 });
 const errorMessage = ref("");
 const title = computed(() => (props.mode === "create" ? "Create User" : "Edit User"));
+const usernamePattern = /^[A-Za-z][A-Za-z0-9_.-]{2,31}$/;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const mobilePattern = /^\+?[0-9\- ]{7,20}$/;
 
 watch(
   () => [props.visible, props.mode, props.initialValue],
@@ -52,12 +55,28 @@ watch(
 );
 
 function validate(): boolean {
-  if (!form.username.trim()) {
+  const username = form.username.trim();
+  const email = form.email?.trim() || "";
+  const mobile = form.mobile?.trim() || "";
+
+  if (!username) {
     errorMessage.value = "Username is required";
+    return false;
+  }
+  if (!usernamePattern.test(username)) {
+    errorMessage.value = "Username must be 3-32 chars, start with a letter, and use letters, numbers, _, ., or -";
     return false;
   }
   if (props.mode === "create" && !form.password?.trim()) {
     errorMessage.value = "Password is required";
+    return false;
+  }
+  if (email && !emailPattern.test(email)) {
+    errorMessage.value = "Email format is invalid";
+    return false;
+  }
+  if (mobile && !mobilePattern.test(mobile)) {
+    errorMessage.value = "Mobile format is invalid";
     return false;
   }
   return true;
