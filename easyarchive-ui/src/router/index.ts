@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { h } from "vue";
 import AppLayout from "../layouts/AppLayout.vue";
 import LoginView from "../views/LoginView.vue";
+import DashboardView from "../views/DashboardView.vue";
 import DatasourceView from "../views/DatasourceView.vue";
 import UserView from "../views/UserView.vue";
 import TaskListView from "../views/TaskListView.vue";
@@ -19,15 +19,12 @@ const router = createRouter({
       children: [
         {
           path: "",
-          name: "home",
-          component: {
-            render() {
-              return h("section", { class: "page-placeholder" }, [
-                h("h1", "EasyArchive Console"),
-                h("p", "UI module initialized.")
-              ]);
-            }
-          }
+          redirect: { name: "dashboard" }
+        },
+        {
+          path: "dashboard",
+          name: "dashboard",
+          component: DashboardView
         },
         {
           path: "datasources",
@@ -77,7 +74,7 @@ router.beforeEach(async (to) => {
     if (!sessionOk) {
       return true;
     }
-    return { name: "home" };
+    return { name: "dashboard" };
   }
 
   return true;

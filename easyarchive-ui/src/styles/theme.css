@@ -58,9 +58,14 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
+.nav__item--ghost {
+  opacity: 0.8;
+}
+
 .app-shell__main {
   display: grid;
   grid-template-rows: 64px 1fr;
+  min-width: 0;
 }
 
 .app-shell__topbar {
@@ -74,24 +79,6 @@ body {
 
 .app-shell__content {
   padding: 24px;
-}
-
-.page-placeholder {
-  border: 1px solid var(--ea-border);
-  border-radius: 16px;
-  background: var(--ea-surface);
-  box-shadow: var(--ea-shadow);
-  padding: 20px;
-}
-
-.page-placeholder h1 {
-  margin: 0 0 10px;
-  font-size: 1.4rem;
-}
-
-.page-placeholder p {
-  margin: 0;
-  color: var(--ea-text-muted);
 }
 
 .page-card {
@@ -115,9 +102,41 @@ body {
   font-size: 1.2rem;
 }
 
+.dashboard-page {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-card {
+  border: 1px solid var(--ea-border);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--ea-surface);
+  box-shadow: var(--ea-shadow);
+}
+
+.metric-card__label {
+  margin: 0;
+  color: var(--ea-text-muted);
+  font-size: 13px;
+}
+
+.metric-card__value {
+  margin: 6px 0 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
 .actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .actions select {
@@ -156,6 +175,11 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
 }
 
 .table th,
@@ -210,6 +234,10 @@ body {
 .section-title {
   margin: 20px 0 10px;
   font-size: 1rem;
+}
+
+.section-title--top {
+  margin-top: 0;
 }
 
 .pager {
@@ -304,6 +332,31 @@ body {
   .app-shell__sidebar {
     border-right: 0;
     border-bottom: 1px solid var(--ea-border);
+    padding: 12px 16px;
+  }
+
+  .nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .nav__item {
+    white-space: nowrap;
+  }
+
+  .app-shell__content {
+    padding: 14px;
+  }
+
+  .page-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .form-grid {
@@ -316,5 +369,16 @@ body {
 
   .truncate {
     max-width: 150px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .pager {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

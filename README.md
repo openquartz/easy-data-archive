@@ -80,6 +80,46 @@ cd easyarchive-starter
 mvn spring-boot:run
 ```
 
+### 6. 启动 UI 控制台（easyarchive-ui）
+
+EasyArchive 提供独立的 Vue 3 运维控制台模块：`easyarchive-ui`。
+
+```bash
+# 安装依赖
+cd easyarchive-ui
+npm install
+
+# 本地开发
+npm run dev
+
+# 生产构建验证
+npm run build
+```
+
+默认 Vite 开发地址为 `http://localhost:5173`。
+
+#### UI 路由
+
+- `/login`：登录页
+- `/dashboard`：总览看板
+- `/datasources`：数据源管理
+- `/tasks`：任务列表
+- `/tasks/:taskId`：任务详情
+- `/users`：用户管理
+
+#### 后端联调说明
+
+- UI 默认通过 `VITE_API_BASE_URL` 访问后端 API，未配置时默认使用 `/api/v1`。
+- 若前后端同源部署，可直接使用默认值。
+- 若本地前端单独启动并访问远端/其他端口后端，请在 `easyarchive-ui/.env.development` 中配置：
+
+```bash
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+```
+
+- 后端启动入口：`easyarchive-starter`（Spring Boot）。
+- 登录成功后，UI 使用 Bearer Token 鉴权访问以下页面接口：dashboard、datasource、tasks、task detail、users。
+
 ## 架构说明
 
 ### 核心组件
@@ -220,4 +260,3 @@ logging:
 ## 许可证
 
 本项目采用 MIT 许可证。详见 [LICENSE](../LICENSE) 文件。
-
