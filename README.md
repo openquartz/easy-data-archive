@@ -120,6 +120,20 @@ VITE_API_BASE_URL=http://localhost:8080/api/v1
 - 后端启动入口：`easyarchive-starter`（Spring Boot）。
 - 登录成功后，UI 使用 Bearer Token 鉴权访问以下页面接口：dashboard、datasource、tasks、task detail、users。
 
+#### 提交前固定检查（推荐）
+
+在仓库根目录执行：
+
+```bash
+./scripts/preflight-check.sh
+```
+
+该脚本会顺序执行：
+
+1. `easyarchive-starter` 编译校验（跳过单测）
+2. Dashboard 接口契约测试（`MockMvc`）
+3. `easyarchive-ui` smoke 检查（包含构建与关键路由/HTTP契约检查）
+
 ## 架构说明
 
 ### 核心组件
