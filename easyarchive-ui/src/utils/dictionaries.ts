@@ -13,6 +13,15 @@ export const userStatusDictionary: Record<number, StatusDictionaryItem> = {
   1: { label: "Enabled", tone: "success" }
 };
 
+export const taskStatusDictionary: Record<number, StatusDictionaryItem> = {
+  0: { label: "Waiting", tone: "neutral" },
+  1: { label: "Running", tone: "success" },
+  2: { label: "Success", tone: "success" },
+  3: { label: "Failed", tone: "danger" },
+  4: { label: "Cancelling", tone: "neutral" },
+  5: { label: "Cancelled", tone: "danger" }
+};
+
 const fallbackStatus: StatusDictionaryItem = { label: "Unknown", tone: "danger" };
 
 export function getStatusLabel(dictionary: Record<number, StatusDictionaryItem>, status?: number): string {

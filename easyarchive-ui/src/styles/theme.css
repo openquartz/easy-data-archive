@@ -120,6 +120,14 @@ body {
   gap: 8px;
 }
 
+.actions select {
+  border: 1px solid var(--ea-border);
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 34px;
+  background: #fff;
+}
+
 .btn {
   height: 34px;
   border-radius: 8px;
@@ -187,6 +195,29 @@ body {
 .empty {
   padding: 14px 0;
   color: var(--ea-text-muted);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
+.detail-grid p {
+  margin: 0;
+}
+
+.section-title {
+  margin: 20px 0 10px;
+  font-size: 1rem;
+}
+
+.pager {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .status-tag {
@@ -276,6 +307,10 @@ body {
   }
 
   .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-grid {
     grid-template-columns: 1fr;
   }
 

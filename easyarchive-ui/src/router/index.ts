@@ -4,6 +4,8 @@ import AppLayout from "../layouts/AppLayout.vue";
 import LoginView from "../views/LoginView.vue";
 import DatasourceView from "../views/DatasourceView.vue";
 import UserView from "../views/UserView.vue";
+import TaskListView from "../views/TaskListView.vue";
+import TaskDetailView from "../views/TaskDetailView.vue";
 import { useAuthStore } from "../stores/auth";
 import { AUTH_EXPIRED_EVENT } from "../utils/http";
 
@@ -36,6 +38,16 @@ const router = createRouter({
           path: "users",
           name: "users",
           component: UserView
+        },
+        {
+          path: "tasks",
+          name: "tasks",
+          component: TaskListView
+        },
+        {
+          path: "tasks/:taskId",
+          name: "task-detail",
+          component: TaskDetailView
         }
       ]
     },
