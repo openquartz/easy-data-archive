@@ -39,6 +39,43 @@ class ArchiveGroupServiceImplTest {
     }
 
     @Test
+    void shouldRejectBlankGroupCodeOnCreate() {
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setGroupCode("   ");
+
+        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        verify(groupMapper, never()).insert(any());
+    }
+
+    @Test
+    void shouldRejectBlankGroupNameOnCreate() {
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setGroupName("");
+
+        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        verify(groupMapper, never()).insert(any());
+    }
+
+    @Test
+    void shouldRejectMissingDatasourceOnCreate() {
+        ArchiveGroup missingSource = enabledGroup();
+        missingSource.setId(null);
+        missingSource.setSourceDatasourceId(null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.create(missingSource));
+        verify(groupMapper, never()).insert(any());
+
+        ArchiveGroup missingTarget = enabledGroup();
+        missingTarget.setId(null);
+        missingTarget.setTargetDatasourceId(null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.create(missingTarget));
+        verify(groupMapper, never()).insert(any());
+    }
+
+    @Test
     void shouldCreateValidGroupWithDefaultStatus() {
         ArchiveGroup input = enabledGroup();
         input.setId(null);
@@ -110,6 +147,38 @@ class ArchiveGroupServiceImplTest {
     }
 
     @Test
+    void shouldAllowNullStatusOnUpdateForPartialUpdate() {
+        ArchiveGroup existing = enabledGroup();
+        ArchiveGroup input = enabledGroup();
+        input.setEnableStatus(null);
+        when(groupMapper.selectById(10L)).thenReturn(existing);
+        when(groupMapper.selectByCode("ORDER_ARCHIVE")).thenReturn(existing);
+
+        ArchiveGroup updated = service.update(input);
+
+        assertSame(input, updated);
+        verify(groupMapper).update(input);
+    }
+
+    @Test
+    void shouldTrimGroupCodeAndNameBeforeUpdate() {
+        ArchiveGroup existing = enabledGroup();
+        ArchiveGroup input = enabledGroup();
+        input.setGroupCode(" ORDER_ARCHIVE ");
+        input.setGroupName(" Order Archive ");
+        when(groupMapper.selectById(10L)).thenReturn(existing);
+        when(groupMapper.selectByCode("ORDER_ARCHIVE")).thenReturn(existing);
+
+        ArchiveGroup updated = service.update(input);
+
+        assertSame(input, updated);
+        assertEquals("ORDER_ARCHIVE", input.getGroupCode());
+        assertEquals("Order Archive", input.getGroupName());
+        verify(groupMapper).selectByCode("ORDER_ARCHIVE");
+        verify(groupMapper).update(input);
+    }
+
+    @Test
     void shouldUpdateExistingGroupWhenCodeBelongsToSameGroup() {
         ArchiveGroup existing = enabledGroup();
         ArchiveGroup input = enabledGroup();
@@ -147,6 +216,14 @@ class ArchiveGroupServiceImplTest {
         service.delete(10L);
 
         verify(groupMapper).deleteById(10L);
+    }
+
+    @Test
+    void shouldRejectDeleteWhenGroupDoesNotExist() {
+        when(groupMapper.selectById(10L)).thenReturn(null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.delete(10L));
+        verify(groupMapper, never()).deleteById(any());
     }
 
     @Test
