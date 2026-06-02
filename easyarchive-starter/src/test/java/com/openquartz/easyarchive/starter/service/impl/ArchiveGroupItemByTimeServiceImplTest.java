@@ -145,15 +145,53 @@ class ArchiveGroupItemByTimeServiceImplTest {
     void shouldAllowNullStatusOnUpdateForPartialUpdate() {
         ArchiveGroupItemByTime existing = validTimeItem();
         existing.setId(20L);
+        existing.setPauseMs(50);
         ArchiveGroupItemByTime item = validTimeItem();
         item.setEnableStatus(null);
+        item.setEnableClean(null);
+        item.setEnableWrite(null);
+        item.setPauseMs(null);
         when(timeMapper.selectById(20L, 10L)).thenReturn(existing);
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
         when(idMapper.countPriority(10L, 20, null)).thenReturn(0);
         when(timeMapper.countPriority(10L, 20, 20L)).thenReturn(0);
 
-        service.update(10L, 20L, item);
+        ArchiveGroupItemByTime updated = service.update(10L, 20L, item);
 
+        assertSame(item, updated);
+        assertEquals(0, updated.getEnableStatus());
+        assertEquals(0, updated.getEnableClean());
+        assertEquals(0, updated.getEnableWrite());
+        assertEquals(50, updated.getPauseMs());
+        verify(timeMapper).update(item);
+    }
+
+    @Test
+    void shouldMergeRequiredFieldsFromExistingOnPartialUpdate() {
+        ArchiveGroupItemByTime existing = validTimeItem();
+        existing.setId(20L);
+        existing.setPauseMs(50);
+        ArchiveGroupItemByTime item = new ArchiveGroupItemByTime();
+        item.setPriority(20);
+        item.setIdColumn(null);
+        item.setStepCount(null);
+        when(timeMapper.selectById(20L, 10L)).thenReturn(existing);
+        when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
+        when(idMapper.countPriority(10L, 20, null)).thenReturn(0);
+        when(timeMapper.countPriority(10L, 20, 20L)).thenReturn(0);
+
+        ArchiveGroupItemByTime updated = service.update(10L, 20L, item);
+
+        assertSame(item, updated);
+        assertEquals("t_order", updated.getSourceTable());
+        assertEquals("t_order_archive", updated.getTargetTable());
+        assertEquals("select id from t_order where created_time >= ? and created_time < ?", updated.getFetchSql());
+        assertEquals("id", updated.getIdColumn());
+        assertEquals(new Date(0L), updated.getStartTime());
+        assertEquals(30, updated.getKeepDay());
+        assertEquals(60, updated.getStepMinutes());
+        assertEquals(1000, updated.getStepCount());
+        assertEquals(50, updated.getPauseMs());
         verify(timeMapper).update(item);
     }
 
@@ -177,6 +215,20 @@ class ArchiveGroupItemByTimeServiceImplTest {
         when(timeMapper.selectById(20L, 10L)).thenReturn(existing);
 
         assertThrows(IllegalArgumentException.class, () -> service.updateStatus(10L, 20L, 2));
+        verify(timeMapper, never()).updateStatus(any(), any(), any());
+    }
+
+    @Test
+    void shouldRejectEnableStatusUpdateWhenExistingItemIsUnsafe() {
+        ArchiveGroupItemByTime existing = validTimeItem();
+        existing.setId(20L);
+        existing.setEnableStatus(1);
+        existing.setEnableClean(0);
+        existing.setEnableWrite(1);
+        when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
+        when(timeMapper.selectById(20L, 10L)).thenReturn(existing);
+
+        assertThrows(IllegalArgumentException.class, () -> service.updateStatus(10L, 20L, 0));
         verify(timeMapper, never()).updateStatus(any(), any(), any());
     }
 

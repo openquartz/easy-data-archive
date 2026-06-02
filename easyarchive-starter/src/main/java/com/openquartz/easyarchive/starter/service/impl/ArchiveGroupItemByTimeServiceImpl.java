@@ -56,6 +56,7 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
         }
         item.setId(itemId);
         item.setGroupId(groupId);
+        mergeExisting(item, existing);
         validateForSave(groupId, item, itemId, existing);
         timeMapper.update(item);
         return item;
@@ -141,6 +142,51 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
         }
         if (item.getEnableWrite() == null) {
             item.setEnableWrite(0);
+        }
+    }
+
+    private void mergeExisting(ArchiveGroupItemByTime item, ArchiveGroupItemByTime existing) {
+        if (item.getSourceTable() == null) {
+            item.setSourceTable(existing.getSourceTable());
+        }
+        if (item.getTargetTable() == null) {
+            item.setTargetTable(existing.getTargetTable());
+        }
+        if (item.getPriority() == null) {
+            item.setPriority(existing.getPriority());
+        }
+        if (item.getFetchSql() == null) {
+            item.setFetchSql(existing.getFetchSql());
+        }
+        if (item.getDeleteWhere() == null) {
+            item.setDeleteWhere(existing.getDeleteWhere());
+        }
+        if (item.getStartTime() == null) {
+            item.setStartTime(existing.getStartTime());
+        }
+        if (item.getKeepDay() == null) {
+            item.setKeepDay(existing.getKeepDay());
+        }
+        if (item.getStepMinutes() == null) {
+            item.setStepMinutes(existing.getStepMinutes());
+        }
+        if (item.getStepCount() == null) {
+            item.setStepCount(existing.getStepCount());
+        }
+        if (item.getPauseMs() == null) {
+            item.setPauseMs(existing.getPauseMs());
+        }
+        if (item.getEnableClean() == null) {
+            item.setEnableClean(existing.getEnableClean());
+        }
+        if (item.getEnableWrite() == null) {
+            item.setEnableWrite(existing.getEnableWrite());
+        }
+        if (item.getEnableStatus() == null) {
+            item.setEnableStatus(existing.getEnableStatus());
+        }
+        if (item.getIdColumn() == null) {
+            item.setIdColumn(existing.getIdColumn());
         }
     }
 

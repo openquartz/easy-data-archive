@@ -145,15 +145,56 @@ class ArchiveGroupItemByIdServiceImplTest {
     void shouldAllowNullStatusOnUpdateForPartialUpdate() {
         ArchiveGroupItemById existing = validIdItem();
         existing.setId(20L);
+        existing.setPauseMs(50);
         ArchiveGroupItemById item = validIdItem();
         item.setEnableStatus(null);
+        item.setEnableClean(null);
+        item.setEnableWrite(null);
+        item.setPauseMs(null);
         when(idMapper.selectById(20L, 10L)).thenReturn(existing);
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
         when(idMapper.countPriority(10L, 10, 20L)).thenReturn(0);
         when(timeMapper.countPriority(10L, 10, null)).thenReturn(0);
 
-        service.update(10L, 20L, item);
+        ArchiveGroupItemById updated = service.update(10L, 20L, item);
 
+        assertSame(item, updated);
+        assertEquals(0, updated.getEnableStatus());
+        assertEquals(0, updated.getEnableClean());
+        assertEquals(0, updated.getEnableWrite());
+        assertEquals(50, updated.getPauseMs());
+        verify(idMapper).update(item);
+    }
+
+    @Test
+    void shouldMergeRequiredFieldsFromExistingOnPartialUpdate() {
+        ArchiveGroupItemById existing = validIdItem();
+        existing.setId(20L);
+        existing.setPauseMs(50);
+        ArchiveGroupItemById item = new ArchiveGroupItemById();
+        item.setPriority(10);
+        item.setIdColumn(null);
+        item.setStartId(null);
+        item.setEndId(null);
+        item.setStepCount(null);
+        item.setStepRounds(null);
+        when(idMapper.selectById(20L, 10L)).thenReturn(existing);
+        when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
+        when(idMapper.countPriority(10L, 10, 20L)).thenReturn(0);
+        when(timeMapper.countPriority(10L, 10, null)).thenReturn(0);
+
+        ArchiveGroupItemById updated = service.update(10L, 20L, item);
+
+        assertSame(item, updated);
+        assertEquals("t_order", updated.getSourceTable());
+        assertEquals("t_order_archive", updated.getTargetTable());
+        assertEquals("select id from t_order where id >= ? and id < ?", updated.getFetchSql());
+        assertEquals("id", updated.getIdColumn());
+        assertEquals("0", updated.getStartId());
+        assertEquals("10000", updated.getEndId());
+        assertEquals(1000, updated.getStepCount());
+        assertEquals(5000, updated.getStepRounds());
+        assertEquals(50, updated.getPauseMs());
         verify(idMapper).update(item);
     }
 
@@ -177,6 +218,20 @@ class ArchiveGroupItemByIdServiceImplTest {
         when(idMapper.selectById(20L, 10L)).thenReturn(existing);
 
         assertThrows(IllegalArgumentException.class, () -> service.updateStatus(10L, 20L, 2));
+        verify(idMapper, never()).updateStatus(any(), any(), any());
+    }
+
+    @Test
+    void shouldRejectEnableStatusUpdateWhenExistingItemIsUnsafe() {
+        ArchiveGroupItemById existing = validIdItem();
+        existing.setId(20L);
+        existing.setEnableStatus(1);
+        existing.setEnableClean(0);
+        existing.setEnableWrite(1);
+        when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
+        when(idMapper.selectById(20L, 10L)).thenReturn(existing);
+
+        assertThrows(IllegalArgumentException.class, () -> service.updateStatus(10L, 20L, 0));
         verify(idMapper, never()).updateStatus(any(), any(), any());
     }
 
