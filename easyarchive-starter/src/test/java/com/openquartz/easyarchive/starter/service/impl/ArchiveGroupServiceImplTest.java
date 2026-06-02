@@ -179,6 +179,22 @@ class ArchiveGroupServiceImplTest {
     }
 
     @Test
+    void shouldUpdateGroupCodeWhenNewCodeIsNotDuplicate() {
+        ArchiveGroup existing = enabledGroup();
+        ArchiveGroup input = enabledGroup();
+        input.setGroupCode(" ORDER_ARCHIVE_NEW ");
+        when(groupMapper.selectById(10L)).thenReturn(existing);
+        when(groupMapper.selectByCode("ORDER_ARCHIVE_NEW")).thenReturn(null);
+
+        ArchiveGroup updated = service.update(input);
+
+        assertSame(input, updated);
+        assertEquals("ORDER_ARCHIVE_NEW", input.getGroupCode());
+        verify(groupMapper).selectByCode("ORDER_ARCHIVE_NEW");
+        verify(groupMapper).update(input);
+    }
+
+    @Test
     void shouldUpdateExistingGroupWhenCodeBelongsToSameGroup() {
         ArchiveGroup existing = enabledGroup();
         ArchiveGroup input = enabledGroup();

@@ -54,6 +54,7 @@
         UPDATE ea_archive_group
         <set>
             <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="groupCode != null">group_code = #{groupCode},</if>
             <if test="groupName != null">group_name = #{groupName},</if>
             <if test="groupPath != null">group_path = #{groupPath},</if>
             <if test="groupLevel != null">group_level = #{groupLevel},</if>
