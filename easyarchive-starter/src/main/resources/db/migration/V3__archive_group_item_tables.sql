@@ -80,6 +80,79 @@ BEGIN
         ALTER TABLE `ea_archive_task_log`
             ADD COLUMN `item_type` VARCHAR(16) NULL COMMENT '明细类型 ID/TIME' AFTER `rule_id`;
     END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_rule_backup_v3'
+    ) THEN
+        IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'ea_archive_task_detail'
+              AND column_name = 'item_type'
+        ) THEN
+            UPDATE `ea_archive_task_detail` task_detail
+            INNER JOIN `ea_archive_rule_backup_v3` rule_backup
+                ON task_detail.`rule_id` = rule_backup.`id`
+            SET task_detail.`item_type` = rule_backup.`rule_type`;
+        END IF;
+
+        IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'ea_archive_task_log'
+              AND column_name = 'item_type'
+        ) THEN
+            UPDATE `ea_archive_task_log` task_log
+            INNER JOIN `ea_archive_rule_backup_v3` rule_backup
+                ON task_log.`rule_id` = rule_backup.`id`
+            SET task_log.`item_type` = rule_backup.`rule_type`
+            WHERE task_log.`rule_id` IS NOT NULL;
+        END IF;
+
+        IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'ea_archive_task'
+              AND column_name = 'current_item_type'
+        ) THEN
+            UPDATE `ea_archive_task` task
+            INNER JOIN `ea_archive_rule_backup_v3` rule_backup
+                ON task.`current_rule_id` = rule_backup.`id`
+            SET task.`current_item_type` = rule_backup.`rule_type`
+            WHERE task.`current_rule_id` IS NOT NULL;
+        END IF;
+
+        IF EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'ea_archive_task_progress'
+              AND column_name = 'current_item_type'
+        ) THEN
+            UPDATE `ea_archive_task_progress` progress
+            INNER JOIN `ea_archive_rule_backup_v3` rule_backup
+                ON progress.`current_rule_id` = rule_backup.`id`
+            SET progress.`current_item_type` = rule_backup.`rule_type`
+            WHERE progress.`current_rule_id` IS NOT NULL;
+        END IF;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_task_detail'
+          AND column_name = 'item_type'
+    ) THEN
+        ALTER TABLE `ea_archive_task_detail`
+            MODIFY COLUMN `item_type` VARCHAR(16) NOT NULL COMMENT 'ID/TIME';
+    END IF;
 END//
 
 DELIMITER ;
