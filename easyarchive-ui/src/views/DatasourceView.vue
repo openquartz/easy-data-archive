@@ -14,6 +14,7 @@ import {
   getStatusTagClass
 } from "../utils/dictionaries";
 import { computed, ref } from "vue";
+import { useI18n } from "../i18n";
 
 const loading = ref(false);
 const list = ref<Datasource[]>([]);
@@ -27,8 +28,9 @@ const dialogVisible = ref(false);
 const dialogMode = ref<"create" | "edit">("create");
 const dialogSubmitting = ref(false);
 const activeItem = ref<Datasource | null>(null);
+const { t } = useI18n();
 
-const emptyText = computed(() => (loading.value ? "Loading datasources..." : "No datasource records."));
+const emptyText = computed(() => (loading.value ? t("datasource.emptyLoading") : t("datasource.empty")));
 const getActionKey = (action: string, id: number): string => `${action}:${id}`;
 const isRowBusy = (id: number): boolean => busyRows.value.has(id);
 const isActionBusy = (action: string, id: number): boolean => busyActions.value.has(getActionKey(action, id));
@@ -39,7 +41,7 @@ async function loadData(): Promise<void> {
   try {
     list.value = await getDatasourcesApi();
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Failed to load datasources";
+    errorMessage.value = error instanceof Error ? error.message : t("datasource.loadFailed");
   } finally {
     loading.value = false;
   }
@@ -67,15 +69,15 @@ async function submitForm(payload: DatasourcePayload): Promise<void> {
   try {
     if (dialogMode.value === "create") {
       await createDatasourceApi(payload);
-      successMessage.value = "Datasource created.";
+      successMessage.value = t("datasource.created");
     } else if (activeItem.value) {
       await updateDatasourceApi(activeItem.value.id, payload);
-      successMessage.value = "Datasource updated.";
+      successMessage.value = t("datasource.updated");
     }
     dialogVisible.value = false;
     await loadData();
   } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : "Save failed";
+    actionErrorMessage.value = error instanceof Error ? error.message : t("datasource.saveFailed");
   } finally {
     dialogSubmitting.value = false;
   }
@@ -93,10 +95,10 @@ async function toggleStatus(item: Datasource): Promise<void> {
   actionErrorMessage.value = "";
   try {
     await updateDatasourceStatusApi(item.id, nextStatus);
-    successMessage.value = "Datasource status updated.";
+    successMessage.value = t("datasource.statusUpdated");
     await loadData();
   } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : "Status update failed";
+    actionErrorMessage.value = error instanceof Error ? error.message : t("datasource.statusUpdateFailed");
   } finally {
     busyActions.value.delete(actionKey);
     busyRows.value.delete(item.id);
@@ -114,10 +116,10 @@ async function testConnection(item: Datasource): Promise<void> {
   actionErrorMessage.value = "";
   try {
     actionErrorMessage.value = "";
-    actionErrorMessage.value = "For security, edit datasource and provide password before testing connection.";
+    actionErrorMessage.value = t("datasource.connectionTip");
     openEdit(item);
   } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : "Connection test failed";
+    actionErrorMessage.value = error instanceof Error ? error.message : t("datasource.connectionTestFailed");
   } finally {
     busyActions.value.delete(actionKey);
     busyRows.value.delete(item.id);
@@ -130,10 +132,10 @@ void loadData();
 <template>
   <section class="page-card">
     <header class="page-toolbar">
-      <h1>Datasource Management</h1>
+      <h1>{{ t("datasource.title") }}</h1>
       <div class="actions">
-        <button class="btn btn--subtle" :disabled="loading" @click="loadData">Refresh</button>
-        <button class="btn btn--primary" :disabled="loading" @click="openCreate">New Datasource</button>
+        <button class="btn btn--subtle" :disabled="loading" @click="loadData">{{ t("common.refresh") }}</button>
+        <button class="btn btn--primary" :disabled="loading" @click="openCreate">{{ t("datasource.new") }}</button>
       </div>
     </header>
     <p v-if="successMessage" class="feedback">{{ successMessage }}</p>
@@ -145,13 +147,13 @@ void loadData();
       <table class="table">
         <thead>
           <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>JDBC URL</th>
-            <th>Username</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>{{ t("datasource.columns.code") }}</th>
+            <th>{{ t("datasource.columns.name") }}</th>
+            <th>{{ t("datasource.columns.type") }}</th>
+            <th>{{ t("datasource.columns.jdbcUrl") }}</th>
+            <th>{{ t("datasource.columns.username") }}</th>
+            <th>{{ t("datasource.columns.status") }}</th>
+            <th>{{ t("datasource.columns.actions") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -163,12 +165,12 @@ void loadData();
             <td>{{ item.username }}</td>
             <td><span :class="getStatusTagClass(datasourceStatusDictionary, item.status)">{{ getStatusLabel(datasourceStatusDictionary, item.status) }}</span></td>
             <td class="row-actions">
-              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">Edit</button>
+              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">{{ t("common.edit") }}</button>
               <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
-                {{ item.status === 1 ? "Disable" : "Enable" }}
+                {{ item.status === 1 ? t("common.disable") : t("common.enable") }}
               </button>
               <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="testConnection(item)">
-                {{ isActionBusy("testConnection", item.id) ? "Testing..." : "Test" }}
+                {{ isActionBusy("testConnection", item.id) ? t("common.testing") : t("common.test") }}
               </button>
             </td>
           </tr>

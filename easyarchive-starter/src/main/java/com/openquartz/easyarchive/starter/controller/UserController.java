@@ -1,7 +1,7 @@
 package com.openquartz.easyarchive.starter.controller;
 
+import com.openquartz.easyarchive.core.common.SysUser;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
-import com.openquartz.easyarchive.starter.model.entity.SysUser;
 import com.openquartz.easyarchive.starter.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

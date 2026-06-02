@@ -10,6 +10,7 @@ import {
 import UserFormDialog from "../components/UserFormDialog.vue";
 import { getStatusLabel, getStatusTagClass, userStatusDictionary } from "../utils/dictionaries";
 import { computed, ref } from "vue";
+import { useI18n } from "../i18n";
 
 const loading = ref(false);
 const list = ref<User[]>([]);
@@ -23,8 +24,9 @@ const dialogVisible = ref(false);
 const dialogMode = ref<"create" | "edit">("create");
 const dialogSubmitting = ref(false);
 const activeItem = ref<User | null>(null);
+const { t } = useI18n();
 
-const emptyText = computed(() => (loading.value ? "Loading users..." : "No user records."));
+const emptyText = computed(() => (loading.value ? t("user.emptyLoading") : t("user.empty")));
 const getActionKey = (action: string, id: number): string => `${action}:${id}`;
 const isRowBusy = (id: number): boolean => busyRows.value.has(id);
 const isActionBusy = (action: string, id: number): boolean => busyActions.value.has(getActionKey(action, id));
@@ -35,7 +37,7 @@ async function loadData(): Promise<void> {
   try {
     list.value = await getUsersApi();
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Failed to load users";
+    errorMessage.value = error instanceof Error ? error.message : t("user.loadFailed");
   } finally {
     loading.value = false;
   }
@@ -63,15 +65,15 @@ async function submitForm(payload: UserPayload): Promise<void> {
   try {
     if (dialogMode.value === "create") {
       await createUserApi(payload);
-      successMessage.value = "User created.";
+      successMessage.value = t("user.created");
     } else if (activeItem.value) {
       await updateUserApi(activeItem.value.id, payload);
-      successMessage.value = "User updated.";
+      successMessage.value = t("user.updated");
     }
     dialogVisible.value = false;
     await loadData();
   } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : "Save failed";
+    actionErrorMessage.value = error instanceof Error ? error.message : t("user.saveFailed");
   } finally {
     dialogSubmitting.value = false;
   }
@@ -89,10 +91,10 @@ async function toggleStatus(item: User): Promise<void> {
   actionErrorMessage.value = "";
   try {
     await updateUserStatusApi(item.id, nextStatus);
-    successMessage.value = "User status updated.";
+    successMessage.value = t("user.statusUpdated");
     await loadData();
   } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : "Status update failed";
+    actionErrorMessage.value = error instanceof Error ? error.message : t("user.statusUpdateFailed");
   } finally {
     busyActions.value.delete(actionKey);
     busyRows.value.delete(item.id);
@@ -105,10 +107,10 @@ void loadData();
 <template>
   <section class="page-card">
     <header class="page-toolbar">
-      <h1>User Management</h1>
+      <h1>{{ t("user.title") }}</h1>
       <div class="actions">
-        <button class="btn btn--subtle" :disabled="loading" @click="loadData">Refresh</button>
-        <button class="btn btn--primary" :disabled="loading" @click="openCreate">New User</button>
+        <button class="btn btn--subtle" :disabled="loading" @click="loadData">{{ t("common.refresh") }}</button>
+        <button class="btn btn--primary" :disabled="loading" @click="openCreate">{{ t("user.new") }}</button>
       </div>
     </header>
     <p v-if="successMessage" class="feedback">{{ successMessage }}</p>
@@ -120,13 +122,13 @@ void loadData();
       <table class="table">
         <thead>
           <tr>
-            <th>Username</th>
-            <th>Real Name</th>
-            <th>Email</th>
-            <th>Mobile</th>
-            <th>Status</th>
-            <th>Last Login</th>
-            <th>Actions</th>
+            <th>{{ t("user.columns.username") }}</th>
+            <th>{{ t("user.columns.realName") }}</th>
+            <th>{{ t("user.columns.email") }}</th>
+            <th>{{ t("user.columns.mobile") }}</th>
+            <th>{{ t("user.columns.status") }}</th>
+            <th>{{ t("user.columns.lastLogin") }}</th>
+            <th>{{ t("user.columns.actions") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -138,9 +140,9 @@ void loadData();
             <td><span :class="getStatusTagClass(userStatusDictionary, item.status)">{{ getStatusLabel(userStatusDictionary, item.status) }}</span></td>
             <td>{{ item.lastLoginTime || "-" }}</td>
             <td class="row-actions">
-              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">Edit</button>
+              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">{{ t("common.edit") }}</button>
               <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
-                {{ item.status === 1 ? "Disable" : "Enable" }}
+                {{ item.status === 1 ? t("common.disable") : t("common.enable") }}
               </button>
             </td>
           </tr>

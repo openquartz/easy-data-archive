@@ -1,7 +1,7 @@
 package com.openquartz.easyarchive.starter.controller;
 
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
-import com.openquartz.easyarchive.starter.model.entity.EaArchiveDatasource;
 import com.openquartz.easyarchive.starter.service.ArchiveDatasourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,22 +21,22 @@ public class ArchiveDatasourceController {
     private final ArchiveDatasourceService datasourceService;
 
     @GetMapping
-    public ApiResponse<List<EaArchiveDatasource>> getDatasources() {
+    public ApiResponse<List<ArchiveConnection>> getDatasources() {
         return ApiResponse.success(datasourceService.findAll());
     }
 
     @PostMapping
-    public ApiResponse<EaArchiveDatasource> createDatasource(@RequestBody EaArchiveDatasource datasource) {
+    public ApiResponse<ArchiveConnection> createDatasource(@RequestBody ArchiveConnection datasource) {
         return ApiResponse.success(datasourceService.create(datasource));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<EaArchiveDatasource> getDatasource(@PathVariable Long id) {
+    public ApiResponse<ArchiveConnection> getDatasource(@PathVariable Long id) {
         return ApiResponse.success(datasourceService.findById(id));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<EaArchiveDatasource> updateDatasource(@PathVariable Long id, @RequestBody EaArchiveDatasource datasource) {
+    public ApiResponse<ArchiveConnection> updateDatasource(@PathVariable Long id, @RequestBody ArchiveConnection datasource) {
         datasource.setId(id);
         return ApiResponse.success(datasourceService.update(datasource));
     }
@@ -48,7 +48,7 @@ public class ArchiveDatasourceController {
     }
 
     @PostMapping("/test")
-    public ApiResponse<Boolean> testConnection(@RequestBody EaArchiveDatasource datasource) {
+    public ApiResponse<Boolean> testConnection(@RequestBody ArchiveConnection datasource) {
         boolean result = datasourceService.testConnection(datasource);
         return ApiResponse.success(result);
     }

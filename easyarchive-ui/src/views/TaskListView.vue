@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRouter } from "vue-router";
 import { getTasksApi, type TaskItem } from "../api/task";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
+import { useI18n } from "../i18n";
 import { createPolling } from "../utils/polling";
 
 const router = useRouter();
@@ -13,18 +14,22 @@ const page = ref(1);
 const size = ref(20);
 const total = ref(0);
 const statusFilter = ref("");
+const { t } = useI18n();
 
-const emptyText = computed(() => (loading.value ? "Loading tasks..." : "No task records."));
-const statusOptions = [
-  { label: "All", value: "" },
-  { label: "Waiting", value: "0" },
-  { label: "Running", value: "1" },
-  { label: "Success", value: "2" },
-  { label: "Failed", value: "3" },
-  { label: "Cancelling", value: "4" },
-  { label: "Cancelled", value: "5" }
-];
+const emptyText = computed(() => (loading.value ? t("task.emptyLoading") : t("task.empty")));
+const statusOptions = computed(() => [
+  { label: t("task.filters.all"), value: "" },
+  { label: t("task.status.waiting"), value: "0" },
+  { label: t("task.status.running"), value: "1" },
+  { label: t("task.status.success"), value: "2" },
+  { label: t("task.status.failed"), value: "3" },
+  { label: t("task.status.cancelling"), value: "4" },
+  { label: t("task.status.cancelled"), value: "5" }
+]);
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / size.value)));
+const pagerText = computed(() =>
+  t("task.pager", { page: page.value, totalPages: totalPages.value, total: total.value })
+);
 
 async function loadData(): Promise<void> {
   loading.value = true;
@@ -34,7 +39,7 @@ async function loadData(): Promise<void> {
     list.value = result.list || [];
     total.value = result.total || 0;
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Failed to load tasks";
+    errorMessage.value = error instanceof Error ? error.message : t("task.loadFailed");
   } finally {
     loading.value = false;
   }
@@ -88,14 +93,14 @@ onBeforeRouteLeave(() => {
 <template>
   <section class="page-card">
     <header class="page-toolbar">
-      <h1>Archive Tasks</h1>
+      <h1>{{ t("task.title") }}</h1>
       <div class="actions">
         <select v-model="statusFilter" :disabled="loading" @change="applyFilter">
           <option v-for="item in statusOptions" :key="item.value || 'all'" :value="item.value">
             {{ item.label }}
           </option>
         </select>
-        <button class="btn btn--subtle" :disabled="loading" @click="refresh">Refresh</button>
+        <button class="btn btn--subtle" :disabled="loading" @click="refresh">{{ t("common.refresh") }}</button>
       </div>
     </header>
 
@@ -106,14 +111,14 @@ onBeforeRouteLeave(() => {
       <table class="table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Group ID</th>
-            <th>Status</th>
-            <th>Processed</th>
-            <th>Speed</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-            <th>Actions</th>
+            <th>{{ t("task.columns.id") }}</th>
+            <th>{{ t("task.columns.groupId") }}</th>
+            <th>{{ t("task.columns.status") }}</th>
+            <th>{{ t("task.columns.processed") }}</th>
+            <th>{{ t("task.columns.speed") }}</th>
+            <th>{{ t("task.columns.startTime") }}</th>
+            <th>{{ t("task.columns.endTime") }}</th>
+            <th>{{ t("task.columns.actions") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -126,7 +131,7 @@ onBeforeRouteLeave(() => {
             <td>{{ item.startTime || "-" }}</td>
             <td>{{ item.endTime || "-" }}</td>
             <td>
-              <button class="btn btn--subtle" @click="goDetail(item.id)">Detail</button>
+              <button class="btn btn--subtle" @click="goDetail(item.id)">{{ t("common.detail") }}</button>
             </td>
           </tr>
         </tbody>
@@ -134,10 +139,10 @@ onBeforeRouteLeave(() => {
     </div>
 
     <footer class="pager">
-      <span>Page {{ page }} / {{ totalPages }} · Total {{ total }}</span>
+      <span>{{ pagerText }}</span>
       <div class="actions">
-        <button class="btn btn--subtle" :disabled="page <= 1 || loading" @click="prevPage">Prev</button>
-        <button class="btn btn--subtle" :disabled="page >= totalPages || loading" @click="nextPage">Next</button>
+        <button class="btn btn--subtle" :disabled="page <= 1 || loading" @click="prevPage">{{ t("common.prev") }}</button>
+        <button class="btn btn--subtle" :disabled="page >= totalPages || loading" @click="nextPage">{{ t("common.next") }}</button>
       </div>
     </footer>
   </section>
