@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper">
+
+    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime">
+        <id column="id" property="id"/>
+        <result column="group_id" property="groupId"/>
+        <result column="source_table" property="sourceTable"/>
+        <result column="target_table" property="targetTable"/>
+        <result column="priority" property="priority"/>
+        <result column="fetch_sql" property="fetchSql"/>
+        <result column="delete_where" property="deleteWhere"/>
+        <result column="start_time" property="startTime"/>
+        <result column="keep_day" property="keepDay"/>
+        <result column="step_minutes" property="stepMinutes"/>
+        <result column="step_count" property="stepCount"/>
+        <result column="pause_ms" property="pauseMs"/>
+        <result column="enable_clean" property="enableClean"/>
+        <result column="enable_write" property="enableWrite"/>
+        <result column="enable_status" property="enableStatus"/>
+        <result column="id_column" property="idColumn"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="updated_time" property="updatedTime"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="updater_id" property="updaterId"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, group_id, source_table, target_table, priority, fetch_sql, delete_where,
+        start_time, keep_day, step_minutes, step_count, pause_ms, enable_clean,
+        enable_write, enable_status, id_column, created_time, updated_time,
+        creator_id, updater_id, deleted
+    </sql>
+
+    <insert id="insert" parameterType="com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ea_archive_group_item_by_time (
+            group_id, source_table, target_table, priority, fetch_sql, delete_where,
+            start_time, keep_day, step_minutes, step_count, pause_ms, enable_clean,
+            enable_write, enable_status, id_column, creator_id, updater_id
+        ) VALUES (
+            #{groupId}, #{sourceTable}, #{targetTable}, #{priority}, #{fetchSql}, #{deleteWhere},
+            #{startTime}, #{keepDay}, #{stepMinutes}, #{stepCount}, #{pauseMs}, #{enableClean},
+            #{enableWrite}, #{enableStatus}, #{idColumn}, #{creatorId}, #{updaterId}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime">
+        UPDATE ea_archive_group_item_by_time
+        <set>
+            <if test="sourceTable != null">source_table = #{sourceTable},</if>
+            <if test="targetTable != null">target_table = #{targetTable},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="fetchSql != null">fetch_sql = #{fetchSql},</if>
+            <if test="deleteWhere != null">delete_where = #{deleteWhere},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="keepDay != null">keep_day = #{keepDay},</if>
+            <if test="stepMinutes != null">step_minutes = #{stepMinutes},</if>
+            <if test="stepCount != null">step_count = #{stepCount},</if>
+            <if test="pauseMs != null">pause_ms = #{pauseMs},</if>
+            <if test="enableClean != null">enable_clean = #{enableClean},</if>
+            <if test="enableWrite != null">enable_write = #{enableWrite},</if>
+            <if test="enableStatus != null">enable_status = #{enableStatus},</if>
+            <if test="idColumn != null">id_column = #{idColumn},</if>
+            <if test="updaterId != null">updater_id = #{updaterId},</if>
+            updated_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id} AND group_id = #{groupId} AND deleted = 0
+    </update>
+
+    <update id="updateStatus">
+        UPDATE ea_archive_group_item_by_time
+        SET enable_status = #{enableStatus}, updated_time = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND group_id = #{groupId} AND deleted = 0
+    </update>
+
+    <update id="deleteById">
+        UPDATE ea_archive_group_item_by_time
+        SET deleted = id, updated_time = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND group_id = #{groupId} AND deleted = 0
+    </update>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_item_by_time
+        WHERE id = #{id} AND group_id = #{groupId} AND deleted = 0
+    </select>
+
+    <select id="selectByGroupId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_item_by_time
+        WHERE group_id = #{groupId}
+          AND deleted = 0
+        <if test="enableStatus != null">
+          AND enable_status = #{enableStatus}
+        </if>
+        ORDER BY priority ASC, id ASC
+    </select>
+
+    <select id="countEnabledByGroupId" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_group_item_by_time
+        WHERE group_id = #{groupId}
+          AND enable_status = 0
+          AND deleted = 0
+    </select>
+
+    <select id="countPriority" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_group_item_by_time
+        WHERE group_id = #{groupId}
+          AND priority = #{priority}
+          AND deleted = 0
+        <if test="excludeId != null">
+          AND id != #{excludeId}
+        </if>
+    </select>
+
+</mapper>
