@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.starter.controller;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
+import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
 import com.openquartz.easyarchive.starter.service.ArchiveConnectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,11 @@ import java.util.List;
 public class ArchiveConnectionController {
 
     private final ArchiveConnectionService datasourceService;
+
+    @GetMapping("/types")
+    public ApiResponse<List<DatasourceTypeOption>> getDatasourceTypes() {
+        return ApiResponse.success(datasourceService.listDatasourceTypes());
+    }
 
     @GetMapping
     public ApiResponse<List<ArchiveConnection>> getDatasources() {

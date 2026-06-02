@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { Datasource, DatasourcePayload } from "../api/datasource";
+import type { Datasource, DatasourcePayload, DatasourceTypeOption } from "../api/datasource";
 import { computed, reactive, ref, watch } from "vue";
 import { useI18n } from "../i18n";
 
 const props = defineProps<{
   visible: boolean;
   mode: "create" | "edit";
+  datasourceTypes: DatasourceTypeOption[];
   initialValue?: Datasource | null;
   submitting?: boolean;
 }>();
@@ -22,7 +23,6 @@ const form = reactive<DatasourcePayload>({
   jdbcUrl: "",
   username: "",
   passwordCipher: "",
-  schemaName: "",
   status: 1,
   remark: ""
 });
@@ -31,30 +31,31 @@ const datasourceCodePattern = /^[A-Za-z][A-Za-z0-9_-]{1,63}$/;
 const { t } = useI18n();
 
 const title = computed(() => (props.mode === "create" ? t("datasource.form.createTitle") : t("datasource.form.editTitle")));
+const resolvedDatasourceTypes = computed(() =>
+  props.datasourceTypes.length ? props.datasourceTypes : [{ code: "MYSQL", name: "MySQL" }]
+);
 
 watch(
-  () => [props.visible, props.initialValue, props.mode],
+  () => [props.visible, props.initialValue, props.mode, props.datasourceTypes],
   () => {
     errorMessage.value = "";
     if (props.mode === "edit" && props.initialValue) {
       form.datasourceCode = props.initialValue.datasourceCode || "";
       form.datasourceName = props.initialValue.datasourceName || "";
-      form.datasourceType = props.initialValue.datasourceType || "MYSQL";
+      form.datasourceType = props.initialValue.datasourceType || resolvedDatasourceTypes.value[0].code;
       form.jdbcUrl = props.initialValue.jdbcUrl || "";
       form.username = props.initialValue.username || "";
       form.passwordCipher = "";
-      form.schemaName = props.initialValue.schemaName || "";
       form.status = props.initialValue.status ?? 1;
       form.remark = props.initialValue.remark || "";
       return;
     }
     form.datasourceCode = "";
     form.datasourceName = "";
-    form.datasourceType = "MYSQL";
+    form.datasourceType = resolvedDatasourceTypes.value[0].code;
     form.jdbcUrl = "";
     form.username = "";
     form.passwordCipher = "";
-    form.schemaName = "";
     form.status = 1;
     form.remark = "";
   },
@@ -111,7 +112,6 @@ function handleSubmit(): void {
     datasourceType: form.datasourceType.trim(),
     jdbcUrl: form.jdbcUrl.trim(),
     username: form.username.trim(),
-    schemaName: form.schemaName?.trim(),
     remark: form.remark?.trim()
   });
 }
@@ -126,7 +126,12 @@ function handleSubmit(): void {
       <form class="form-grid" @submit.prevent="handleSubmit">
         <label>{{ t("datasource.form.code") }}<input v-model="form.datasourceCode" :disabled="submitting || mode === 'edit'" /></label>
         <label>{{ t("datasource.form.name") }}<input v-model="form.datasourceName" :disabled="submitting" /></label>
-        <label>{{ t("datasource.form.type") }}<input v-model="form.datasourceType" :disabled="submitting" /></label>
+        <label>
+          {{ t("datasource.form.type") }}
+          <select v-model="form.datasourceType" :disabled="submitting">
+            <option v-for="item in resolvedDatasourceTypes" :key="item.code" :value="item.code">{{ item.name }}</option>
+          </select>
+        </label>
         <label>{{ t("datasource.form.jdbcUrl") }}<input v-model="form.jdbcUrl" :disabled="submitting" /></label>
         <label>{{ t("datasource.form.username") }}<input v-model="form.username" :disabled="submitting" /></label>
         <label>
@@ -137,7 +142,6 @@ function handleSubmit(): void {
             :disabled="submitting"
           />
         </label>
-        <label>{{ t("datasource.form.schema") }}<input v-model="form.schemaName" :disabled="submitting" /></label>
         <label>
           {{ t("datasource.form.status") }}
           <select v-model.number="form.status" :disabled="submitting">

@@ -12,7 +12,6 @@ export interface ArchiveGroup {
   targetDatasourceId: number;
   ownerUserId?: number;
   enableStatus: number;
-  triggerMode?: string;
   remark?: string;
   createdTime?: string;
   updatedTime?: string;

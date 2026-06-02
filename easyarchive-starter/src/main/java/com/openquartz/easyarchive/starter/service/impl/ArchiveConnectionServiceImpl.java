@@ -2,6 +2,8 @@ package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
+import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
+import com.openquartz.easyarchive.starter.model.enums.DatasourceTypeEnum;
 import com.openquartz.easyarchive.starter.service.ArchiveConnectionService;
 import com.openquartz.easyarchive.starter.support.DatasourceConnectionTester;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,11 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
 
     private final ArchiveConnectionMapper datasourceMapper;
     private final DatasourceConnectionTester connectionTester;
+
+    @Override
+    public List<DatasourceTypeOption> listDatasourceTypes() {
+        return DatasourceTypeEnum.toOptions();
+    }
 
     @Override
     public List<ArchiveConnection> findAll() {

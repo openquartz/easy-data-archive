@@ -3,7 +3,9 @@ import {
   createDatasourceApi,
   type Datasource,
   type DatasourcePayload,
+  type DatasourceTypeOption,
   getDatasourcesApi,
+  getDatasourceTypesApi,
   updateDatasourceApi,
   updateDatasourceStatusApi
 } from "../api/datasource";
@@ -18,6 +20,7 @@ import { useI18n } from "../i18n";
 
 const loading = ref(false);
 const list = ref<Datasource[]>([]);
+const datasourceTypes = ref<DatasourceTypeOption[]>([]);
 const errorMessage = ref("");
 const successMessage = ref("");
 const actionErrorMessage = ref("");
@@ -39,7 +42,9 @@ async function loadData(): Promise<void> {
   loading.value = true;
   errorMessage.value = "";
   try {
-    list.value = await getDatasourcesApi();
+    const [datasourceList, datasourceTypeList] = await Promise.all([getDatasourcesApi(), getDatasourceTypesApi()]);
+    list.value = datasourceList;
+    datasourceTypes.value = datasourceTypeList;
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : t("datasource.loadFailed");
   } finally {
@@ -181,6 +186,7 @@ void loadData();
     <DatasourceFormDialog
       :visible="dialogVisible"
       :mode="dialogMode"
+      :datasource-types="datasourceTypes"
       :initial-value="activeItem"
       :submitting="dialogSubmitting"
       @close="dialogVisible = false"

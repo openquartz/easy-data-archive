@@ -7,13 +7,17 @@ export interface Datasource {
   datasourceType: string;
   jdbcUrl: string;
   username: string;
-  schemaName?: string;
   status: number;
   lastCheckTime?: string;
   ownerUserId?: number;
   remark?: string;
   createdTime?: string;
   updatedTime?: string;
+}
+
+export interface DatasourceTypeOption {
+  code: string;
+  name: string;
 }
 
 export interface DatasourcePayload {
@@ -23,10 +27,13 @@ export interface DatasourcePayload {
   jdbcUrl: string;
   username: string;
   passwordCipher?: string;
-  schemaName?: string;
   status?: number;
   ownerUserId?: number;
   remark?: string;
+}
+
+export function getDatasourceTypesApi(): Promise<DatasourceTypeOption[]> {
+  return http.get<DatasourceTypeOption[]>("/archive/datasources/types");
 }
 
 export function getDatasourcesApi(): Promise<Datasource[]> {

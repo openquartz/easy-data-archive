@@ -63,11 +63,6 @@ public class ArchiveGroup extends BaseEntity {
     private Integer enableStatus;
 
     /**
-     * 触发方式
-     */
-    private String triggerMode;
-
-    /**
      * 备注
      */
     private String remark;
