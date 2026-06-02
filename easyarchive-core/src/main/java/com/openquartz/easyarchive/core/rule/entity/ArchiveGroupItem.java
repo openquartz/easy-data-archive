@@ -57,7 +57,7 @@ public interface ArchiveGroupItem {
      * 1-启用，0-禁用
      * @return 是否启用
      */
-    boolean isEnableClean();
+    boolean isCleanEnabled();
 
     /**
      * 删除数据条件。主要用于乐观锁。删除数据时使用
@@ -69,7 +69,7 @@ public interface ArchiveGroupItem {
      * 1-启用，0-禁用
      * @return 是否启用
      */
-    boolean isEnableWrite();
+    boolean isWriteEnabled();
 
     /**
      * 获取暂停时间

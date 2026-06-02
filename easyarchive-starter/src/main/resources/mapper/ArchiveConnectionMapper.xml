@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.openquartz.easyarchive.starter.mapper.EaArchiveDatasourceMapper">
+<mapper namespace="com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper">
 
     <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.core.connection.entity.ArchiveConnection">
         <id column="id" property="id"/>
@@ -10,7 +10,6 @@
         <result column="jdbc_url" property="jdbcUrl"/>
         <result column="username" property="username"/>
         <result column="password_cipher" property="passwordCipher"/>
-        <result column="schema_name" property="schemaName"/>
         <result column="status" property="status"/>
         <result column="last_check_time" property="lastCheckTime"/>
         <result column="owner_user_id" property="ownerUserId"/>
@@ -24,7 +23,7 @@
 
     <sql id="Base_Column_List">
         id, datasource_code, datasource_name, datasource_type, jdbc_url, username,
-        password_cipher, schema_name, status, last_check_time, owner_user_id, remark,
+        password_cipher, status, last_check_time, owner_user_id, remark,
         created_time, updated_time, creator_id, updater_id, deleted
     </sql>
 
@@ -43,10 +42,10 @@
     <insert id="insert" parameterType="com.openquartz.easyarchive.core.connection.entity.ArchiveConnection" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO ea_archive_datasource (
             datasource_code, datasource_name, datasource_type, jdbc_url, username,
-            password_cipher, schema_name, status, owner_user_id, remark, creator_id, updater_id
+            password_cipher, status, owner_user_id, remark, creator_id, updater_id
         ) VALUES (
             #{datasourceCode}, #{datasourceName}, #{datasourceType}, #{jdbcUrl}, #{username},
-            #{passwordCipher}, #{schemaName}, #{status}, #{ownerUserId}, #{remark}, #{creatorId}, #{updaterId}
+            #{passwordCipher}, #{status}, #{ownerUserId}, #{remark}, #{creatorId}, #{updaterId}
         )
     </insert>
 
@@ -58,7 +57,6 @@
             <if test="jdbcUrl != null">jdbc_url = #{jdbcUrl},</if>
             <if test="username != null">username = #{username},</if>
             <if test="passwordCipher != null">password_cipher = #{passwordCipher},</if>
-            <if test="schemaName != null">schema_name = #{schemaName},</if>
             <if test="status != null">status = #{status},</if>
             <if test="lastCheckTime != null">last_check_time = #{lastCheckTime},</if>
             <if test="ownerUserId != null">owner_user_id = #{ownerUserId},</if>

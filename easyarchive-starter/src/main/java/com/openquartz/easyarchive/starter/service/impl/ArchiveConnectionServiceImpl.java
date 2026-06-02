@@ -1,8 +1,8 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
-import com.openquartz.easyarchive.starter.mapper.EaArchiveDatasourceMapper;
-import com.openquartz.easyarchive.starter.service.ArchiveDatasourceService;
+import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
+import com.openquartz.easyarchive.starter.service.ArchiveConnectionService;
 import com.openquartz.easyarchive.starter.support.DatasourceConnectionTester;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,9 +14,9 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
-public class ArchiveDatasourceServiceImpl implements ArchiveDatasourceService {
+public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
 
-    private final EaArchiveDatasourceMapper datasourceMapper;
+    private final ArchiveConnectionMapper datasourceMapper;
     private final DatasourceConnectionTester connectionTester;
 
     @Override

@@ -98,12 +98,12 @@ public class ArchiveGroupItemByTime extends BaseEntity implements ArchiveGroupIt
     }
 
     @Override
-    public boolean isEnableClean() {
+    public boolean isCleanEnabled() {
         return enableClean != null && enableClean == 0;
     }
 
     @Override
-    public boolean isEnableWrite() {
+    public boolean isWriteEnabled() {
         return enableWrite != null && enableWrite == 0;
     }
 }

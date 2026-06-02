@@ -56,11 +56,6 @@ public class ArchiveConnection extends BaseEntity {
     private String datasourceName;
 
     /**
-     * schema 名称
-     */
-    private String schemaName;
-
-    /**
      * 最近校验时间
      */
     private Date lastCheckTime;

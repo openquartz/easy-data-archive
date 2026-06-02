@@ -11,7 +11,7 @@ import java.util.Map;
  * 数据源Mapper
  */
 @Mapper
-public interface EaArchiveDatasourceMapper {
+public interface ArchiveConnectionMapper {
 
     int insert(ArchiveConnection datasource);
 
