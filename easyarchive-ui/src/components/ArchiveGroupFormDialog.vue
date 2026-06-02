@@ -24,7 +24,6 @@ const form = reactive<ArchiveGroupPayload>({
   sourceDatasourceId: 0,
   targetDatasourceId: 0,
   enableStatus: 0,
-  triggerMode: "MANUAL",
   remark: ""
 });
 const errorMessage = ref("");
@@ -49,7 +48,6 @@ watch(
       form.targetDatasourceId = props.initialValue.targetDatasourceId;
       form.ownerUserId = props.initialValue.ownerUserId;
       form.enableStatus = props.initialValue.enableStatus ?? 0;
-      form.triggerMode = props.initialValue.triggerMode || "MANUAL";
       form.remark = props.initialValue.remark || "";
       return;
     }
@@ -62,7 +60,6 @@ watch(
     form.targetDatasourceId = 0;
     form.ownerUserId = undefined;
     form.enableStatus = 0;
-    form.triggerMode = "MANUAL";
     form.remark = "";
   },
   { immediate: true }
@@ -104,7 +101,6 @@ function handleSubmit(): void {
     ...form,
     groupCode: form.groupCode.trim(),
     groupName: form.groupName.trim(),
-    triggerMode: form.triggerMode?.trim() || "MANUAL",
     remark: form.remark?.trim()
   });
 }
@@ -140,7 +136,6 @@ function handleSubmit(): void {
             <option :value="1">{{ t("status.disabled") }}</option>
           </select>
         </label>
-        <label>{{ t("archiveGroup.form.triggerMode") }}<input v-model="form.triggerMode" :disabled="submitting" /></label>
         <label class="full-width">{{ t("archiveGroup.form.remark") }}<textarea v-model="form.remark" :disabled="submitting" /></label>
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
         <footer class="modal-card__footer">
