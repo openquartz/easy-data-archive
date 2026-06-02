@@ -39,6 +39,21 @@ class ArchiveGroupServiceImplTest {
     }
 
     @Test
+    void shouldRejectSoftDeletedGroupCodeOnCreateBecauseCodesAreNotReusable() {
+        ArchiveGroup existing = new ArchiveGroup();
+        existing.setId(1L);
+        existing.setGroupCode("ORDER_ARCHIVE");
+        existing.setDeleted(1L);
+        when(groupMapper.selectByCode("ORDER_ARCHIVE")).thenReturn(existing);
+
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        verify(groupMapper, never()).insert(any());
+    }
+
+    @Test
     void shouldRejectBlankGroupCodeOnCreate() {
         ArchiveGroup input = enabledGroup();
         input.setId(null);
