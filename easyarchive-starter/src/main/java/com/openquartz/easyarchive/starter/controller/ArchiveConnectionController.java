@@ -2,7 +2,7 @@ package com.openquartz.easyarchive.starter.controller;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
-import com.openquartz.easyarchive.starter.service.ArchiveDatasourceService;
+import com.openquartz.easyarchive.starter.service.ArchiveConnectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +16,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/archive/datasources")
 @RequiredArgsConstructor
-public class ArchiveDatasourceController {
+public class ArchiveConnectionController {
 
-    private final ArchiveDatasourceService datasourceService;
+    private final ArchiveConnectionService datasourceService;
 
     @GetMapping
     public ApiResponse<List<ArchiveConnection>> getDatasources() {

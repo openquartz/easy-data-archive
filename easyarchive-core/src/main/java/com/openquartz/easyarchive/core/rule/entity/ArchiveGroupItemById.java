@@ -101,12 +101,12 @@ public class ArchiveGroupItemById extends BaseEntity implements ArchiveGroupItem
     }
 
     @Override
-    public boolean isEnableClean() {
+    public boolean isCleanEnabled() {
         return enableClean != null && enableClean == 0;
     }
 
     @Override
-    public boolean isEnableWrite() {
+    public boolean isWriteEnabled() {
         return enableWrite != null && enableWrite == 0;
     }
 }

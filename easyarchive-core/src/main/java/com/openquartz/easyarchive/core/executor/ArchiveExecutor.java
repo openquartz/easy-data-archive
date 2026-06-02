@@ -99,7 +99,7 @@ public class ArchiveExecutor implements Runnable {
                         rule.getGroupId(),
                         TableInfo.of(ExpressionService.getInstance().parse(rule.getSourceTable()), rule.getIdColumn()),
                         fetchSql,
-                        rule.isEnableClean(),
+                        rule.isCleanEnabled(),
                         rule.getDeleteWhere());
                      Sink sink = createSink(rule, sinkConnection);
                      SyncExecutor executor = new SyncExecutor(archiveConfig, reader, sink, effectivePauseMs)) {
@@ -125,9 +125,9 @@ public class ArchiveExecutor implements Runnable {
                     if (rule instanceof ArchiveGroupItemById) {
                         ArchiveGroupItemById byIdRule = (ArchiveGroupItemById) rule;
                         String startIdStr = ExpressionService.getInstance().parse(byIdRule.getStartId());
-                        Long startId = Long.valueOf(startIdStr);
+                        Long startId = Long.valueOf(startIdStr.trim());
                         String endIdStr = ExpressionService.getInstance().parse(byIdRule.getEndId());
-                        Long endId = Long.valueOf(endIdStr);
+                        Long endId = Long.valueOf(endIdStr.trim());
 
                         while (Objects.requireNonNull(startId).compareTo(endId) < 0) {
                             // 校验是否被取消和中断
@@ -187,7 +187,7 @@ public class ArchiveExecutor implements Runnable {
     }
 
     private Sink createSink(ArchiveGroupItem rule, ArchiveConnection targetConnection) {
-        if (!rule.isEnableWrite()) {
+        if (!rule.isWriteEnabled()) {
             return new EmptySink();
         }
         return new MysqlSink(targetConnection, rule.getTargetTable());

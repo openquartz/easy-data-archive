@@ -9,7 +9,7 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
-import com.openquartz.easyarchive.starter.mapper.EaArchiveDatasourceMapper;
+import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.support.ArchiveGroupTaskDispatcher;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -34,7 +34,7 @@ class ArchiveGroupExecutionServiceImplTest {
     private final ArchiveGroupItemByIdMapper idMapper = mock(ArchiveGroupItemByIdMapper.class);
     private final ArchiveGroupItemByTimeMapper timeMapper = mock(ArchiveGroupItemByTimeMapper.class);
     private final ArchiveGroupExecuteTaskMapper taskMapper = mock(ArchiveGroupExecuteTaskMapper.class);
-    private final EaArchiveDatasourceMapper datasourceMapper = mock(EaArchiveDatasourceMapper.class);
+    private final ArchiveConnectionMapper datasourceMapper = mock(ArchiveConnectionMapper.class);
     private final ArchiveGroupTaskDispatcher dispatcher = mock(ArchiveGroupTaskDispatcher.class);
     private final ArchiveGroupExecutionServiceImpl service = new ArchiveGroupExecutionServiceImpl(
             groupMapper, idMapper, timeMapper, taskMapper, datasourceMapper, dispatcher);
@@ -127,7 +127,7 @@ class ArchiveGroupExecutionServiceImplTest {
 
     private static Object datasource(Long id, String code, String jdbcUrl) {
         try {
-            Class<?> returnType = EaArchiveDatasourceMapper.class.getMethod("selectById", Long.class).getReturnType();
+            Class<?> returnType = ArchiveConnectionMapper.class.getMethod("selectById", Long.class).getReturnType();
             Object datasource = returnType.getDeclaredConstructor().newInstance();
             invokeSetter(datasource, "setId", Long.class, id);
             invokeSetter(datasource, "setDatasourceCode", String.class, code);

@@ -1,9 +1,20 @@
+### Project ###
 .claude/settings.local.json
 HELP.md
+logs/
+*.log
+
+### Maven ###
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.flattened-pom.xml
+
+### Node / Frontend ###
+node_modules/
+dist/
+*.tsbuildinfo
 
 ### STS ###
 .apt_generated
@@ -23,13 +34,25 @@ target/
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
-/dist/
 /nbdist/
 /.nb-gradle/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+### OS ###
 .DS_Store
+Thumbs.db
+
+### Tool directories ###
+.omc/
+.codegraph/
+.codex/
+.superpowers/
 .worktrees/
-.flattened-pom.xml
+
+### Env / Secrets ###
+.env
+.env.*
+*.pem
+*.key

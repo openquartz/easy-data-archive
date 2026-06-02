@@ -8,7 +8,7 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
-import com.openquartz.easyarchive.starter.mapper.EaArchiveDatasourceMapper;
+import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.rule.PlatformArchiveRuleLoader;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupExecutionService;
 import com.openquartz.easyarchive.starter.support.ArchiveGroupTaskDispatcher;
@@ -25,7 +25,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
     private final ArchiveGroupItemByIdMapper idMapper;
     private final ArchiveGroupItemByTimeMapper timeMapper;
     private final ArchiveGroupExecuteTaskMapper taskMapper;
-    private final EaArchiveDatasourceMapper datasourceMapper;
+    private final ArchiveConnectionMapper datasourceMapper;
     private final ArchiveGroupTaskDispatcher dispatcher;
 
     @Override

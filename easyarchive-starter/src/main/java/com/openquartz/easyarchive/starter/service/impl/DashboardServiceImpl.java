@@ -2,7 +2,7 @@ package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
-import com.openquartz.easyarchive.starter.mapper.EaArchiveDatasourceMapper;
+import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class DashboardServiceImpl implements DashboardService {
     private static final int FAILED_TASK_LIMIT = 10;
 
     private final ArchiveGroupExecuteTaskMapper archiveGroupExecuteTaskMapper;
-    private final EaArchiveDatasourceMapper eaArchiveDatasourceMapper;
+    private final ArchiveConnectionMapper eaArchiveDatasourceMapper;
 
     @Override
     public Map<String, Object> getOverview() {
