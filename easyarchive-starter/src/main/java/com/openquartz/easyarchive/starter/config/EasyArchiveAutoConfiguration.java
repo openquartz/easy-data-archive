@@ -13,6 +13,7 @@ import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.ArchiveRuleLoader;
 import com.openquartz.easyarchive.core.rule.DbArchiveRuleLoader;
 import com.openquartz.easyarchive.starter.listener.DbArchiveLogListener;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,17 +26,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration
 @EnableScheduling
-@EnableConfigurationProperties({ArchiveConfig.class, ConnectionProperties.class})
+@EnableConfigurationProperties({ConnectionProperties.class, ArchiveConfig.class})
 public class EasyArchiveAutoConfiguration {
 
-    private final ArchiveConfig archiveConfig;
-    private final ConnectionProperties connectionProperties;
+    @Autowired
+    private ArchiveConfig archiveConfig;
 
-    public EasyArchiveAutoConfiguration(ArchiveConfig archiveConfig, ConnectionProperties connectionProperties) {
-        this.archiveConfig = archiveConfig;
-        this.connectionProperties = connectionProperties;
-        ConnectionFactory.init(toPoolConfig(connectionProperties.getPool()));
-    }
+    @Autowired
+    private ConnectionProperties connectionProperties;
 
     private ConnectionPoolConfig toPoolConfig(ConnectionProperties.PoolProperties pool) {
         ConnectionPoolConfig config = new ConnectionPoolConfig();
@@ -49,6 +47,7 @@ public class EasyArchiveAutoConfiguration {
 
     @Bean
     public ArchiveConnection configConnection() {
+        ConnectionFactory.init(toPoolConfig(connectionProperties.getPool()));
         return ArchiveConnectionFactory.createConfigConnection(connectionProperties);
     }
 

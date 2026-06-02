@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.core.property;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * ArchiveConfig
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
  * @author svnee
  */
 @Getter
+@ConfigurationProperties(prefix = "sync")
 public class ArchiveConfig {
 
 

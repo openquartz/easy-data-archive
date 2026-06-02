@@ -1,6 +1,6 @@
 package com.openquartz.easyarchive.starter.mapper;
 
-import com.openquartz.easyarchive.starter.model.entity.EaArchiveDatasource;
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -13,19 +13,19 @@ import java.util.Map;
 @Mapper
 public interface EaArchiveDatasourceMapper {
 
-    int insert(EaArchiveDatasource datasource);
+    int insert(ArchiveConnection datasource);
 
-    int update(EaArchiveDatasource datasource);
+    int update(ArchiveConnection datasource);
 
     int deleteById(Long id);
 
-    EaArchiveDatasource selectById(Long id);
+    ArchiveConnection selectById(Long id);
 
-    EaArchiveDatasource selectByCode(String datasourceCode);
+    ArchiveConnection selectByCode(String datasourceCode);
 
-    List<EaArchiveDatasource> selectList(@Param("status") Integer status, @Param("ownerUserId") Long ownerUserId);
+    List<ArchiveConnection> selectList(@Param("status") Integer status, @Param("ownerUserId") Long ownerUserId);
 
-    List<EaArchiveDatasource> selectPage(@Param("start") int start, @Param("size") int size,
+    List<ArchiveConnection> selectPage(@Param("start") int start, @Param("size") int size,
                                         @Param("status") Integer status, @Param("ownerUserId") Long ownerUserId);
 
     int count(@Param("status") Integer status, @Param("ownerUserId") Long ownerUserId);

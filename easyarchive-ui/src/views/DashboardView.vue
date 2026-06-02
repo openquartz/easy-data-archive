@@ -2,10 +2,12 @@
 import { computed, ref } from "vue";
 import { getDashboardOverviewApi, type DashboardOverview } from "../api/dashboard";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
+import { useI18n } from "../i18n";
 
 const loading = ref(false);
 const errorMessage = ref("");
 const overview = ref<DashboardOverview | null>(null);
+const { t } = useI18n();
 
 const statusCountMap = computed(() => {
   const result = new Map<number, number>();
@@ -22,12 +24,12 @@ const statusCountMap = computed(() => {
 const summaryCards = computed(() => {
   const datasource = overview.value?.datasourceStatusSummary;
   return [
-    { label: "Tasks Running", value: statusCountMap.value.get(1) || 0 },
-    { label: "Tasks Succeeded", value: statusCountMap.value.get(2) || 0 },
-    { label: "Tasks Failed", value: statusCountMap.value.get(3) || 0 },
-    { label: "Datasources Enabled", value: datasource?.enabled || 0 },
-    { label: "Datasources Disabled", value: datasource?.disabled || 0 },
-    { label: "Datasources Total", value: datasource?.total || 0 }
+    { label: t("dashboard.cards.running"), value: statusCountMap.value.get(1) || 0 },
+    { label: t("dashboard.cards.succeeded"), value: statusCountMap.value.get(2) || 0 },
+    { label: t("dashboard.cards.failed"), value: statusCountMap.value.get(3) || 0 },
+    { label: t("dashboard.cards.datasourceEnabled"), value: datasource?.enabled || 0 },
+    { label: t("dashboard.cards.datasourceDisabled"), value: datasource?.disabled || 0 },
+    { label: t("dashboard.cards.datasourceTotal"), value: datasource?.total || 0 }
   ];
 });
 
@@ -37,7 +39,7 @@ async function loadData(): Promise<void> {
   try {
     overview.value = await getDashboardOverviewApi();
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Failed to load dashboard";
+    errorMessage.value = error instanceof Error ? error.message : t("dashboard.loadFailed");
   } finally {
     loading.value = false;
   }
@@ -49,15 +51,15 @@ void loadData();
 <template>
   <section class="dashboard-page">
     <header class="page-toolbar">
-      <h1>Dashboard</h1>
+      <h1>{{ t("dashboard.title") }}</h1>
       <div class="actions">
-        <button class="btn btn--subtle" :disabled="loading" @click="loadData">Refresh</button>
+        <button class="btn btn--subtle" :disabled="loading" @click="loadData">{{ t("common.refresh") }}</button>
       </div>
     </header>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-    <div v-if="loading" class="page-card empty">Loading dashboard...</div>
-    <div v-else-if="!overview" class="page-card empty">No dashboard data.</div>
+    <div v-if="loading" class="page-card empty">{{ t("dashboard.loading") }}</div>
+    <div v-else-if="!overview" class="page-card empty">{{ t("dashboard.empty") }}</div>
     <template v-else>
       <section class="dashboard-cards">
         <article v-for="item in summaryCards" :key="item.label" class="metric-card">
@@ -67,19 +69,19 @@ void loadData();
       </section>
 
       <section class="page-card">
-        <h2 class="section-title section-title--top">Recent Tasks</h2>
-        <div v-if="!overview.recentTasks.length" class="empty">No recent tasks.</div>
+        <h2 class="section-title section-title--top">{{ t("dashboard.recentTasks") }}</h2>
+        <div v-if="!overview.recentTasks.length" class="empty">{{ t("dashboard.noRecentTasks") }}</div>
         <div v-else class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Group ID</th>
-                <th>Status</th>
-                <th>Processed</th>
-                <th>Speed</th>
-                <th>Start Time</th>
-                <th>End Time</th>
+                <th>{{ t("dashboard.columns.id") }}</th>
+                <th>{{ t("dashboard.columns.groupId") }}</th>
+                <th>{{ t("dashboard.columns.status") }}</th>
+                <th>{{ t("dashboard.columns.processed") }}</th>
+                <th>{{ t("dashboard.columns.speed") }}</th>
+                <th>{{ t("dashboard.columns.startTime") }}</th>
+                <th>{{ t("dashboard.columns.endTime") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -98,18 +100,18 @@ void loadData();
       </section>
 
       <section class="page-card">
-        <h2 class="section-title section-title--top">Failed Tasks</h2>
-        <div v-if="!overview.failedTasks.length" class="empty">No failed tasks.</div>
+        <h2 class="section-title section-title--top">{{ t("dashboard.failedTasks") }}</h2>
+        <div v-if="!overview.failedTasks.length" class="empty">{{ t("dashboard.noFailedTasks") }}</div>
         <div v-else class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Group ID</th>
-                <th>Status</th>
-                <th>Error</th>
-                <th>Start Time</th>
-                <th>End Time</th>
+                <th>{{ t("dashboard.columns.id") }}</th>
+                <th>{{ t("dashboard.columns.groupId") }}</th>
+                <th>{{ t("dashboard.columns.status") }}</th>
+                <th>{{ t("dashboard.columns.error") }}</th>
+                <th>{{ t("dashboard.columns.startTime") }}</th>
+                <th>{{ t("dashboard.columns.endTime") }}</th>
               </tr>
             </thead>
             <tbody>

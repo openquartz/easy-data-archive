@@ -4,6 +4,8 @@ import com.openquartz.easyarchive.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
+
 /**
  * 归档链接
  */
@@ -47,5 +49,57 @@ public class ArchiveConnection extends BaseEntity {
      * 备注
      */
     private String remark;
+
+    /**
+     * 展示名
+     */
+    private String datasourceName;
+
+    /**
+     * schema 名称
+     */
+    private String schemaName;
+
+    /**
+     * 最近校验时间
+     */
+    private Date lastCheckTime;
+
+    /**
+     * 所属用户 ID
+     */
+    private Long ownerUserId;
+
+    public String getDatasourceCode() {
+        return connectCode;
+    }
+
+    public void setDatasourceCode(String datasourceCode) {
+        this.connectCode = datasourceCode;
+    }
+
+    public String getDatasourceType() {
+        return connectType;
+    }
+
+    public void setDatasourceType(String datasourceType) {
+        this.connectType = datasourceType;
+    }
+
+    public String getJdbcUrl() {
+        return url;
+    }
+
+    public void setJdbcUrl(String jdbcUrl) {
+        this.url = jdbcUrl;
+    }
+
+    public String getPasswordCipher() {
+        return password;
+    }
+
+    public void setPasswordCipher(String passwordCipher) {
+        this.password = passwordCipher;
+    }
 
 }

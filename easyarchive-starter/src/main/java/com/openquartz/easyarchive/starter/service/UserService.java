@@ -1,6 +1,6 @@
 package com.openquartz.easyarchive.starter.service;
 
-import com.openquartz.easyarchive.starter.model.entity.SysUser;
+import com.openquartz.easyarchive.core.common.SysUser;
 
 import java.util.List;
 

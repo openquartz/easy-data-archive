@@ -1,7 +1,7 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.starter.mapper.EaArchiveDatasourceMapper;
-import com.openquartz.easyarchive.starter.model.entity.EaArchiveDatasource;
 import com.openquartz.easyarchive.starter.service.ArchiveDatasourceService;
 import com.openquartz.easyarchive.starter.support.DatasourceConnectionTester;
 import lombok.RequiredArgsConstructor;
@@ -20,37 +20,37 @@ public class ArchiveDatasourceServiceImpl implements ArchiveDatasourceService {
     private final DatasourceConnectionTester connectionTester;
 
     @Override
-    public List<EaArchiveDatasource> findAll() {
+    public List<ArchiveConnection> findAll() {
         return datasourceMapper.selectList(null, null);
     }
 
     @Override
-    public EaArchiveDatasource findById(Long id) {
+    public ArchiveConnection findById(Long id) {
         return datasourceMapper.selectById(id);
     }
 
     @Override
-    public EaArchiveDatasource create(EaArchiveDatasource datasource) {
+    public ArchiveConnection create(ArchiveConnection datasource) {
         datasourceMapper.insert(datasource);
         return datasource;
     }
 
     @Override
-    public EaArchiveDatasource update(EaArchiveDatasource datasource) {
+    public ArchiveConnection update(ArchiveConnection datasource) {
         datasourceMapper.update(datasource);
         return datasource;
     }
 
     @Override
     public void updateStatus(Long id, Integer status) {
-        EaArchiveDatasource datasource = new EaArchiveDatasource();
+        ArchiveConnection datasource = new ArchiveConnection();
         datasource.setId(id);
         datasource.setStatus(status);
         datasourceMapper.update(datasource);
     }
 
     @Override
-    public boolean testConnection(EaArchiveDatasource datasource) {
+    public boolean testConnection(ArchiveConnection datasource) {
         return connectionTester.testConnection(datasource);
     }
 }

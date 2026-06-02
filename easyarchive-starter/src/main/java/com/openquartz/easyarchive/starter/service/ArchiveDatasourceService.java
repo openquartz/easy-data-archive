@@ -1,6 +1,6 @@
 package com.openquartz.easyarchive.starter.service;
 
-import com.openquartz.easyarchive.starter.model.entity.EaArchiveDatasource;
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 
 import java.util.List;
 
@@ -9,15 +9,15 @@ import java.util.List;
  */
 public interface ArchiveDatasourceService {
 
-    List<EaArchiveDatasource> findAll();
+    List<ArchiveConnection> findAll();
 
-    EaArchiveDatasource findById(Long id);
+    ArchiveConnection findById(Long id);
 
-    EaArchiveDatasource create(EaArchiveDatasource datasource);
+    ArchiveConnection create(ArchiveConnection datasource);
 
-    EaArchiveDatasource update(EaArchiveDatasource datasource);
+    ArchiveConnection update(ArchiveConnection datasource);
 
     void updateStatus(Long id, Integer status);
 
-    boolean testConnection(EaArchiveDatasource datasource);
+    boolean testConnection(ArchiveConnection datasource);
 }

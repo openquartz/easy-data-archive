@@ -1,6 +1,6 @@
 package com.openquartz.easyarchive.starter.support;
 
-import com.openquartz.easyarchive.starter.model.entity.EaArchiveDatasource;
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +14,7 @@ import java.sql.DriverManager;
 @Component
 public class DatasourceConnectionTester {
 
-    public boolean testConnection(EaArchiveDatasource datasource) {
+    public boolean testConnection(ArchiveConnection datasource) {
         Connection connection = null;
         try {
             // 加载MySQL驱动

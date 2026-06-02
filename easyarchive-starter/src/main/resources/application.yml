@@ -9,9 +9,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/easy_archive_platform?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/openquartz?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
-    password: root
+    password: 123456
     hikari:
       minimum-idle: 5
       maximum-pool-size: 20
@@ -25,52 +25,12 @@ spring:
     filter:
       order: -100
 
-  # EasyArchive 原有配置
-  sync:
-    connection:
-      # 源数据库连接
-      source: jdbc:mysql://localhost:3306/source_db?useUnicode=true&characterEncoding=utf8&useSSL=false
-      source-username: root
-      source-password: password
-
-      # 目标数据库连接
-      target: jdbc:mysql://localhost:3306/target_db?useUnicode=true&characterEncoding=utf8&useSSL=false
-      target-username: root
-      target-password: password
-
-      # 配置数据库连接
-      config: jdbc:mysql://localhost:3306/config_db?useUnicode=true&characterEncoding=utf8&useSSL=false
-      config-username: root
-      config-password: password
-
-    # 配置表
-    config:
-      connection: ${spring.sync.connection.config}
-      table: archive_config
-
-    # 性能设置
-    reader:
-      load:
-        max:
-          rows: 5000
-        unit-time:
-          max:
-            try:
-              frequency: 10000
-    archive:
-      step:
-        interval:
-          time: 50
-    log:
-      enabled: true
-      retention-days: 30
-
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   mapper-locations: classpath:mapper/**/*.xml
-  type-aliases-package: com.openquartz.easyarchive.starter.model.entity
+  type-aliases-package: com.openquartz.easyarchive.core.common,com.openquartz.easyarchive.core.rule.entity,com.openquartz.easyarchive.core.connection.entity
 
 management:
   endpoints:
@@ -104,3 +64,29 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
     name: logs/easy-archive-platform.log
+
+sync:
+  connection:
+    config: jdbc:mysql://localhost:3306/openquartz?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    config-username: root
+    config-password: 123456
+
+  config:
+    connection: ${sync.connection.config}
+    table: archive_config
+
+  reader:
+    load:
+      max:
+        rows: 5000
+      unit-time:
+        max:
+          try:
+            frequency: 10000
+  archive:
+    step:
+      interval:
+        time: 50
+  log:
+    enabled: true
+    retention-days: 30

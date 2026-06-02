@@ -1,6 +1,6 @@
 package com.openquartz.easyarchive.starter.mapper;
 
-import com.openquartz.easyarchive.starter.model.entity.SysUser;
+import com.openquartz.easyarchive.core.common.SysUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

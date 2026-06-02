@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { User, UserPayload } from "../api/user";
 import { computed, reactive, ref, watch } from "vue";
+import { useI18n } from "../i18n";
 
 const props = defineProps<{
   visible: boolean;
@@ -24,7 +25,8 @@ const form = reactive<UserPayload>({
   remark: ""
 });
 const errorMessage = ref("");
-const title = computed(() => (props.mode === "create" ? "Create User" : "Edit User"));
+const { t } = useI18n();
+const title = computed(() => (props.mode === "create" ? t("user.form.createTitle") : t("user.form.editTitle")));
 const usernamePattern = /^[A-Za-z][A-Za-z0-9_.-]{2,31}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const mobilePattern = /^\+?[0-9\- ]{7,20}$/;
@@ -60,23 +62,23 @@ function validate(): boolean {
   const mobile = form.mobile?.trim() || "";
 
   if (!username) {
-    errorMessage.value = "Username is required";
+    errorMessage.value = t("user.form.validation.usernameRequired");
     return false;
   }
   if (!usernamePattern.test(username)) {
-    errorMessage.value = "Username must be 3-32 chars, start with a letter, and use letters, numbers, _, ., or -";
+    errorMessage.value = t("user.form.validation.usernameInvalid");
     return false;
   }
   if (props.mode === "create" && !form.password?.trim()) {
-    errorMessage.value = "Password is required";
+    errorMessage.value = t("user.form.validation.passwordRequired");
     return false;
   }
   if (email && !emailPattern.test(email)) {
-    errorMessage.value = "Email format is invalid";
+    errorMessage.value = t("user.form.validation.emailInvalid");
     return false;
   }
   if (mobile && !mobilePattern.test(mobile)) {
-    errorMessage.value = "Mobile format is invalid";
+    errorMessage.value = t("user.form.validation.mobileInvalid");
     return false;
   }
   return true;
@@ -109,32 +111,32 @@ function handleSubmit(): void {
         <h3>{{ title }}</h3>
       </header>
       <form class="form-grid" @submit.prevent="handleSubmit">
-        <label>Username<input v-model="form.username" :disabled="submitting || mode === 'edit'" /></label>
+        <label>{{ t("user.form.username") }}<input v-model="form.username" :disabled="submitting || mode === 'edit'" /></label>
         <label>
-          Password
+          {{ t("user.form.password") }}
           <input
             v-model="form.password"
             type="password"
-            :placeholder="mode === 'edit' ? 'Leave blank to keep unchanged' : ''"
+            :placeholder="mode === 'edit' ? t('user.form.keepPassword') : ''"
             :disabled="submitting"
           />
         </label>
-        <label>Real Name<input v-model="form.realName" :disabled="submitting" /></label>
-        <label>Mobile<input v-model="form.mobile" :disabled="submitting" /></label>
-        <label>Email<input v-model="form.email" type="email" :disabled="submitting" /></label>
+        <label>{{ t("user.form.realName") }}<input v-model="form.realName" :disabled="submitting" /></label>
+        <label>{{ t("user.form.mobile") }}<input v-model="form.mobile" :disabled="submitting" /></label>
+        <label>{{ t("user.form.email") }}<input v-model="form.email" type="email" :disabled="submitting" /></label>
         <label>
-          Status
+          {{ t("user.form.status") }}
           <select v-model.number="form.status" :disabled="submitting">
-            <option :value="1">Enabled</option>
-            <option :value="0">Disabled</option>
+            <option :value="1">{{ t("status.enabled") }}</option>
+            <option :value="0">{{ t("status.disabled") }}</option>
           </select>
         </label>
-        <label class="full-width">Remark<textarea v-model="form.remark" :disabled="submitting" /></label>
+        <label class="full-width">{{ t("user.form.remark") }}<textarea v-model="form.remark" :disabled="submitting" /></label>
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
         <footer class="modal-card__footer">
-          <button type="button" class="btn btn--subtle" :disabled="submitting" @click="emit('close')">Cancel</button>
+          <button type="button" class="btn btn--subtle" :disabled="submitting" @click="emit('close')">{{ t("common.cancel") }}</button>
           <button type="submit" class="btn btn--primary" :disabled="submitting">
-            {{ submitting ? "Saving..." : "Save" }}
+            {{ submitting ? t("common.saving") : t("common.save") }}
           </button>
         </footer>
       </form>

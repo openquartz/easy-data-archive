@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.openquartz.easyarchive.starter.mapper.SysUserMapper">
 
-    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.starter.model.entity.SysUser">
+    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.core.common.SysUser">
         <id column="id" property="id"/>
         <result column="username" property="username"/>
         <result column="password" property="password"/>
@@ -33,7 +33,7 @@
         </where>
     </sql>
 
-    <insert id="insert" parameterType="com.openquartz.easyarchive.starter.model.entity.SysUser" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.openquartz.easyarchive.core.common.SysUser" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO sys_user (
             username, password, real_name, mobile, email, status,
             last_login_time, remark, creator_id, updater_id
@@ -43,7 +43,7 @@
         )
     </insert>
 
-    <update id="update" parameterType="com.openquartz.easyarchive.starter.model.entity.SysUser">
+    <update id="update" parameterType="com.openquartz.easyarchive.core.common.SysUser">
         UPDATE sys_user
         <set>
             <if test="password != null">password = #{password},</if>

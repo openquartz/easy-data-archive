@@ -1,7 +1,7 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
+import com.openquartz.easyarchive.core.common.SysUser;
 import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
-import com.openquartz.easyarchive.starter.model.entity.SysUser;
 import com.openquartz.easyarchive.starter.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

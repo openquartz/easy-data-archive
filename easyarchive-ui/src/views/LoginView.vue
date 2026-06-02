@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import LanguageSwitcher from "../components/LanguageSwitcher.vue";
+import { useI18n } from "../i18n";
 import { useAuthStore } from "../stores/auth";
 
 interface LoginForm {
@@ -11,6 +13,7 @@ interface LoginForm {
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { t } = useI18n();
 const form = reactive<LoginForm>({
   username: "",
   password: ""
@@ -20,11 +23,11 @@ const submitting = ref(false);
 
 function validate(): boolean {
   if (!form.username.trim()) {
-    errorMessage.value = "Username is required";
+    errorMessage.value = t("login.validation.usernameRequired");
     return false;
   }
   if (!form.password.trim()) {
-    errorMessage.value = "Password is required";
+    errorMessage.value = t("login.validation.passwordRequired");
     return false;
   }
   return true;
@@ -47,7 +50,7 @@ async function handleSubmit(): Promise<void> {
     const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/";
     await router.replace(redirect);
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Login failed";
+    errorMessage.value = error instanceof Error ? error.message : t("login.failed");
   } finally {
     submitting.value = false;
   }
@@ -57,14 +60,17 @@ async function handleSubmit(): Promise<void> {
 <template>
   <main class="login-page">
     <section class="login-card">
-      <h1>EasyArchive Login</h1>
+      <div class="login-card__header">
+        <h1>{{ t("login.title") }}</h1>
+        <LanguageSwitcher />
+      </div>
       <form class="login-form" @submit.prevent="handleSubmit">
         <label>
-          Username
+          {{ t("login.username") }}
           <input v-model="form.username" type="text" autocomplete="username" :disabled="submitting" />
         </label>
         <label>
-          Password
+          {{ t("login.password") }}
           <input
             v-model="form.password"
             type="password"
@@ -73,7 +79,9 @@ async function handleSubmit(): Promise<void> {
           />
         </label>
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-        <button type="submit" :disabled="submitting">{{ submitting ? "Signing in..." : "Sign in" }}</button>
+        <button type="submit" :disabled="submitting">
+          {{ submitting ? t("login.submitting") : t("login.submit") }}
+        </button>
       </form>
     </section>
   </main>
@@ -93,6 +101,18 @@ async function handleSubmit(): Promise<void> {
   border-radius: 12px;
   padding: 24px;
   background: #fff;
+}
+
+.login-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.login-card__header h1 {
+  margin: 0;
 }
 
 .login-form {
@@ -134,4 +154,3 @@ button:disabled {
   font-size: 13px;
 }
 </style>
-

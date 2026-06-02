@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1779540683383,
+  "lastScanned": 1780210071057,
   "projectRoot": "/Users/jackxu/Documents/Code/local/easy-archive-master",
   "techStack": {
     "languages": [
@@ -33,16 +33,25 @@
   "structure": {
     "isMonorepo": false,
     "workspaces": [],
-    "mainDirectories": [],
+    "mainDirectories": [
+      "docs"
+    ],
     "gitBranches": null
   },
   "customNotes": [],
   "directoryMap": {
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1780210071048,
+      "keyFiles": []
+    },
     "easyarchive-common": {
       "path": "easyarchive-common",
       "purpose": null,
-      "fileCount": 1,
-      "lastAccessed": 1779540683374,
+      "fileCount": 2,
+      "lastAccessed": 1780210071048,
       "keyFiles": [
         "pom.xml"
       ]
@@ -50,26 +59,8 @@
     "easyarchive-core": {
       "path": "easyarchive-core",
       "purpose": null,
-      "fileCount": 1,
-      "lastAccessed": 1779540683374,
-      "keyFiles": [
-        "pom.xml"
-      ]
-    },
-    "easyarchive-sink-mysql": {
-      "path": "easyarchive-sink-mysql",
-      "purpose": null,
-      "fileCount": 1,
-      "lastAccessed": 1779540683374,
-      "keyFiles": [
-        "pom.xml"
-      ]
-    },
-    "easyarchive-source-mysql": {
-      "path": "easyarchive-source-mysql",
-      "purpose": null,
-      "fileCount": 1,
-      "lastAccessed": 1779540683375,
+      "fileCount": 2,
+      "lastAccessed": 1780210071048,
       "keyFiles": [
         "pom.xml"
       ]
@@ -77,8 +68,8 @@
     "easyarchive-starter": {
       "path": "easyarchive-starter",
       "purpose": null,
-      "fileCount": 1,
-      "lastAccessed": 1779540683375,
+      "fileCount": 2,
+      "lastAccessed": 1780210071049,
       "keyFiles": [
         "pom.xml"
       ]
@@ -87,344 +78,330 @@
       "path": "easyarchive-ui",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1779540683375,
+      "lastAccessed": 1780210071049,
       "keyFiles": []
     },
     "easyarchive-common/src": {
       "path": "easyarchive-common/src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1779540683376,
+      "lastAccessed": 1780210071049,
       "keyFiles": []
     },
     "easyarchive-core/src": {
       "path": "easyarchive-core/src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1779540683376,
-      "keyFiles": []
-    },
-    "easyarchive-sink-mysql/src": {
-      "path": "easyarchive-sink-mysql/src",
-      "purpose": "Source code",
-      "fileCount": 0,
-      "lastAccessed": 1779540683376,
-      "keyFiles": []
-    },
-    "easyarchive-source-mysql/src": {
-      "path": "easyarchive-source-mysql/src",
-      "purpose": "Source code",
-      "fileCount": 0,
-      "lastAccessed": 1779540683377,
+      "lastAccessed": 1780210071049,
       "keyFiles": []
     },
     "easyarchive-starter/src": {
       "path": "easyarchive-starter/src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1779540683377,
+      "lastAccessed": 1780210071049,
       "keyFiles": []
     }
   },
   "hotPaths": [
     {
-      "path": "CLAUDE.md",
-      "accessCount": 8,
-      "lastAccessed": 1779595839165,
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/executor/ArchiveExecutor.java",
+      "accessCount": 29,
+      "lastAccessed": 1780233476617,
       "type": "file"
     },
     {
-      "path": "pom.xml",
-      "accessCount": 7,
-      "lastAccessed": 1779596095218,
-      "type": "file"
-    },
-    {
-      "path": ".claude/settings.local.json",
-      "accessCount": 6,
-      "lastAccessed": 1779590533156,
-      "type": "file"
-    },
-    {
-      "path": ".claude/settings.json",
-      "accessCount": 5,
-      "lastAccessed": 1779590488933,
-      "type": "file"
-    },
-    {
-      "path": "README.md",
-      "accessCount": 4,
-      "lastAccessed": 1779595814280,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/connection/ConnectionFactory.java",
-      "accessCount": 3,
-      "lastAccessed": 1779594035110,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/DbArchiveRuleLoader.java",
-      "accessCount": 3,
-      "lastAccessed": 1779594997844,
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/ArchiveGroupExecutor.java",
+      "accessCount": 23,
+      "lastAccessed": 1780233476457,
       "type": "file"
     },
     {
       "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/config/EasyArchiveAutoConfiguration.java",
+      "accessCount": 19,
+      "lastAccessed": 1780236669921,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupExecuteTask.java",
+      "accessCount": 18,
+      "lastAccessed": 1780233476511,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/property/ArchiveConfig.java",
+      "accessCount": 15,
+      "lastAccessed": 1780231282590,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveTaskLog.java",
+      "accessCount": 11,
+      "lastAccessed": 1780231294287,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupItem.java",
+      "accessCount": 7,
+      "lastAccessed": 1780231282487,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/connection/ConnectionFactory.java",
+      "accessCount": 7,
+      "lastAccessed": 1780236359880,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/entity/BaseEntity.java",
+      "accessCount": 6,
+      "lastAccessed": 1780231309842,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-starter/src/main/resources/application.yml",
+      "accessCount": 6,
+      "lastAccessed": 1780231311665,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/connection/property/ConnectionProperties.java",
+      "accessCount": 6,
+      "lastAccessed": 1780236502628,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/SyncExecutor.java",
+      "accessCount": 5,
+      "lastAccessed": 1780231273443,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupItemByTime.java",
+      "accessCount": 5,
+      "lastAccessed": 1780231282569,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupItemById.java",
+      "accessCount": 5,
+      "lastAccessed": 1780231282623,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/model/dto/ApiResponse.java",
+      "accessCount": 5,
+      "lastAccessed": 1780232186818,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/connection/entity/ArchiveConnection.java",
+      "accessCount": 5,
+      "lastAccessed": 1780236366675,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroup.java",
+      "accessCount": 4,
+      "lastAccessed": 1780231282641,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/ArchiveRuleLoader.java",
+      "accessCount": 4,
+      "lastAccessed": 1780231282677,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/DbArchiveRuleLoader.java",
+      "accessCount": 4,
+      "lastAccessed": 1780231306893,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/controller/ArchiveDatasourceController.java",
       "accessCount": 3,
-      "lastAccessed": 1779595122742,
+      "lastAccessed": 1780231259564,
       "type": "file"
     },
     {
       "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/connection/factory/ArchiveConnectionFactory.java",
       "accessCount": 3,
-      "lastAccessed": 1779595168107,
+      "lastAccessed": 1780231296583,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupItemByTime.java",
-      "accessCount": 2,
-      "lastAccessed": 1779593931144,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupItemById.java",
-      "accessCount": 2,
-      "lastAccessed": 1779593944444,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/util/DateUtils.java",
-      "accessCount": 2,
-      "lastAccessed": 1779595781699,
-      "type": "file"
-    },
-    {
-      "path": "HARNESS_CONFIGURATION.md",
-      "accessCount": 2,
-      "lastAccessed": 1779595985661,
-      "type": "file"
-    },
-    {
-      "path": "HARNESS_SETUP_SUMMARY.md",
-      "accessCount": 2,
-      "lastAccessed": 1779595990593,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/pom.xml",
-      "accessCount": 1,
-      "lastAccessed": 1779588776981,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/pom.xml",
-      "accessCount": 1,
-      "lastAccessed": 1779588777033,
-      "type": "file"
-    },
-    {
-      "path": ".claude/test-hook.java",
-      "accessCount": 1,
-      "lastAccessed": 1779590994966,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/SyncExecutor.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593823414,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/ArchiveGroupExecutor.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593823466,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/property/ArchiveConfig.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593823516,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Writer.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593835181,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/PageSource.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593835232,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Sink.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593835284,
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/connection/ArchiveConnectionService.java",
+      "accessCount": 3,
+      "lastAccessed": 1780231325002,
       "type": "file"
     },
     {
       "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/sink/mysql/MysqlSink.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593840507,
+      "accessCount": 3,
+      "lastAccessed": 1780235359372,
       "type": "file"
     },
     {
       "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/source/mysql/MysqlSource.java",
+      "accessCount": 3,
+      "lastAccessed": 1780235359422,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-05-31-archive-execution-log-design.md",
+      "accessCount": 2,
+      "lastAccessed": 1780220649380,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/service/impl/ArchiveDatasourceServiceImpl.java",
+      "accessCount": 2,
+      "lastAccessed": 1780224283572,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/service/ArchiveDatasourceService.java",
+      "accessCount": 2,
+      "lastAccessed": 1780224283586,
+      "type": "file"
+    },
+    {
+      "path": "CLAUDE.md",
+      "accessCount": 2,
+      "lastAccessed": 1780224283862,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/sink/EmptySink.java",
       "accessCount": 1,
-      "lastAccessed": 1779593840559,
+      "lastAccessed": 1780219613061,
       "type": "file"
     },
     {
       "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/PageReader.java",
       "accessCount": 1,
-      "lastAccessed": 1779593845536,
+      "lastAccessed": 1780219613072,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Cleaner.java",
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/PageSource.java",
       "accessCount": 1,
-      "lastAccessed": 1779593845587,
+      "lastAccessed": 1780219613087,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/DataIterator.java",
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Sink.java",
       "accessCount": 1,
-      "lastAccessed": 1779593850470,
+      "lastAccessed": 1780219613113,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/EmptyDataIterator.java",
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Writer.java",
       "accessCount": 1,
-      "lastAccessed": 1779593850522,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/DataRecord.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593850573,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/FetchDataRecordByIdsFunction.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593856997,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupItem.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593864679,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/StepIdDataIterator.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593864731,
+      "lastAccessed": 1780219613154,
       "type": "file"
     },
     {
       "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/TableInfo.java",
       "accessCount": 1,
-      "lastAccessed": 1779593864781,
+      "lastAccessed": 1780219646472,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupExecuteTask.java",
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Connection.java",
       "accessCount": 1,
-      "lastAccessed": 1779593886890,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/executor/ArchiveExecutor.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593886941,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/IdResolver.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593898375,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/entity/Pair.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593898426,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/entity/BaseEntity.java",
-      "accessCount": 1,
-      "lastAccessed": 1779593898477,
+      "lastAccessed": 1780219646505,
       "type": "file"
     },
     {
       "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/expr/ExpressionService.java",
       "accessCount": 1,
-      "lastAccessed": 1779593958099,
+      "lastAccessed": 1780219646552,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/expr/cmd/AssignExtParam.java",
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/DataIterator.java",
       "accessCount": 1,
-      "lastAccessed": 1779593968218,
+      "lastAccessed": 1780219646566,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/expr/cmd/ExpressionEngine.java",
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/StepIdDataIterator.java",
       "accessCount": 1,
-      "lastAccessed": 1779593968269,
+      "lastAccessed": 1780219646587,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/ArchiveRuleLoader.java",
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/DataRecord.java",
       "accessCount": 1,
-      "lastAccessed": 1779593983488,
+      "lastAccessed": 1780219646609,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/connection/entity/ArchiveConnection.java",
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Cleaner.java",
       "accessCount": 1,
-      "lastAccessed": 1779593991275,
+      "lastAccessed": 1780219646661,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroup.java",
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/statistic/ArchiveStaticGroupInfo.java",
       "accessCount": 1,
-      "lastAccessed": 1779594043588,
+      "lastAccessed": 1780219661156,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/statistic/ArchiveStatistics.java",
+      "accessCount": 1,
+      "lastAccessed": 1780219661208,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/statistic/ArchiveStatisticInfo.java",
+      "accessCount": 1,
+      "lastAccessed": 1780219661262,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/EmptyDataIterator.java",
+      "accessCount": 1,
+      "lastAccessed": 1780219661488,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/util/ExceptionUtils.java",
+      "accessCount": 1,
+      "lastAccessed": 1780219678285,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/IdResolver.java",
+      "accessCount": 1,
+      "lastAccessed": 1780219678300,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/FetchDataRecordByIdsFunction.java",
+      "accessCount": 1,
+      "lastAccessed": 1780219678341,
       "type": "file"
     },
     {
       "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/concurrent/ILock.java",
       "accessCount": 1,
-      "lastAccessed": 1779594083062,
+      "lastAccessed": 1780219678393,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/concurrent/SimpleMemoryLock.java",
+      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/mapper/EaArchiveDatasourceMapper.java",
       "accessCount": 1,
-      "lastAccessed": 1779594106129,
+      "lastAccessed": 1780220798011,
       "type": "file"
     },
     {
-      "path": "docs/database/schema.sql",
+      "path": "easyarchive-starter/src/main/resources/mapper/EaArchiveDatasourceMapper.xml",
       "accessCount": 1,
-      "lastAccessed": 1779594207399,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/EasyArchiveStarter.java",
-      "accessCount": 1,
-      "lastAccessed": 1779594239824,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/connection/property/ConnectionProperties.java",
-      "accessCount": 1,
-      "lastAccessed": 1779594278246,
+      "lastAccessed": 1780220798063,
       "type": "file"
     }
   ],

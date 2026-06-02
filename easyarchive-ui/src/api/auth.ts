@@ -17,14 +17,13 @@ export interface UserProfile {
 }
 
 export function loginApi(payload: LoginPayload): Promise<LoginResponse> {
-  return http.post<LoginResponse>("/auth/login", payload);
+  return http.post<LoginResponse>("auth/login", payload);
 }
 
 export function logoutApi(): Promise<void> {
-  return http.post<void>("/auth/logout");
+  return http.post<void>("auth/logout");
 }
 
 export function meApi(): Promise<UserProfile> {
-  return http.get<UserProfile>("/auth/me");
+  return http.post<UserProfile>("auth/me");
 }
-

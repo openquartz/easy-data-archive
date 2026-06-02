@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { cancelTaskApi, getTaskDetailApi, getTaskLogsApi, type TaskItem, type TaskLogItem } from "../api/task";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
+import { useI18n } from "../i18n";
 import { createPolling } from "../utils/polling";
 
 const route = useRoute();
@@ -19,13 +20,17 @@ const logs = ref<TaskLogItem[]>([]);
 const logPage = ref(1);
 const logSize = ref(20);
 const logTotal = ref(0);
+const { t } = useI18n();
 
 const canCancel = computed(() => {
   const status = task.value?.executeStatus;
   return status === 0 || status === 1 || status === 4;
 });
 const logTotalPages = computed(() => Math.max(1, Math.ceil(logTotal.value / logSize.value)));
-const emptyLogText = computed(() => (loadingLogs.value ? "Loading logs..." : "No log records."));
+const emptyLogText = computed(() => (loadingLogs.value ? t("task.logEmptyLoading") : t("task.logEmpty")));
+const logPagerText = computed(() =>
+  t("task.pager", { page: logPage.value, totalPages: logTotalPages.value, total: logTotal.value })
+);
 
 async function loadTask(): Promise<void> {
   loading.value = true;
@@ -33,7 +38,7 @@ async function loadTask(): Promise<void> {
   try {
     task.value = await getTaskDetailApi(taskId.value);
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Failed to load task detail";
+    errorMessage.value = error instanceof Error ? error.message : t("task.detailLoadFailed");
   } finally {
     loading.value = false;
   }
@@ -47,7 +52,7 @@ async function loadLogs(): Promise<void> {
     logs.value = result.list || [];
     logTotal.value = result.total || 0;
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Failed to load task logs";
+    errorMessage.value = error instanceof Error ? error.message : t("task.logsLoadFailed");
   } finally {
     loadingLogs.value = false;
   }
@@ -61,7 +66,7 @@ async function cancelTask(): Promise<void> {
   if (!canCancel.value || cancelling.value || !task.value) {
     return;
   }
-  const confirmed = window.confirm(`Cancel task #${task.value.id}?`);
+  const confirmed = window.confirm(t("task.cancelConfirm", { id: task.value.id }));
   if (!confirmed) {
     return;
   }
@@ -70,10 +75,10 @@ async function cancelTask(): Promise<void> {
   successMessage.value = "";
   try {
     await cancelTaskApi(task.value.id);
-    successMessage.value = "Cancel request submitted.";
+    successMessage.value = t("task.cancelSubmitted");
     await loadAll();
   } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : "Cancel failed";
+    actionErrorMessage.value = error instanceof Error ? error.message : t("task.cancelFailed");
   } finally {
     cancelling.value = false;
   }
@@ -104,7 +109,7 @@ const stopPolling = (): void => poller.stop();
 
 onMounted(async () => {
   if (!Number.isFinite(taskId.value)) {
-    errorMessage.value = "Invalid task ID.";
+    errorMessage.value = t("task.invalidId");
     return;
   }
   await loadAll();
@@ -123,12 +128,12 @@ onBeforeUnmount(() => {
 <template>
   <section class="page-card">
     <header class="page-toolbar">
-      <h1>Task Detail</h1>
+      <h1>{{ t("task.detailTitle") }}</h1>
       <div class="actions">
-        <button class="btn btn--subtle" @click="router.push({ name: 'tasks' })">Back</button>
-        <button class="btn btn--subtle" :disabled="loading || loadingLogs" @click="refresh">Refresh</button>
+        <button class="btn btn--subtle" @click="router.push({ name: 'tasks' })">{{ t("common.back") }}</button>
+        <button class="btn btn--subtle" :disabled="loading || loadingLogs" @click="refresh">{{ t("common.refresh") }}</button>
         <button class="btn btn--primary" :disabled="!canCancel || cancelling" @click="cancelTask">
-          {{ cancelling ? "Cancelling..." : "Cancel Task" }}
+          {{ cancelling ? t("task.cancelling") : t("task.cancelAction") }}
         </button>
       </div>
     </header>
@@ -136,34 +141,34 @@ onBeforeUnmount(() => {
     <p v-if="actionErrorMessage" class="error">{{ actionErrorMessage }}</p>
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
-    <div v-if="loading" class="empty">Loading task detail...</div>
-    <div v-else-if="!task" class="empty">Task not found.</div>
+    <div v-if="loading" class="empty">{{ t("task.detailLoading") }}</div>
+    <div v-else-if="!task" class="empty">{{ t("task.detailEmpty") }}</div>
     <div v-else class="detail-grid">
-      <p><strong>ID:</strong> {{ task.id }}</p>
-      <p><strong>Group ID:</strong> {{ task.groupId }}</p>
-      <p><strong>Status:</strong> <TaskStatusTag :status="task.executeStatus" /></p>
-      <p><strong>Processed:</strong> {{ task.processedRecords ?? 0 }}</p>
-      <p><strong>Speed:</strong> {{ task.processedSpeed ?? "-" }}</p>
-      <p><strong>Heartbeat:</strong> {{ task.heartbeatTime || "-" }}</p>
-      <p><strong>Start:</strong> {{ task.startTime || "-" }}</p>
-      <p><strong>End:</strong> {{ task.endTime || "-" }}</p>
-      <p class="full-width"><strong>Error:</strong> {{ task.errorMsg || "-" }}</p>
+      <p><strong>{{ t("task.columns.id") }}:</strong> {{ task.id }}</p>
+      <p><strong>{{ t("task.columns.groupId") }}:</strong> {{ task.groupId }}</p>
+      <p><strong>{{ t("task.columns.status") }}:</strong> <TaskStatusTag :status="task.executeStatus" /></p>
+      <p><strong>{{ t("task.columns.processed") }}:</strong> {{ task.processedRecords ?? 0 }}</p>
+      <p><strong>{{ t("task.columns.speed") }}:</strong> {{ task.processedSpeed ?? "-" }}</p>
+      <p><strong>{{ t("task.columns.heartbeat") }}:</strong> {{ task.heartbeatTime || "-" }}</p>
+      <p><strong>{{ t("task.columns.start") }}:</strong> {{ task.startTime || "-" }}</p>
+      <p><strong>{{ t("task.columns.end") }}:</strong> {{ task.endTime || "-" }}</p>
+      <p class="full-width"><strong>{{ t("task.columns.error") }}:</strong> {{ task.errorMsg || "-" }}</p>
     </div>
 
-    <h2 class="section-title">Logs</h2>
+    <h2 class="section-title">{{ t("task.logs") }}</h2>
     <div v-if="loadingLogs" class="empty">{{ emptyLogText }}</div>
     <div v-else-if="!logs.length" class="empty">{{ emptyLogText }}</div>
     <div v-else class="table-wrap">
       <table class="table">
         <thead>
           <tr>
-            <th>Time</th>
-            <th>Level</th>
-            <th>Type</th>
-            <th>Phase</th>
-            <th>Processed</th>
-            <th>Speed</th>
-            <th>Content</th>
+            <th>{{ t("task.columns.time") }}</th>
+            <th>{{ t("task.columns.level") }}</th>
+            <th>{{ t("task.columns.type") }}</th>
+            <th>{{ t("task.columns.phase") }}</th>
+            <th>{{ t("task.columns.processed") }}</th>
+            <th>{{ t("task.columns.speed") }}</th>
+            <th>{{ t("task.columns.content") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -180,10 +185,10 @@ onBeforeUnmount(() => {
       </table>
     </div>
     <footer class="pager">
-      <span>Page {{ logPage }} / {{ logTotalPages }} · Total {{ logTotal }}</span>
+      <span>{{ logPagerText }}</span>
       <div class="actions">
-        <button class="btn btn--subtle" :disabled="logPage <= 1 || loadingLogs" @click="prevLogPage">Prev</button>
-        <button class="btn btn--subtle" :disabled="logPage >= logTotalPages || loadingLogs" @click="nextLogPage">Next</button>
+        <button class="btn btn--subtle" :disabled="logPage <= 1 || loadingLogs" @click="prevLogPage">{{ t("common.prev") }}</button>
+        <button class="btn btn--subtle" :disabled="logPage >= logTotalPages || loadingLogs" @click="nextLogPage">{{ t("common.next") }}</button>
       </div>
     </footer>
   </section>
