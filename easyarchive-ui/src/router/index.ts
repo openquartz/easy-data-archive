@@ -3,6 +3,7 @@ import AppLayout from "../layouts/AppLayout.vue";
 import LoginView from "../views/LoginView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import DatasourceView from "../views/DatasourceView.vue";
+import ArchiveGroupView from "../views/ArchiveGroupView.vue";
 import UserView from "../views/UserView.vue";
 import TaskListView from "../views/TaskListView.vue";
 import TaskDetailView from "../views/TaskDetailView.vue";
@@ -30,6 +31,11 @@ const router = createRouter({
           path: "datasources",
           name: "datasources",
           component: DatasourceView
+        },
+        {
+          path: "archive/groups",
+          name: "archive-groups",
+          component: ArchiveGroupView
         },
         {
           path: "users",
