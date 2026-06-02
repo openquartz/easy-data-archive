@@ -37,6 +37,8 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         validateForSave(group, true);
         if (group.getEnableStatus() == null) {
             group.setEnableStatus(0);
+        } else {
+            validateEnableStatus(group.getEnableStatus());
         }
         groupMapper.insert(group);
         return group;
@@ -49,6 +51,9 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         }
         ensureExists(group.getId());
         validateForSave(group, false);
+        if (group.getEnableStatus() != null) {
+            validateEnableStatus(group.getEnableStatus());
+        }
         groupMapper.update(group);
         return group;
     }
@@ -56,9 +61,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     @Override
     public void updateStatus(Long id, Integer enableStatus) {
         ensureExists(id);
-        if (enableStatus == null || (enableStatus != 0 && enableStatus != 1)) {
-            throw new IllegalArgumentException("启用状态不合法");
-        }
+        validateEnableStatus(enableStatus);
         groupMapper.updateStatus(id, enableStatus);
     }
 
@@ -83,10 +86,16 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         if (group == null) {
             throw new IllegalArgumentException("归档分组不能为空");
         }
-        if (group.getGroupCode() == null || group.getGroupCode().trim().isEmpty()) {
+        if (group.getGroupCode() != null) {
+            group.setGroupCode(group.getGroupCode().trim());
+        }
+        if (group.getGroupName() != null) {
+            group.setGroupName(group.getGroupName().trim());
+        }
+        if (group.getGroupCode() == null || group.getGroupCode().isEmpty()) {
             throw new IllegalArgumentException("分组编码不能为空");
         }
-        if (group.getGroupName() == null || group.getGroupName().trim().isEmpty()) {
+        if (group.getGroupName() == null || group.getGroupName().isEmpty()) {
             throw new IllegalArgumentException("分组名称不能为空");
         }
         if (group.getSourceDatasourceId() == null || group.getTargetDatasourceId() == null) {
@@ -95,6 +104,12 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         ArchiveGroup existing = groupMapper.selectByCode(group.getGroupCode());
         if (existing != null && (create || !existing.getId().equals(group.getId()))) {
             throw new IllegalArgumentException("分组编码已存在");
+        }
+    }
+
+    private void validateEnableStatus(Integer enableStatus) {
+        if (enableStatus == null || (enableStatus != 0 && enableStatus != 1)) {
+            throw new IllegalArgumentException("启用状态不合法");
         }
     }
 }

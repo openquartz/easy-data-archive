@@ -52,6 +52,32 @@ class ArchiveGroupServiceImplTest {
     }
 
     @Test
+    void shouldRejectInvalidStatusOnCreate() {
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setEnableStatus(2);
+
+        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        verify(groupMapper, never()).insert(any());
+    }
+
+    @Test
+    void shouldTrimGroupCodeAndNameBeforeCreate() {
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setGroupCode(" ORDER_ARCHIVE ");
+        input.setGroupName(" Order Archive ");
+
+        ArchiveGroup created = service.create(input);
+
+        assertSame(input, created);
+        assertEquals("ORDER_ARCHIVE", input.getGroupCode());
+        assertEquals("Order Archive", input.getGroupName());
+        verify(groupMapper).selectByCode("ORDER_ARCHIVE");
+        verify(groupMapper).insert(input);
+    }
+
+    @Test
     void shouldRejectDuplicateGroupCodeOnUpdate() {
         ArchiveGroup existing = enabledGroup();
         existing.setId(99L);
@@ -68,6 +94,16 @@ class ArchiveGroupServiceImplTest {
     void shouldRejectUpdateWhenGroupDoesNotExist() {
         ArchiveGroup input = enabledGroup();
         when(groupMapper.selectById(10L)).thenReturn(null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.update(input));
+        verify(groupMapper, never()).update(any());
+    }
+
+    @Test
+    void shouldRejectInvalidStatusOnUpdate() {
+        ArchiveGroup input = enabledGroup();
+        input.setEnableStatus(-1);
+        when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
 
         assertThrows(IllegalArgumentException.class, () -> service.update(input));
         verify(groupMapper, never()).update(any());
