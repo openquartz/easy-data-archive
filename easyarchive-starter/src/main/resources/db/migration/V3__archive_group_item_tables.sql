@@ -1,7 +1,91 @@
 -- V3: Replace generic archive rule tables with concrete archive group item tables.
 
-DROP TABLE IF EXISTS `ea_archive_rule_condition`;
-DROP TABLE IF EXISTS `ea_archive_rule`;
+-- MySQL 5.7 does not support RENAME TABLE IF EXISTS or ADD COLUMN IF NOT EXISTS.
+-- Use a short migration procedure to preserve old generic rule data when present
+-- and keep this migration safe for databases that never had the generic tables.
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS `ea_archive_v3_migrate`//
+
+CREATE PROCEDURE `ea_archive_v3_migrate`()
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_rule_condition'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_rule_condition_backup_v3'
+    ) THEN
+        RENAME TABLE `ea_archive_rule_condition` TO `ea_archive_rule_condition_backup_v3`;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_rule'
+    ) AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_rule_backup_v3'
+    ) THEN
+        RENAME TABLE `ea_archive_rule` TO `ea_archive_rule_backup_v3`;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_task'
+          AND column_name = 'current_item_type'
+    ) THEN
+        ALTER TABLE `ea_archive_task`
+            ADD COLUMN `current_item_type` VARCHAR(16) NULL COMMENT '当前明细类型 ID/TIME' AFTER `current_rule_id`;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_task_detail'
+          AND column_name = 'item_type'
+    ) THEN
+        ALTER TABLE `ea_archive_task_detail`
+            ADD COLUMN `item_type` VARCHAR(16) NOT NULL DEFAULT 'ID' COMMENT 'ID/TIME' AFTER `rule_id`;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_task_progress'
+          AND column_name = 'current_item_type'
+    ) THEN
+        ALTER TABLE `ea_archive_task_progress`
+            ADD COLUMN `current_item_type` VARCHAR(16) NULL COMMENT '当前明细类型 ID/TIME' AFTER `current_rule_id`;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = 'ea_archive_task_log'
+          AND column_name = 'item_type'
+    ) THEN
+        ALTER TABLE `ea_archive_task_log`
+            ADD COLUMN `item_type` VARCHAR(16) NULL COMMENT '明细类型 ID/TIME' AFTER `rule_id`;
+    END IF;
+END//
+
+DELIMITER ;
+
+CALL `ea_archive_v3_migrate`();
+DROP PROCEDURE `ea_archive_v3_migrate`;
 
 CREATE TABLE IF NOT EXISTS `ea_archive_group_item_by_id` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
