@@ -45,7 +45,12 @@ public class DbArchiveLogListener implements ArchiveEventListener {
         task.setStartTime(new Date(event.getTimestamp()));
         task.setExecuteStatus(1);
         task.setProcessedRecords(0L);
-        repository.saveTaskExecution(task);
+        ArchiveGroupExecuteTask existing = repository.queryTaskById(event.getTaskId());
+        if (existing == null) {
+            repository.saveTaskExecution(task);
+        } else {
+            repository.updateTaskExecution(task);
+        }
 
         saveLog(event.getTaskId(), "START", "INFO",
                 "任务开始，规则数:" + event.getRuleCount(),

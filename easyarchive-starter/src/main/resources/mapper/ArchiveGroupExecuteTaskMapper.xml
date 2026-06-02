@@ -29,9 +29,9 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO ea_archive_group_execute_task (
-            group_id, start_time, execute_status, processed_records
+            group_id, start_time, execute_status, processed_records, finished_flag
         ) VALUES (
-            #{groupId}, #{startTime}, #{executeStatus}, #{processedRecords}
+            #{groupId}, #{startTime}, #{executeStatus}, #{processedRecords}, COALESCE(#{finishedFlag}, 0)
         )
     </insert>
 
@@ -74,6 +74,14 @@
             <if test="status != null and status != ''">AND execute_status = #{status}</if>
             AND deleted = 0
         </where>
+    </select>
+
+    <select id="countActiveByGroupId" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+          AND group_id = #{groupId}
+          AND execute_status IN (0, 1, 4)
     </select>
 
     <update id="updateExecuteStatus">
