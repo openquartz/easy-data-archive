@@ -1,10 +1,12 @@
 package com.openquartz.easyarchive.core.rule.entity;
 
 import com.openquartz.easyarchive.common.entity.BaseEntity;
-import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+/**
+ * 归档分组
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ArchiveGroup extends BaseEntity {
@@ -12,7 +14,12 @@ public class ArchiveGroup extends BaseEntity {
     /**
      * ID
      */
-    private Integer id;
+    private Long id;
+
+    /**
+     * 父分组ID
+     */
+    private Long parentId;
 
     /**
      * 分组编码。唯一
@@ -25,16 +32,24 @@ public class ArchiveGroup extends BaseEntity {
     private String groupName;
 
     /**
-     * 源库ID
-     * @see ArchiveConnection#getId()
+     * 分组路径
      */
-    private Integer sourceConnectionId;
+    private String groupPath;
 
     /**
-     * 目标库ID. 可选
-     * @see ArchiveConnection#getId()
+     * 分组层级
      */
-    private Integer targetConnectionId;
+    private Integer groupLevel;
+
+    /**
+     * 源数据源ID
+     */
+    private Long sourceDatasourceId;
+
+    /**
+     * 目标数据源ID
+     */
+    private Long targetDatasourceId;
 
     /**
      * 所属人ID
@@ -46,4 +61,14 @@ public class ArchiveGroup extends BaseEntity {
      * 0-启用，1-禁用
      */
     private Integer enableStatus;
+
+    /**
+     * 触发方式
+     */
+    private String triggerMode;
+
+    /**
+     * 备注
+     */
+    private String remark;
 }
