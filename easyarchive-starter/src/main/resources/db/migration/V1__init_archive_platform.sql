@@ -174,60 +174,6 @@ CREATE TABLE IF NOT EXISTS `ea_archive_group` (
     INDEX `idx_enable_status` (`enable_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档分组表';
 
-CREATE TABLE IF NOT EXISTS `ea_archive_rule` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `group_id` BIGINT NOT NULL COMMENT '分组 ID',
-    `rule_code` VARCHAR(64) NOT NULL COMMENT '规则编码，唯一',
-    `rule_name` VARCHAR(64) NOT NULL COMMENT '规则名称',
-    `rule_type` VARCHAR(16) NOT NULL COMMENT 'TIME/ID',
-    `priority_no` INT NOT NULL COMMENT '优先级，组内唯一',
-    `source_table` VARCHAR(128) NOT NULL COMMENT '来源表',
-    `target_table` VARCHAR(128) NOT NULL COMMENT '目标表',
-    `id_column` VARCHAR(64) NOT NULL COMMENT '主键字段',
-    `fetch_sql_template` TEXT NOT NULL COMMENT '抓取 SQL 模板',
-    `delete_where` TEXT NULL COMMENT '删除保护条件',
-    `start_expr` VARCHAR(255) NULL COMMENT '起始表达式',
-    `end_expr` VARCHAR(255) NULL COMMENT '结束表达式',
-    `keep_days` INT NULL COMMENT '保留天数',
-    `step_count` INT NOT NULL DEFAULT 1000 COMMENT '单批大小',
-    `step_rounds` INT NULL COMMENT '滚动窗口',
-    `pause_ms` INT NOT NULL DEFAULT 100 COMMENT '批间停顿',
-    `enable_write` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
-    `enable_clean` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
-    `enable_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
-    `last_check_status` TINYINT NULL COMMENT '最近校验状态',
-    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `creator_id` BIGINT NULL COMMENT '创建人ID',
-    `updater_id` BIGINT NULL COMMENT '更新人ID',
-    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
-    PRIMARY KEY (`id`),
-    UNIQUE INDEX `uk_rule_code` (`rule_code`),
-    UNIQUE INDEX `uk_group_priority` (`group_id`, `priority_no`),
-    INDEX `idx_group_status` (`group_id`, `enable_status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档规则表';
-
-CREATE TABLE IF NOT EXISTS `ea_archive_rule_condition` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `rule_id` BIGINT NOT NULL COMMENT '规则 ID',
-    `sort_no` INT NOT NULL COMMENT '条件顺序',
-    `logic_type` VARCHAR(8) NOT NULL DEFAULT 'AND' COMMENT 'AND/OR',
-    `field_name` VARCHAR(64) NOT NULL COMMENT '字段名',
-    `operator` VARCHAR(16) NOT NULL COMMENT '=、>、<、BETWEEN、IN、LIKE',
-    `value_type` VARCHAR(16) NOT NULL DEFAULT 'CONST' COMMENT 'CONST/EXPR',
-    `value_expr` VARCHAR(255) NOT NULL COMMENT '条件值或表达式',
-    `value_expr_ext` VARCHAR(255) NULL COMMENT '扩展值',
-    `enable_status` TINYINT NOT NULL DEFAULT 0 COMMENT '启用状态',
-    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `creator_id` BIGINT NULL COMMENT '创建人ID',
-    `updater_id` BIGINT NULL COMMENT '更新人ID',
-    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
-    PRIMARY KEY (`id`),
-    INDEX `idx_rule_id` (`rule_id`),
-    INDEX `idx_sort_no` (`sort_no`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档规则条件表';
-
 CREATE TABLE IF NOT EXISTS `ea_archive_task` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
     `task_no` VARCHAR(64) NOT NULL COMMENT '任务编号，唯一',
