@@ -29,7 +29,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
     private final ArchiveGroupTaskDispatcher dispatcher;
 
     @Override
-    public ArchiveGroupExecuteTask trigger(Long groupId) {
+    public synchronized ArchiveGroupExecuteTask trigger(Long groupId) {
         ArchiveGroup group = requireEnabledGroup(groupId);
         if (taskMapper.countActiveByGroupId(groupId) > 0) {
             throw new IllegalStateException("Archive group has active task");
@@ -72,10 +72,50 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
         if (datasourceId == null) {
             throw new IllegalArgumentException(message);
         }
-        ArchiveConnection datasource = datasourceMapper.selectById(datasourceId);
+        Object datasource = datasourceMapper.selectById(datasourceId);
         if (datasource == null) {
             throw new IllegalArgumentException(message);
         }
-        return datasource;
+        return toArchiveConnection(datasource);
+    }
+
+    private ArchiveConnection toArchiveConnection(Object datasource) {
+        if (datasource instanceof ArchiveConnection) {
+            return (ArchiveConnection) datasource;
+        }
+
+        ArchiveConnection connection = new ArchiveConnection();
+        connection.setId(readLong(datasource, "getId"));
+        connection.setConnectCode(readString(datasource, "getDatasourceCode"));
+        connection.setConnectType(readString(datasource, "getDatasourceType"));
+        connection.setUrl(readString(datasource, "getJdbcUrl"));
+        connection.setUsername(readString(datasource, "getUsername"));
+        connection.setPassword(readString(datasource, "getPasswordCipher"));
+        connection.setStatus(readInteger(datasource, "getStatus"));
+        connection.setRemark(readString(datasource, "getRemark"));
+        return connection;
+    }
+
+    private String readString(Object source, String methodName) {
+        Object value = invokeGetter(source, methodName);
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private Long readLong(Object source, String methodName) {
+        Object value = invokeGetter(source, methodName);
+        return value instanceof Number ? ((Number) value).longValue() : null;
+    }
+
+    private Integer readInteger(Object source, String methodName) {
+        Object value = invokeGetter(source, methodName);
+        return value instanceof Number ? ((Number) value).intValue() : null;
+    }
+
+    private Object invokeGetter(Object source, String methodName) {
+        try {
+            return source.getClass().getMethod(methodName).invoke(source);
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalArgumentException("Unsupported datasource type: " + source.getClass().getName(), ex);
+        }
     }
 }

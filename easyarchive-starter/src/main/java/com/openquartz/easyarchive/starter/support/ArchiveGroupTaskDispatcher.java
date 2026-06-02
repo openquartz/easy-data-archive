@@ -35,11 +35,40 @@ public class ArchiveGroupTaskDispatcher {
                          Pair<ArchiveConnection, ArchiveConnection> connections) {
         ArchiveGroupExecutor executor = new ArchiveGroupExecutor(
                 loader, archiveConfig, task, connections, publisher, archiveLogRepository);
-        executorService.submit(executor);
+        executorService.submit(() -> runWithTaskStateFallback(task, executor));
     }
 
     @PreDestroy
     public void shutdown() {
         executorService.shutdown();
+    }
+
+    private void runWithTaskStateFallback(ArchiveGroupExecuteTask task, ArchiveGroupExecutor executor) {
+        markTask(task.getId(), ArchiveGroupExecuteTask.STATUS_RUNNING);
+        try {
+            executor.run();
+            markTerminalIfEventLoggingDidNot(task.getId(), ArchiveGroupExecuteTask.STATUS_SUCCESS);
+        } catch (RuntimeException ex) {
+            markTerminalIfEventLoggingDidNot(task.getId(), ArchiveGroupExecuteTask.STATUS_FAILED);
+            throw ex;
+        }
+    }
+
+    private void markTask(Long taskId, Integer status) {
+        ArchiveGroupExecuteTask update = new ArchiveGroupExecuteTask();
+        update.setId(taskId);
+        update.setExecuteStatus(status);
+        archiveLogRepository.updateTaskExecution(update);
+    }
+
+    private void markTerminalIfEventLoggingDidNot(Long taskId, Integer status) {
+        ArchiveGroupExecuteTask current = archiveLogRepository.queryTaskById(taskId);
+        if (current != null && !current.isTerminal()) {
+            ArchiveGroupExecuteTask update = new ArchiveGroupExecuteTask();
+            update.setId(taskId);
+            update.setExecuteStatus(status);
+            update.setEndTime(new java.util.Date());
+            archiveLogRepository.updateTaskExecution(update);
+        }
     }
 }
