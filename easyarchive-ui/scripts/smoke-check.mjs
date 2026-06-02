@@ -9,11 +9,14 @@ const requiredFiles = [
   "src/views/LoginView.vue",
   "src/views/DashboardView.vue",
   "src/views/DatasourceView.vue",
+  "src/views/ArchiveGroupView.vue",
   "src/views/TaskListView.vue",
   "src/views/TaskDetailView.vue",
   "src/views/UserView.vue",
   "src/utils/http.ts",
   "src/api/dashboard.ts",
+  "src/api/archiveGroup.ts",
+  "src/api/archiveGroupItem.ts",
   "src/api/task.ts"
 ];
 
@@ -32,6 +35,7 @@ const routeFragments = [
   'path: "/"',
   'path: "dashboard"',
   'path: "datasources"',
+  'path: "archive/groups"',
   'path: "tasks"',
   'path: "tasks/:taskId"',
   'path: "users"'

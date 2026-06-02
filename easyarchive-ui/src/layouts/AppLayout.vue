@@ -12,6 +12,7 @@ const { t } = useI18n();
       <nav class="nav">
         <RouterLink class="nav__item" :to="{ name: 'dashboard' }">{{ t("layout.nav.dashboard") }}</RouterLink>
         <RouterLink class="nav__item" :to="{ name: 'datasources' }">{{ t("layout.nav.datasources") }}</RouterLink>
+        <RouterLink class="nav__item" :to="{ name: 'archive-groups' }">{{ t("layout.nav.archiveGroups") }}</RouterLink>
         <RouterLink class="nav__item" :to="{ name: 'tasks' }">{{ t("layout.nav.tasks") }}</RouterLink>
         <RouterLink class="nav__item" :to="{ name: 'users' }">{{ t("layout.nav.users") }}</RouterLink>
         <RouterLink class="nav__item nav__item--ghost" :to="{ name: 'login' }">{{ t("layout.nav.login") }}</RouterLink>

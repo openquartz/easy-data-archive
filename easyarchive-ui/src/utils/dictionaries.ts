@@ -15,6 +15,11 @@ export const userStatusDictionary: Record<number, StatusDictionaryItem> = {
   1: { labelKey: "status.enabled", tone: "success" }
 };
 
+export const archiveEnableStatusDictionary: Record<number, StatusDictionaryItem> = {
+  0: { labelKey: "status.enabled", tone: "success" },
+  1: { labelKey: "status.disabled", tone: "neutral" }
+};
+
 export const taskStatusDictionary: Record<number, StatusDictionaryItem> = {
   0: { labelKey: "task.status.waiting", tone: "neutral" },
   1: { labelKey: "task.status.running", tone: "success" },
