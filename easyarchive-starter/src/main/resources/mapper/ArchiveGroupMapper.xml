@@ -91,7 +91,7 @@
     <select id="selectByCode" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ea_archive_group
-        WHERE group_code = #{groupCode} AND deleted = 0
+        WHERE group_code = #{groupCode}
     </select>
 
     <select id="selectList" resultMap="BaseResultMap">
