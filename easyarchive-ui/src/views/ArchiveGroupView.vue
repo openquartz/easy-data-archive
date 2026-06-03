@@ -221,7 +221,7 @@ onBeforeUnmount(() => {
         </thead>
         <tbody>
           <tr v-for="group in groups" :key="group.id">
-            <td><EntityLink type="group" :id="group.id" :title="group.groupName">{{ group.groupCode }}</EntityLink></td>
+            <td><EntityLink type="group" :id="group.id" :title="group.groupName || group.groupCode">{{ group.groupCode }}</EntityLink></td>
             <td>{{ group.groupName }}</td>
             <td><EntityLink type="datasource" :id="group.sourceDatasourceId">{{ datasourceName(group.sourceDatasourceId) }}</EntityLink></td>
             <td><EntityLink type="datasource" :id="group.targetDatasourceId">{{ datasourceName(group.targetDatasourceId) }}</EntityLink></td>
