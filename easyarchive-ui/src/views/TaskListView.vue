@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRouter } from "vue-router";
-import { getTasksApi, type TaskItem } from "../api/task";
+import { cancelTaskApi, getTasksApi, type TaskItem } from "../api/task";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
+import EntityLink from "../components/EntityLink.vue";
 import { useI18n } from "../i18n";
 import { createPolling } from "../utils/polling";
 
@@ -14,6 +15,7 @@ const page = ref(1);
 const size = ref(20);
 const total = ref(0);
 const statusFilter = ref("");
+const cancellingIds = ref(new Set<number>());
 const { t } = useI18n();
 
 const emptyText = computed(() => (loading.value ? t("task.emptyLoading") : t("task.empty")));
@@ -47,6 +49,30 @@ async function loadData(): Promise<void> {
 
 function goDetail(taskId: number): void {
   void router.push({ name: "task-detail", params: { taskId } });
+}
+
+function canCancel(task: TaskItem): boolean {
+  return task.executeStatus === 0 || task.executeStatus === 1 || task.executeStatus === 4;
+}
+
+async function cancelTask(task: TaskItem): Promise<void> {
+  if (!canCancel(task) || cancellingIds.value.has(task.id)) {
+    return;
+  }
+  const confirmed = window.confirm(t("task.cancelConfirm", { id: task.id }));
+  if (!confirmed) {
+    return;
+  }
+  cancellingIds.value.add(task.id);
+  errorMessage.value = "";
+  try {
+    await cancelTaskApi(task.id);
+    await loadData();
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : t("task.cancelFailed");
+  } finally {
+    cancellingIds.value.delete(task.id);
+  }
 }
 
 function applyFilter(): void {
@@ -123,14 +149,22 @@ onBeforeRouteLeave(() => {
         </thead>
         <tbody>
           <tr v-for="item in list" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ item.groupId }}</td>
+            <td><EntityLink type="task" :id="item.id">{{ item.id }}</EntityLink></td>
+            <td><EntityLink type="group" :id="item.groupId">{{ item.groupId }}</EntityLink></td>
             <td><TaskStatusTag :status="item.executeStatus" /></td>
             <td>{{ item.processedRecords ?? 0 }}</td>
             <td>{{ item.processedSpeed ?? "-" }}</td>
             <td>{{ item.startTime || "-" }}</td>
             <td>{{ item.endTime || "-" }}</td>
             <td>
+              <button
+                v-if="canCancel(item)"
+                class="btn btn--subtle"
+                :disabled="cancellingIds.has(item.id) || item.executeStatus === 4"
+                @click="cancelTask(item)"
+              >
+                {{ item.executeStatus === 4 ? t("task.cancelling") : t("task.cancelAction") }}
+              </button>
               <button class="btn btn--subtle" @click="goDetail(item.id)">{{ t("common.detail") }}</button>
             </td>
           </tr>
