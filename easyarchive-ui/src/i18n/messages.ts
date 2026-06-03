@@ -11,11 +11,15 @@ export const messages = {
         dashboard: "Dashboard",
         datasources: "Datasources",
         archiveGroups: "Archive Groups",
-        tasks: "Tasks",
-        users: "Users",
-        login: "Login"
+        tasks: "Archive Tasks",
+        guide: "Guide",
+        users: "Users"
       },
-      topbar: "Operations Console"
+      topbar: "Operations Console",
+      actions: {
+        logout: "Sign out",
+        loggingOut: "Signing out..."
+      }
     },
     common: {
       refresh: "Refresh",
@@ -102,7 +106,7 @@ export const messages = {
         code: "Code",
         name: "Name",
         type: "Type",
-        jdbcUrl: "JDBC URL",
+        jdbcUrl: "Connection Address",
         username: "Username",
         password: "Password",
         status: "Status",
@@ -113,8 +117,8 @@ export const messages = {
           codeInvalid: "Datasource code must be 2-64 chars, start with a letter, and use letters, numbers, _ or -",
           nameRequired: "Datasource name is required",
           typeRequired: "Datasource type is required",
-          jdbcRequired: "JDBC URL is required",
-          jdbcInvalid: "JDBC URL must start with jdbc:",
+          jdbcRequired: "Connection address is required",
+          jdbcInvalid: "Connection address must start with jdbc:",
           usernameRequired: "Username is required"
         }
       },
@@ -122,7 +126,7 @@ export const messages = {
         code: "Code",
         name: "Name",
         type: "Type",
-        jdbcUrl: "JDBC URL",
+        jdbcUrl: "Connection Address",
         username: "Username",
         status: "Status",
         actions: "Actions"
@@ -138,18 +142,22 @@ export const messages = {
       deleted: "Archive group deleted.",
       statusUpdated: "Archive group status updated.",
       triggered: "Archive task #{id} submitted.",
+      cancelSubmitted: "Cancel request submitted for task #{id}.",
       saveFailed: "Save failed",
       loadFailed: "Failed to load archive groups",
       actionFailed: "Action failed",
       deleteConfirm: "Delete this archive group?",
       items: "Items",
       trigger: "Trigger",
+      viewTask: "View Archive Task",
       columns: {
         code: "Code",
         name: "Name",
         source: "Source",
         target: "Target",
         status: "Status",
+        activeTask: "Active Task",
+        activeTaskStartTime: "Task Start Time",
         actions: "Actions"
       },
       form: {
@@ -212,6 +220,15 @@ export const messages = {
         }
       }
     },
+    archiveGroupDetail: {
+      title: "Archive Group Detail",
+      summary: "Overview",
+      recentTasks: "Recent Tasks",
+      openDetail: "Open Detail",
+      viewTask: "View Task",
+      notFound: "Archive group not found.",
+      emptyTasks: "No recent tasks."
+    },
     user: {
       title: "User Management",
       new: "New User",
@@ -254,23 +271,23 @@ export const messages = {
     },
     task: {
       title: "Archive Tasks",
-      emptyLoading: "Loading tasks...",
-      empty: "No task records.",
-      loadFailed: "Failed to load tasks",
-      detailTitle: "Task Detail",
-      detailLoading: "Loading task detail...",
-      detailEmpty: "Task not found.",
-      detailLoadFailed: "Failed to load task detail",
-      logsLoadFailed: "Failed to load task logs",
-      invalidId: "Invalid task ID.",
-      cancelAction: "Cancel Task",
+      emptyLoading: "Loading archive tasks...",
+      empty: "No archive task records.",
+      loadFailed: "Failed to load archive tasks",
+      detailTitle: "Archive Task Detail",
+      detailLoading: "Loading archive task detail...",
+      detailEmpty: "Archive task not found.",
+      detailLoadFailed: "Failed to load archive task detail",
+      logsLoadFailed: "Failed to load archive task logs",
+      invalidId: "Invalid archive task ID.",
+      cancelAction: "Cancel Archive Task",
       cancelling: "Cancelling...",
-      cancelConfirm: "Cancel task #{id}?",
+      cancelConfirm: "Cancel archive task #{id}?",
       cancelSubmitted: "Cancel request submitted.",
-      cancelFailed: "Cancel failed",
-      logs: "Logs",
-      logEmptyLoading: "Loading logs...",
-      logEmpty: "No log records.",
+      cancelFailed: "Archive task cancel failed",
+      logs: "Archive Task Logs",
+      logEmptyLoading: "Loading archive task logs...",
+      logEmpty: "No archive task logs.",
       pager: "Page {page} / {totalPages} · Total {total}",
       filters: {
         all: "All"
@@ -306,6 +323,10 @@ export const messages = {
     status: {
       enabled: "Enabled",
       disabled: "Disabled"
+    },
+    workTab: {
+      groupDetail: "Group Detail",
+      task: "Task"
     }
   },
   "zh-CN": {
@@ -320,11 +341,15 @@ export const messages = {
         dashboard: "仪表盘",
         datasources: "数据源",
         archiveGroups: "归档分组",
-        tasks: "任务",
-        users: "用户",
-        login: "登录"
+        tasks: "归档任务",
+        guide: "操作指南",
+        users: "用户"
       },
-      topbar: "运维控制台"
+      topbar: "运维控制台",
+      actions: {
+        logout: "退出登录",
+        loggingOut: "退出中..."
+      }
     },
     common: {
       refresh: "刷新",
@@ -411,7 +436,7 @@ export const messages = {
         code: "编码",
         name: "名称",
         type: "类型",
-        jdbcUrl: "JDBC 地址",
+        jdbcUrl: "连接地址",
         username: "用户名",
         password: "密码",
         status: "状态",
@@ -422,8 +447,8 @@ export const messages = {
           codeInvalid: "数据源编码长度需为 2-64 位，必须以字母开头，并且只能包含字母、数字、_ 或 -",
           nameRequired: "请输入数据源名称",
           typeRequired: "请输入数据源类型",
-          jdbcRequired: "请输入 JDBC 地址",
-          jdbcInvalid: "JDBC 地址必须以 jdbc: 开头",
+          jdbcRequired: "请输入连接地址",
+          jdbcInvalid: "连接地址必须以 jdbc: 开头",
           usernameRequired: "请输入用户名"
         }
       },
@@ -431,7 +456,7 @@ export const messages = {
         code: "编码",
         name: "名称",
         type: "类型",
-        jdbcUrl: "JDBC 地址",
+        jdbcUrl: "连接地址",
         username: "用户名",
         status: "状态",
         actions: "操作"
@@ -447,18 +472,22 @@ export const messages = {
       deleted: "归档分组已删除。",
       statusUpdated: "归档分组状态已更新。",
       triggered: "归档任务 #{id} 已提交。",
+      cancelSubmitted: "已提交任务 #{id} 的取消请求。",
       saveFailed: "保存失败",
       loadFailed: "加载归档分组失败",
       actionFailed: "操作失败",
       deleteConfirm: "确认删除该归档分组吗？",
       items: "明细",
       trigger: "触发",
+      viewTask: "查看归档任务",
       columns: {
         code: "编码",
         name: "名称",
         source: "源数据源",
         target: "目标数据源",
         status: "状态",
+        activeTask: "当前任务",
+        activeTaskStartTime: "任务开始时间",
         actions: "操作"
       },
       form: {
@@ -521,6 +550,15 @@ export const messages = {
         }
       }
     },
+    archiveGroupDetail: {
+      title: "归档分组详情",
+      summary: "概览",
+      recentTasks: "最近任务",
+      openDetail: "打开详情",
+      viewTask: "查看任务",
+      notFound: "未找到归档分组。",
+      emptyTasks: "暂无最近任务。"
+    },
     user: {
       title: "用户管理",
       new: "新建用户",
@@ -563,23 +601,23 @@ export const messages = {
     },
     task: {
       title: "归档任务",
-      emptyLoading: "正在加载任务...",
-      empty: "暂无任务记录。",
-      loadFailed: "加载任务失败",
-      detailTitle: "任务详情",
-      detailLoading: "正在加载任务详情...",
-      detailEmpty: "未找到任务。",
-      detailLoadFailed: "加载任务详情失败",
-      logsLoadFailed: "加载任务日志失败",
-      invalidId: "任务 ID 无效。",
-      cancelAction: "取消任务",
+      emptyLoading: "正在加载归档任务...",
+      empty: "暂无归档任务记录。",
+      loadFailed: "加载归档任务失败",
+      detailTitle: "归档任务详情",
+      detailLoading: "正在加载归档任务详情...",
+      detailEmpty: "未找到归档任务。",
+      detailLoadFailed: "加载归档任务详情失败",
+      logsLoadFailed: "加载归档任务日志失败",
+      invalidId: "归档任务 ID 无效。",
+      cancelAction: "取消归档任务",
       cancelling: "取消中...",
-      cancelConfirm: "确认取消任务 #{id} 吗？",
+      cancelConfirm: "确认取消归档任务 #{id} 吗？",
       cancelSubmitted: "已提交取消请求。",
-      cancelFailed: "取消失败",
-      logs: "日志",
-      logEmptyLoading: "正在加载日志...",
-      logEmpty: "暂无日志记录。",
+      cancelFailed: "取消归档任务失败",
+      logs: "归档任务日志",
+      logEmptyLoading: "正在加载归档任务日志...",
+      logEmpty: "暂无归档任务日志。",
       pager: "第 {page} / {totalPages} 页 · 共 {total} 条",
       filters: {
         all: "全部"
@@ -615,6 +653,10 @@ export const messages = {
     status: {
       enabled: "已启用",
       disabled: "已停用"
+    },
+    workTab: {
+      groupDetail: "分组详情",
+      task: "任务"
     }
   }
 } as const;
