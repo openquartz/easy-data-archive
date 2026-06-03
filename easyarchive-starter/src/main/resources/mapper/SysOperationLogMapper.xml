@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openquartz.easyarchive.starter.mapper.SysOperationLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.starter.model.entity.SysOperationLog">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="module_code" property="moduleCode"/>
+        <result column="action_code" property="actionCode"/>
+        <result column="button_name" property="buttonName"/>
+        <result column="biz_type" property="bizType"/>
+        <result column="biz_id" property="bizId"/>
+        <result column="biz_key" property="bizKey"/>
+        <result column="content" property="content"/>
+        <result column="request_uri" property="requestUri"/>
+        <result column="request_method" property="requestMethod"/>
+        <result column="request_param" property="requestParam"/>
+        <result column="response_code" property="responseCode"/>
+        <result column="result_status" property="resultStatus"/>
+        <result column="cost_ms" property="costMs"/>
+        <result column="client_ip" property="clientIp"/>
+        <result column="error_message" property="errorMessage"/>
+        <result column="operate_time" property="operateTime"/>
+        <result column="created_time" property="createdTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.openquartz.easyarchive.starter.model.entity.SysOperationLog"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_operation_log (
+            user_id, module_code, action_code, button_name, biz_type, biz_id, biz_key,
+            content, request_uri, request_method, request_param, response_code, result_status,
+            cost_ms, client_ip, error_message, operate_time
+        ) VALUES (
+            #{userId}, #{moduleCode}, #{actionCode}, #{buttonName}, #{bizType}, #{bizId}, #{bizKey},
+            #{content}, #{requestUri}, #{requestMethod}, #{requestParam}, #{responseCode}, #{resultStatus},
+            #{costMs}, #{clientIp}, #{errorMessage}, #{operateTime}
+        )
+    </insert>
+
+</mapper>

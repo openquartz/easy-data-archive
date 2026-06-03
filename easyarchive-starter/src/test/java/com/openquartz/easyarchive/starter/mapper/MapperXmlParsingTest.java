@@ -19,6 +19,7 @@ class MapperXmlParsingTest {
 
         factoryBean.setDataSource(dataSource);
         factoryBean.setMapperLocations(
+                resolver.getResource("classpath:mapper/SysOperationLogMapper.xml"),
                 resolver.getResource("classpath:mapper/ArchiveGroupItemByIdMapper.xml"),
                 resolver.getResource("classpath:mapper/ArchiveGroupItemByTimeMapper.xml")
         );
