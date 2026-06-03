@@ -1,6 +1,10 @@
 package com.openquartz.easyarchive.starter.controller;
 
-import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
+import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupItemStatsView;
+import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
+import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupTaskStatsView;
+import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
 import com.openquartz.easyarchive.starter.security.JwtAuthenticationEntryPoint;
 import com.openquartz.easyarchive.starter.security.JwtTokenUtil;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupExecutionService;
@@ -10,13 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -44,10 +52,14 @@ class ArchiveGroupControllerContractTest {
 
     @Test
     void shouldListArchiveGroupsWithStableEnvelope() throws Exception {
-        ArchiveGroup group = new ArchiveGroup();
+        ArchiveGroupView group = new ArchiveGroupView();
         group.setId(10L);
         group.setGroupCode("ORDER_ARCHIVE");
         group.setGroupName("Order Archive");
+        group.setActiveTaskId(88L);
+        group.setActiveTaskStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
+        group.setCanTrigger(false);
+        group.setCanCancelActiveTask(true);
         when(groupService.findAll(null)).thenReturn(Collections.singletonList(group));
 
         mockMvc.perform(get("/api/v1/archive/groups"))
@@ -55,6 +67,76 @@ class ArchiveGroupControllerContractTest {
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].id").value(10))
-                .andExpect(jsonPath("$.data[0].groupCode").value("ORDER_ARCHIVE"));
+                .andExpect(jsonPath("$.data[0].groupCode").value("ORDER_ARCHIVE"))
+                .andExpect(jsonPath("$.data[0].activeTaskId").value(88))
+                .andExpect(jsonPath("$.data[0].activeTaskStatus").value(ArchiveGroupExecuteTask.STATUS_RUNNING))
+                .andExpect(jsonPath("$.data[0].canTrigger").value(false))
+                .andExpect(jsonPath("$.data[0].canCancelActiveTask").value(true));
+    }
+
+    @Test
+    void shouldCancelActiveTaskFromGroupEndpoint() throws Exception {
+        ArchiveGroupExecuteTask task = new ArchiveGroupExecuteTask();
+        task.setId(88L);
+        task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_CANCELLING);
+        when(executionService.cancelActiveTask(eq(10L), any())).thenReturn(task);
+
+        mockMvc.perform(post("/api/v1/archive/groups/10/cancel-active-task")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cancelReason\":\"manual stop\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(88))
+                .andExpect(jsonPath("$.data.executeStatus").value(ArchiveGroupExecuteTask.STATUS_CANCELLING));
+    }
+
+    @Test
+    void shouldGetArchiveGroupOverviewWithStableEnvelope() throws Exception {
+        ArchiveGroupView group = new ArchiveGroupView();
+        group.setId(10L);
+        group.setGroupCode("ORDER_ARCHIVE");
+        group.setGroupName("Order Archive");
+
+        ArchiveGroupItemStatsView itemStats = new ArchiveGroupItemStatsView();
+        itemStats.setTotalCount(6L);
+        itemStats.setEnabledCount(4L);
+        itemStats.setDisabledCount(2L);
+        itemStats.setIdTypeCount(3L);
+        itemStats.setTimeTypeCount(3L);
+
+        ArchiveGroupTaskStatsView taskStats = new ArchiveGroupTaskStatsView();
+        taskStats.setTotalCount(20L);
+        taskStats.setSuccessCount(15L);
+        taskStats.setFailedCount(2L);
+        taskStats.setRunningCount(1L);
+        taskStats.setLastExecuteStatus(ArchiveGroupExecuteTask.STATUS_SUCCESS);
+        taskStats.setLastExecuteTime(1704067200000L);
+
+        ArchiveGroupExecuteTask recentTask = new ArchiveGroupExecuteTask();
+        recentTask.setId(99L);
+        recentTask.setGroupId(10L);
+        recentTask.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
+
+        ArchiveGroupOverviewView overview = new ArchiveGroupOverviewView();
+        overview.setGroup(group);
+        overview.setItemStats(itemStats);
+        overview.setTaskStats(taskStats);
+        overview.setRecentTasks(Collections.singletonList(recentTask));
+
+        when(groupService.findOverview(10L)).thenReturn(overview);
+
+        mockMvc.perform(get("/api/v1/archive/groups/10/overview"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.group.id").value(10))
+                .andExpect(jsonPath("$.data.group.groupCode").value("ORDER_ARCHIVE"))
+                .andExpect(jsonPath("$.data.itemStats.totalCount").value(6))
+                .andExpect(jsonPath("$.data.itemStats.idTypeCount").value(3))
+                .andExpect(jsonPath("$.data.taskStats.totalCount").value(20))
+                .andExpect(jsonPath("$.data.taskStats.lastExecuteStatus").value(ArchiveGroupExecuteTask.STATUS_SUCCESS))
+                .andExpect(jsonPath("$.data.taskStats.lastExecuteTime").value(1704067200000L))
+                .andExpect(jsonPath("$.data.recentTasks").isArray())
+                .andExpect(jsonPath("$.data.recentTasks[0].id").value(99))
+                .andExpect(jsonPath("$.data.recentTasks[0].groupId").value(10));
     }
 }

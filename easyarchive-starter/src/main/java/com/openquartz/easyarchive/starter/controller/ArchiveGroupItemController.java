@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.starter.controller;
 
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemById;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
+import com.openquartz.easyarchive.starter.annotation.OperationLog;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupItemSummary;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupItemByIdService;
@@ -58,12 +59,14 @@ public class ArchiveGroupItemController {
     }
 
     @PostMapping("/id")
+    @OperationLog(value = "新增分组项", module = "ARCHIVE_GROUP_ITEM_ID", action = "CREATE", button = "新增分组项")
     public ApiResponse<ArchiveGroupItemById> createIdItem(@PathVariable Long groupId,
                                                           @RequestBody ArchiveGroupItemById item) {
         return ApiResponse.success(idService.create(groupId, item));
     }
 
     @PutMapping("/id/{itemId}")
+    @OperationLog(value = "编辑分组项", module = "ARCHIVE_GROUP_ITEM_ID", action = "UPDATE", button = "编辑分组项")
     public ApiResponse<ArchiveGroupItemById> updateIdItem(@PathVariable Long groupId,
                                                           @PathVariable Long itemId,
                                                           @RequestBody ArchiveGroupItemById item) {
@@ -71,6 +74,7 @@ public class ArchiveGroupItemController {
     }
 
     @PatchMapping("/id/{itemId}/status")
+    @OperationLog(value = "修改分组项状态", module = "ARCHIVE_GROUP_ITEM_ID", action = "STATUS", button = "修改分组项状态")
     public ApiResponse<?> updateIdStatus(@PathVariable Long groupId,
                                          @PathVariable Long itemId,
                                          @RequestParam Integer enableStatus) {
@@ -79,6 +83,7 @@ public class ArchiveGroupItemController {
     }
 
     @DeleteMapping("/id/{itemId}")
+    @OperationLog(value = "删除分组项", module = "ARCHIVE_GROUP_ITEM_ID", action = "DELETE", button = "删除分组项")
     public ApiResponse<?> deleteIdItem(@PathVariable Long groupId, @PathVariable Long itemId) {
         idService.delete(groupId, itemId);
         return ApiResponse.success();
@@ -90,12 +95,14 @@ public class ArchiveGroupItemController {
     }
 
     @PostMapping("/time")
+    @OperationLog(value = "新增分组项", module = "ARCHIVE_GROUP_ITEM_TIME", action = "CREATE", button = "新增分组项")
     public ApiResponse<ArchiveGroupItemByTime> createTimeItem(@PathVariable Long groupId,
                                                               @RequestBody ArchiveGroupItemByTime item) {
         return ApiResponse.success(timeService.create(groupId, item));
     }
 
     @PutMapping("/time/{itemId}")
+    @OperationLog(value = "编辑分组项", module = "ARCHIVE_GROUP_ITEM_TIME", action = "UPDATE", button = "编辑分组项")
     public ApiResponse<ArchiveGroupItemByTime> updateTimeItem(@PathVariable Long groupId,
                                                               @PathVariable Long itemId,
                                                               @RequestBody ArchiveGroupItemByTime item) {
@@ -103,6 +110,7 @@ public class ArchiveGroupItemController {
     }
 
     @PatchMapping("/time/{itemId}/status")
+    @OperationLog(value = "修改分组项状态", module = "ARCHIVE_GROUP_ITEM_TIME", action = "STATUS", button = "修改分组项状态")
     public ApiResponse<?> updateTimeStatus(@PathVariable Long groupId,
                                            @PathVariable Long itemId,
                                            @RequestParam Integer enableStatus) {
@@ -111,6 +119,7 @@ public class ArchiveGroupItemController {
     }
 
     @DeleteMapping("/time/{itemId}")
+    @OperationLog(value = "删除分组项", module = "ARCHIVE_GROUP_ITEM_TIME", action = "DELETE", button = "删除分组项")
     public ApiResponse<?> deleteTimeItem(@PathVariable Long groupId, @PathVariable Long itemId) {
         timeService.delete(groupId, itemId);
         return ApiResponse.success();

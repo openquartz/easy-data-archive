@@ -5,6 +5,8 @@ import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
+import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
+import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupItemOperationLogPresenter;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupItemByTimeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
     private final ArchiveGroupMapper groupMapper;
     private final ArchiveGroupItemByIdMapper idMapper;
     private final ArchiveGroupItemByTimeMapper timeMapper;
+    private final ArchiveGroupItemOperationLogPresenter archiveGroupItemOperationLogPresenter;
+    private final OperationLogRecorder operationLogRecorder;
 
     @Override
     public List<ArchiveGroupItemByTime> findByGroupId(Long groupId, Integer enableStatus) {
@@ -44,6 +48,7 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
         applyCreateDefaults(item);
         validateForSave(groupId, item, null, null);
         timeMapper.insert(item);
+        operationLogRecorder.record(archiveGroupItemOperationLogPresenter.buildTimeCreate(item));
         return item;
     }
 
@@ -59,6 +64,7 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
         mergeExisting(item, existing);
         validateForSave(groupId, item, itemId, existing);
         timeMapper.update(item);
+        operationLogRecorder.record(archiveGroupItemOperationLogPresenter.buildTimeUpdate(existing, item));
         return item;
     }
 
@@ -72,13 +78,16 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
             throw new IllegalArgumentException("启用归档明细时不能只清理源数据而不写入目标数据");
         }
         timeMapper.updateStatus(itemId, groupId, enableStatus);
+        ArchiveGroupItemByTime after = timeMapper.selectById(itemId, groupId);
+        operationLogRecorder.record(archiveGroupItemOperationLogPresenter.buildTimeStatusUpdate(existing, after));
     }
 
     @Override
     public void delete(Long groupId, Long itemId) {
         ensureGroupExists(groupId);
-        ensureItemExists(groupId, itemId);
+        ArchiveGroupItemByTime existing = ensureItemExists(groupId, itemId);
         timeMapper.deleteById(itemId, groupId);
+        operationLogRecorder.record(archiveGroupItemOperationLogPresenter.buildTimeDelete(existing));
     }
 
     private void validateForSave(Long groupId, ArchiveGroupItemByTime item, Long excludeId, ArchiveGroupItemByTime existing) {
