@@ -5,6 +5,8 @@ import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
+import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
+import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupItemOperationLogPresenter;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -25,7 +27,10 @@ class ArchiveGroupItemByTimeServiceImplTest {
     private final ArchiveGroupMapper groupMapper = mock(ArchiveGroupMapper.class);
     private final ArchiveGroupItemByIdMapper idMapper = mock(ArchiveGroupItemByIdMapper.class);
     private final ArchiveGroupItemByTimeMapper timeMapper = mock(ArchiveGroupItemByTimeMapper.class);
-    private final ArchiveGroupItemByTimeServiceImpl service = new ArchiveGroupItemByTimeServiceImpl(groupMapper, idMapper, timeMapper);
+    private final ArchiveGroupItemOperationLogPresenter archiveGroupItemOperationLogPresenter = mock(ArchiveGroupItemOperationLogPresenter.class);
+    private final OperationLogRecorder operationLogRecorder = mock(OperationLogRecorder.class);
+    private final ArchiveGroupItemByTimeServiceImpl service = new ArchiveGroupItemByTimeServiceImpl(groupMapper, idMapper, timeMapper,
+            archiveGroupItemOperationLogPresenter, operationLogRecorder);
 
     @Test
     void shouldRejectCleanWithoutWriteWhenEnabled() {
@@ -205,6 +210,7 @@ class ArchiveGroupItemByTimeServiceImplTest {
         service.updateStatus(10L, 20L, 1);
 
         verify(timeMapper).updateStatus(20L, 10L, 1);
+        verify(operationLogRecorder).record(any());
     }
 
     @Test
@@ -242,6 +248,7 @@ class ArchiveGroupItemByTimeServiceImplTest {
         service.delete(10L, 20L);
 
         verify(timeMapper).deleteById(20L, 10L);
+        verify(operationLogRecorder).record(any());
     }
 
     private static ArchiveGroup enabledGroup() {
