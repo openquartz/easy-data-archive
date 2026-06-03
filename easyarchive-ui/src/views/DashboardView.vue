@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { getDashboardOverviewApi, type DashboardOverview } from "../api/dashboard";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
 import { useI18n } from "../i18n";
+import EntityLink from "../components/EntityLink.vue";
 
 const loading = ref(false);
 const errorMessage = ref("");
@@ -86,8 +87,8 @@ void loadData();
             </thead>
             <tbody>
               <tr v-for="item in overview.recentTasks" :key="item.id">
-                <td>{{ item.id }}</td>
-                <td>{{ item.groupId }}</td>
+                <td><EntityLink type="task" :id="item.id">{{ item.id }}</EntityLink></td>
+                <td><EntityLink type="group" :id="item.groupId">{{ item.groupId }}</EntityLink></td>
                 <td><TaskStatusTag :status="item.executeStatus" /></td>
                 <td>{{ item.processedRecords ?? 0 }}</td>
                 <td>{{ item.processedSpeed ?? "-" }}</td>
@@ -116,8 +117,8 @@ void loadData();
             </thead>
             <tbody>
               <tr v-for="item in overview.failedTasks" :key="item.id">
-                <td>{{ item.id }}</td>
-                <td>{{ item.groupId }}</td>
+                <td><EntityLink type="task" :id="item.id">{{ item.id }}</EntityLink></td>
+                <td><EntityLink type="group" :id="item.groupId">{{ item.groupId }}</EntityLink></td>
                 <td><TaskStatusTag :status="item.executeStatus" /></td>
                 <td class="truncate" :title="item.errorMsg || '-'">{{ item.errorMsg || "-" }}</td>
                 <td>{{ item.startTime || "-" }}</td>
