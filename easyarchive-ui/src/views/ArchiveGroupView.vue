@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  cancelArchiveGroupActiveTaskApi,
   createArchiveGroupApi,
   deleteArchiveGroupApi,
   type ArchiveGroup,
@@ -9,38 +10,19 @@ import {
   updateArchiveGroupApi,
   updateArchiveGroupStatusApi
 } from "../api/archiveGroup";
-import {
-  createArchiveGroupItemByIdApi,
-  createArchiveGroupItemByTimeApi,
-  deleteArchiveGroupItemByIdApi,
-  deleteArchiveGroupItemByTimeApi,
-  getArchiveGroupItemByIdApi,
-  getArchiveGroupItemByTimeApi,
-  getArchiveGroupItemsApi,
-  type ArchiveGroupItemById,
-  type ArchiveGroupItemByIdPayload,
-  type ArchiveGroupItemByTime,
-  type ArchiveGroupItemByTimePayload,
-  type ArchiveGroupItemSummary,
-  updateArchiveGroupItemByIdApi,
-  updateArchiveGroupItemByIdStatusApi,
-  updateArchiveGroupItemByTimeApi,
-  updateArchiveGroupItemByTimeStatusApi
-} from "../api/archiveGroupItem";
 import { getDatasourcesApi, type Datasource } from "../api/datasource";
 import ArchiveGroupFormDialog from "../components/ArchiveGroupFormDialog.vue";
-import ArchiveGroupItemByIdFormDialog from "../components/ArchiveGroupItemByIdFormDialog.vue";
-import ArchiveGroupItemByTimeFormDialog from "../components/ArchiveGroupItemByTimeFormDialog.vue";
+import TaskStatusTag from "../components/TaskStatusTag.vue";
+import EntityLink from "../components/EntityLink.vue";
 import { archiveEnableStatusDictionary, getStatusLabel, getStatusTagClass } from "../utils/dictionaries";
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, ref } from "vue";
 import { useI18n } from "../i18n";
+import { useRouter } from "vue-router";
+import { createPolling } from "../utils/polling";
 
 const loading = ref(false);
-const itemLoading = ref(false);
 const groups = ref<ArchiveGroup[]>([]);
 const datasources = ref<Datasource[]>([]);
-const items = ref<ArchiveGroupItemSummary[]>([]);
-const selectedGroupId = ref<number | null>(null);
 const errorMessage = ref("");
 const successMessage = ref("");
 const actionErrorMessage = ref("");
@@ -51,23 +33,17 @@ const groupDialogVisible = ref(false);
 const groupDialogMode = ref<"create" | "edit">("create");
 const groupDialogSubmitting = ref(false);
 const activeGroup = ref<ArchiveGroup | null>(null);
-
-const idDialogVisible = ref(false);
-const timeDialogVisible = ref(false);
-const itemDialogMode = ref<"create" | "edit">("create");
-const itemDialogSubmitting = ref(false);
-const activeIdItem = ref<ArchiveGroupItemById | null>(null);
-const activeTimeItem = ref<ArchiveGroupItemByTime | null>(null);
 const { t } = useI18n();
+const router = useRouter();
 
-const selectedGroup = computed(() => groups.value.find((item) => item.id === selectedGroupId.value) || null);
 const groupEmptyText = computed(() => (loading.value ? t("archiveGroup.emptyLoading") : t("archiveGroup.empty")));
-const itemEmptyText = computed(() => (itemLoading.value ? t("archiveGroup.item.emptyLoading") : t("archiveGroup.item.empty")));
+const hasActiveTasks = computed(() => groups.value.some((item) => typeof item.activeTaskId === "number"));
 
 const getActionKey = (action: string, id: number): string => `${action}:${id}`;
 const isRowBusy = (id: number): boolean => busyRows.value.has(id);
 const isActionBusy = (action: string, id: number): boolean => busyActions.value.has(getActionKey(action, id));
 const datasourceName = (id: number): string => datasources.value.find((item) => item.id === id)?.datasourceName || String(id);
+const datasourceCode = (id: number): string => datasources.value.find((item) => item.id === id)?.datasourceCode || "";
 
 async function loadData(): Promise<void> {
   loading.value = true;
@@ -76,36 +52,20 @@ async function loadData(): Promise<void> {
     const [groupResult, datasourceResult] = await Promise.all([getArchiveGroupsApi(), getDatasourcesApi()]);
     groups.value = groupResult;
     datasources.value = datasourceResult;
-    if (!selectedGroupId.value && groups.value.length) {
-      selectedGroupId.value = groups.value[0].id;
-    }
-    if (selectedGroupId.value) {
-      await loadItems(selectedGroupId.value);
-    } else {
-      items.value = [];
-    }
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : t("archiveGroup.loadFailed");
   } finally {
     loading.value = false;
+    syncPolling();
   }
 }
 
-async function loadItems(groupId: number): Promise<void> {
-  itemLoading.value = true;
-  actionErrorMessage.value = "";
-  try {
-    items.value = await getArchiveGroupItemsApi(groupId);
-  } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.item.loadFailed");
-  } finally {
-    itemLoading.value = false;
-  }
-}
-
-function selectGroup(group: ArchiveGroup): void {
-  selectedGroupId.value = group.id;
-  void loadItems(group.id);
+function openDetail(group: ArchiveGroup): void {
+  void router.push({
+    name: "archive-group-detail",
+    params: { id: group.id },
+    query: { title: `${t("archiveGroupDetail.title")} - ${group.groupName}` }
+  });
 }
 
 function openCreateGroup(): void {
@@ -129,8 +89,7 @@ async function submitGroup(payload: ArchiveGroupPayload): Promise<void> {
   actionErrorMessage.value = "";
   try {
     if (groupDialogMode.value === "create") {
-      const created = await createArchiveGroupApi(payload);
-      selectedGroupId.value = created.id;
+      await createArchiveGroupApi(payload);
       successMessage.value = t("archiveGroup.created");
     } else if (activeGroup.value) {
       await updateArchiveGroupApi(activeGroup.value.id, payload);
@@ -159,9 +118,6 @@ async function deleteGroup(group: ArchiveGroup): Promise<void> {
   }
   await runGroupAction("delete", group.id, async () => {
     await deleteArchiveGroupApi(group.id);
-    if (selectedGroupId.value === group.id) {
-      selectedGroupId.value = null;
-    }
     successMessage.value = t("archiveGroup.deleted");
     await loadData();
   });
@@ -173,6 +129,28 @@ async function triggerGroup(group: ArchiveGroup): Promise<void> {
     successMessage.value = t("archiveGroup.triggered").replace("{id}", String(task.id));
     await loadData();
   });
+}
+
+async function cancelGroupTask(group: ArchiveGroup): Promise<void> {
+  if (!group.activeTaskId) {
+    return;
+  }
+  const confirmed = window.confirm(t("task.cancelConfirm", { id: group.activeTaskId }));
+  if (!confirmed) {
+    return;
+  }
+  await runGroupAction("cancelTask", group.id, async () => {
+    const task = await cancelArchiveGroupActiveTaskApi(group.id);
+    successMessage.value = t("archiveGroup.cancelSubmitted").replace("{id}", String(task.id));
+    await loadData();
+  });
+}
+
+function viewTask(group: ArchiveGroup): void {
+  if (!group.activeTaskId) {
+    return;
+  }
+  void router.push({ name: "task-detail", params: { taskId: group.activeTaskId } });
 }
 
 async function runGroupAction(action: string, id: number, handler: () => Promise<void>): Promise<void> {
@@ -194,107 +172,21 @@ async function runGroupAction(action: string, id: number, handler: () => Promise
   }
 }
 
-function openCreateIdItem(): void {
-  itemDialogMode.value = "create";
-  activeIdItem.value = null;
-  idDialogVisible.value = true;
-}
+const poller = createPolling(loadData, { intervalMs: 5000, immediate: false });
 
-function openCreateTimeItem(): void {
-  itemDialogMode.value = "create";
-  activeTimeItem.value = null;
-  timeDialogVisible.value = true;
-}
-
-async function openEditItem(item: ArchiveGroupItemSummary): Promise<void> {
-  if (!selectedGroupId.value) {
+function syncPolling(): void {
+  if (hasActiveTasks.value) {
+    poller.start();
     return;
   }
-  itemDialogMode.value = "edit";
-  actionErrorMessage.value = "";
-  try {
-    if (item.itemType === "ID") {
-      activeIdItem.value = await getArchiveGroupItemByIdApi(selectedGroupId.value, item.id);
-      idDialogVisible.value = true;
-    } else {
-      activeTimeItem.value = await getArchiveGroupItemByTimeApi(selectedGroupId.value, item.id);
-      timeDialogVisible.value = true;
-    }
-  } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.item.loadFailed");
-  }
-}
-
-async function submitIdItem(payload: ArchiveGroupItemByIdPayload): Promise<void> {
-  if (!selectedGroupId.value || itemDialogSubmitting.value) {
-    return;
-  }
-  itemDialogSubmitting.value = true;
-  try {
-    if (itemDialogMode.value === "create") {
-      await createArchiveGroupItemByIdApi(selectedGroupId.value, payload);
-    } else if (activeIdItem.value) {
-      await updateArchiveGroupItemByIdApi(selectedGroupId.value, activeIdItem.value.id, payload);
-    }
-    idDialogVisible.value = false;
-    successMessage.value = t("archiveGroup.item.saved");
-    await loadItems(selectedGroupId.value);
-  } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.item.saveFailed");
-  } finally {
-    itemDialogSubmitting.value = false;
-  }
-}
-
-async function submitTimeItem(payload: ArchiveGroupItemByTimePayload): Promise<void> {
-  if (!selectedGroupId.value || itemDialogSubmitting.value) {
-    return;
-  }
-  itemDialogSubmitting.value = true;
-  try {
-    if (itemDialogMode.value === "create") {
-      await createArchiveGroupItemByTimeApi(selectedGroupId.value, payload);
-    } else if (activeTimeItem.value) {
-      await updateArchiveGroupItemByTimeApi(selectedGroupId.value, activeTimeItem.value.id, payload);
-    }
-    timeDialogVisible.value = false;
-    successMessage.value = t("archiveGroup.item.saved");
-    await loadItems(selectedGroupId.value);
-  } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.item.saveFailed");
-  } finally {
-    itemDialogSubmitting.value = false;
-  }
-}
-
-async function toggleItemStatus(item: ArchiveGroupItemSummary): Promise<void> {
-  if (!selectedGroupId.value) {
-    return;
-  }
-  const nextStatus = item.enableStatus === 0 ? 1 : 0;
-  if (item.itemType === "ID") {
-    await updateArchiveGroupItemByIdStatusApi(selectedGroupId.value, item.id, nextStatus);
-  } else {
-    await updateArchiveGroupItemByTimeStatusApi(selectedGroupId.value, item.id, nextStatus);
-  }
-  successMessage.value = t("archiveGroup.item.statusUpdated");
-  await loadItems(selectedGroupId.value);
-}
-
-async function deleteItem(item: ArchiveGroupItemSummary): Promise<void> {
-  if (!selectedGroupId.value || !window.confirm(t("archiveGroup.item.deleteConfirm"))) {
-    return;
-  }
-  if (item.itemType === "ID") {
-    await deleteArchiveGroupItemByIdApi(selectedGroupId.value, item.id);
-  } else {
-    await deleteArchiveGroupItemByTimeApi(selectedGroupId.value, item.id);
-  }
-  successMessage.value = t("archiveGroup.item.deleted");
-  await loadItems(selectedGroupId.value);
+  poller.stop();
 }
 
 void loadData();
+
+onBeforeUnmount(() => {
+  poller.stop();
+});
 </script>
 
 <template>
@@ -322,84 +214,81 @@ void loadData();
             <th>{{ t("archiveGroup.columns.source") }}</th>
             <th>{{ t("archiveGroup.columns.target") }}</th>
             <th>{{ t("archiveGroup.columns.status") }}</th>
+            <th>{{ t("archiveGroup.columns.activeTask") }}</th>
+            <th>{{ t("archiveGroup.columns.activeTaskStartTime") }}</th>
             <th>{{ t("archiveGroup.columns.actions") }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="group in groups" :key="group.id" :class="{ selected: selectedGroupId === group.id }">
-            <td>{{ group.groupCode }}</td>
+          <tr v-for="group in groups" :key="group.id">
+            <td><EntityLink type="group" :id="group.id" :title="group.groupName">{{ group.groupCode }}</EntityLink></td>
             <td>{{ group.groupName }}</td>
-            <td>{{ datasourceName(group.sourceDatasourceId) }}</td>
-            <td>{{ datasourceName(group.targetDatasourceId) }}</td>
+            <td><EntityLink type="datasource" :id="group.sourceDatasourceId">{{ datasourceName(group.sourceDatasourceId) }}</EntityLink></td>
+            <td><EntityLink type="datasource" :id="group.targetDatasourceId">{{ datasourceName(group.targetDatasourceId) }}</EntityLink></td>
             <td>
               <span :class="getStatusTagClass(archiveEnableStatusDictionary, group.enableStatus)">
                 {{ getStatusLabel(archiveEnableStatusDictionary, group.enableStatus) }}
               </span>
             </td>
+            <td>
+              <TaskStatusTag v-if="group.activeTaskId" :status="group.activeTaskStatus" />
+              <span v-else>-</span>
+            </td>
+            <td>{{ group.activeTaskStartTime || "-" }}</td>
             <td class="row-actions">
-              <button class="btn btn--subtle" :disabled="isRowBusy(group.id)" @click="selectGroup(group)">{{ t("archiveGroup.items") }}</button>
-              <button class="btn btn--subtle" :disabled="isRowBusy(group.id)" @click="openEditGroup(group)">{{ t("common.edit") }}</button>
-              <button class="btn btn--subtle" :disabled="isRowBusy(group.id)" @click="toggleGroupStatus(group)">
+              <button class="btn btn--subtle" :disabled="isRowBusy(group.id)" @click.stop="openDetail(group)">
+                {{ t("archiveGroupDetail.openDetail") }}
+              </button>
+              <button
+                class="btn btn--subtle"
+                :disabled="isRowBusy(group.id) || !!group.activeTaskId"
+                @click.stop="openEditGroup(group)"
+              >
+                {{ t("common.edit") }}
+              </button>
+              <button
+                class="btn btn--subtle"
+                :disabled="isRowBusy(group.id) || !!group.activeTaskId"
+                @click.stop="toggleGroupStatus(group)"
+              >
                 {{ group.enableStatus === 0 ? t("common.disable") : t("common.enable") }}
               </button>
-              <button class="btn btn--subtle" :disabled="isRowBusy(group.id)" @click="triggerGroup(group)">{{ t("archiveGroup.trigger") }}</button>
-              <button class="btn btn--subtle" :disabled="isRowBusy(group.id)" @click="deleteGroup(group)">{{ t("common.delete") }}</button>
+              <button
+                v-if="group.canTrigger !== false"
+                class="btn btn--subtle"
+                :disabled="isRowBusy(group.id) || !group.canTrigger"
+                @click.stop="triggerGroup(group)"
+              >
+                {{ t("archiveGroup.trigger") }}
+              </button>
+              <button
+                v-if="group.activeTaskId"
+                class="btn btn--subtle"
+                :disabled="isRowBusy(group.id) || !group.canCancelActiveTask || group.activeTaskStatus === 4"
+                @click.stop="cancelGroupTask(group)"
+              >
+                {{ group.activeTaskStatus === 4 ? t("task.cancelling") : t("task.cancelAction") }}
+              </button>
+              <button
+                v-if="group.activeTaskId"
+                class="btn btn--subtle"
+                :disabled="isRowBusy(group.id)"
+                @click.stop="viewTask(group)"
+              >
+                {{ t("archiveGroup.viewTask") }}
+              </button>
+              <button
+                class="btn btn--subtle"
+                :disabled="isRowBusy(group.id) || !!group.activeTaskId"
+                @click.stop="deleteGroup(group)"
+              >
+                {{ t("common.delete") }}
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <section class="page-card archive-items">
-      <header class="page-toolbar">
-        <h2>{{ selectedGroup ? selectedGroup.groupName : t("archiveGroup.item.title") }}</h2>
-        <div class="actions">
-          <button class="btn btn--subtle" :disabled="!selectedGroupId || itemLoading" @click="selectedGroupId && loadItems(selectedGroupId)">
-            {{ t("common.refresh") }}
-          </button>
-          <button class="btn btn--primary" :disabled="!selectedGroupId" @click="openCreateIdItem">{{ t("archiveGroup.item.newId") }}</button>
-          <button class="btn btn--primary" :disabled="!selectedGroupId" @click="openCreateTimeItem">{{ t("archiveGroup.item.newTime") }}</button>
-        </div>
-      </header>
-      <div v-if="itemLoading" class="empty">{{ itemEmptyText }}</div>
-      <div v-else-if="!items.length" class="empty">{{ itemEmptyText }}</div>
-      <div v-else class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>{{ t("archiveGroup.item.type") }}</th>
-              <th>{{ t("archiveGroup.item.sourceTable") }}</th>
-              <th>{{ t("archiveGroup.item.targetTable") }}</th>
-              <th>{{ t("archiveGroup.item.priority") }}</th>
-              <th>{{ t("archiveGroup.item.stepCount") }}</th>
-              <th>{{ t("archiveGroup.item.status") }}</th>
-              <th>{{ t("common.actions") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in items" :key="`${item.itemType}:${item.id}`">
-              <td>{{ item.itemType }}</td>
-              <td>{{ item.sourceTable }}</td>
-              <td>{{ item.targetTable }}</td>
-              <td>{{ item.priority }}</td>
-              <td>{{ item.stepCount || "-" }}</td>
-              <td>
-                <span :class="getStatusTagClass(archiveEnableStatusDictionary, item.enableStatus)">
-                  {{ getStatusLabel(archiveEnableStatusDictionary, item.enableStatus) }}
-                </span>
-              </td>
-              <td class="row-actions">
-                <button class="btn btn--subtle" @click="openEditItem(item)">{{ t("common.edit") }}</button>
-                <button class="btn btn--subtle" @click="toggleItemStatus(item)">
-                  {{ item.enableStatus === 0 ? t("common.disable") : t("common.enable") }}
-                </button>
-                <button class="btn btn--subtle" @click="deleteItem(item)">{{ t("common.delete") }}</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
 
     <ArchiveGroupFormDialog
       :visible="groupDialogVisible"
@@ -410,32 +299,5 @@ void loadData();
       @close="groupDialogVisible = false"
       @submit="submitGroup"
     />
-    <ArchiveGroupItemByIdFormDialog
-      :visible="idDialogVisible"
-      :mode="itemDialogMode"
-      :initial-value="activeIdItem"
-      :submitting="itemDialogSubmitting"
-      @close="idDialogVisible = false"
-      @submit="submitIdItem"
-    />
-    <ArchiveGroupItemByTimeFormDialog
-      :visible="timeDialogVisible"
-      :mode="itemDialogMode"
-      :initial-value="activeTimeItem"
-      :submitting="itemDialogSubmitting"
-      @close="timeDialogVisible = false"
-      @submit="submitTimeItem"
-    />
   </section>
 </template>
-
-<style scoped>
-.selected {
-  background: rgba(40, 120, 96, 0.08);
-}
-
-.archive-items {
-  margin-top: 24px;
-  box-shadow: none;
-}
-</style>
