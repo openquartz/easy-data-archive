@@ -1,0 +1,551 @@
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { getArchiveGroupOverviewApi, type ArchiveGroup, type ArchiveGroupOverview } from "../api/archiveGroup";
+import {
+  createArchiveGroupItemByIdApi,
+  createArchiveGroupItemByTimeApi,
+  deleteArchiveGroupItemByIdApi,
+  deleteArchiveGroupItemByTimeApi,
+  getArchiveGroupItemByIdApi,
+  getArchiveGroupItemByTimeApi,
+  getArchiveGroupItemsApi,
+  type ArchiveGroupItemById,
+  type ArchiveGroupItemByIdPayload,
+  type ArchiveGroupItemByTime,
+  type ArchiveGroupItemByTimePayload,
+  type ArchiveGroupItemSummary,
+  updateArchiveGroupItemByIdApi,
+  updateArchiveGroupItemByIdStatusApi,
+  updateArchiveGroupItemByTimeApi,
+  updateArchiveGroupItemByTimeStatusApi
+} from "../api/archiveGroupItem";
+import ArchiveGroupItemByIdFormDialog from "../components/ArchiveGroupItemByIdFormDialog.vue";
+import ArchiveGroupItemByTimeFormDialog from "../components/ArchiveGroupItemByTimeFormDialog.vue";
+import TaskStatusTag from "../components/TaskStatusTag.vue";
+import { useI18n } from "../i18n";
+import EntityLink from "../components/EntityLink.vue";
+import { getDatasourcesApi, type Datasource } from "../api/datasource";
+import { archiveEnableStatusDictionary, getStatusLabel, getStatusTagClass, taskStatusDictionary } from "../utils/dictionaries";
+
+const route = useRoute();
+const router = useRouter();
+const { t } = useI18n();
+
+const loading = ref(false);
+const errorMessage = ref("");
+const actionErrorMessage = ref("");
+const successMessage = ref("");
+const notFound = ref(false);
+const group = ref<ArchiveGroup | null>(null);
+const items = ref<ArchiveGroupItemSummary[]>([]);
+const overview = ref<ArchiveGroupOverview | null>(null);
+const busyItemIds = ref(new Set<number>());
+const idDialogVisible = ref(false);
+const timeDialogVisible = ref(false);
+const idDialogMode = ref<"create" | "edit">("create");
+const timeDialogMode = ref<"create" | "edit">("create");
+const itemDialogSubmitting = ref(false);
+const activeIdItem = ref<ArchiveGroupItemById | null>(null);
+const activeTimeItem = ref<ArchiveGroupItemByTime | null>(null);
+let loadToken = 0;
+const datasources = ref<Datasource[]>([]);
+
+const groupId = computed(() => Number(route.params.id));
+const formattedLastExecuteTime = computed(() => formatTimestamp(overview.value?.taskStats.lastExecuteTime));
+
+function formatTimestamp(value?: number): string {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    return "-";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+  return date.toLocaleString();
+}
+
+function formatSwitchFlag(value?: number): string {
+  if (value === 0) {
+    return t("common.yes");
+  }
+  if (value === 1) {
+    return t("common.no");
+  }
+  return "-";
+}
+
+function datasourceName(id: number): string {
+  return datasources.value.find((item) => item.id === id)?.datasourceName || String(id);
+}
+
+async function syncTitle(title: string, token: number): Promise<void> {
+  if (token !== loadToken || route.query.title === title) {
+    return;
+  }
+  await router.replace({
+    query: {
+      ...route.query,
+      title
+    }
+  });
+}
+
+function isCurrentToken(token: number): boolean {
+  return token === loadToken;
+}
+
+function isItemBusy(itemId: number): boolean {
+  return busyItemIds.value.has(itemId);
+}
+
+function resetItemDialogs(): void {
+  idDialogVisible.value = false;
+  timeDialogVisible.value = false;
+  activeIdItem.value = null;
+  activeTimeItem.value = null;
+  itemDialogSubmitting.value = false;
+}
+
+async function loadDetail(): Promise<void> {
+  const token = ++loadToken;
+  loading.value = true;
+
+  if (!Number.isFinite(groupId.value) || groupId.value <= 0) {
+    if (!isCurrentToken(token)) {
+      return;
+    }
+    group.value = null;
+    items.value = [];
+    overview.value = null;
+    notFound.value = true;
+    errorMessage.value = t("archiveGroupDetail.notFound");
+    loading.value = false;
+    await syncTitle(t("archiveGroupDetail.title"), token);
+    return;
+  }
+
+  if (!isCurrentToken(token)) {
+    return;
+  }
+  notFound.value = false;
+  errorMessage.value = "";
+
+  try {
+    const [itemsResult, overviewResult, datasourceResult] = await Promise.all([
+      getArchiveGroupItemsApi(groupId.value),
+      getArchiveGroupOverviewApi(groupId.value),
+      getDatasourcesApi()
+    ]);
+
+    if (!isCurrentToken(token)) {
+      return;
+    }
+
+    group.value = overviewResult.group || null;
+    items.value = itemsResult;
+    overview.value = overviewResult;
+    datasources.value = datasourceResult;
+
+    const groupName = overviewResult.group?.groupName;
+    if (groupName) {
+      await syncTitle(`${t("archiveGroupDetail.title")} - ${groupName}`, token);
+    }
+  } catch (error) {
+    if (!isCurrentToken(token)) {
+      return;
+    }
+    group.value = null;
+    items.value = [];
+    overview.value = null;
+    const message = error instanceof Error ? error.message : t("archiveGroupDetail.notFound");
+    notFound.value = /404|not found|未找到/i.test(message);
+    errorMessage.value = notFound.value ? t("archiveGroupDetail.notFound") : message;
+    await syncTitle(t("archiveGroupDetail.title"), token);
+  } finally {
+    if (isCurrentToken(token)) {
+      loading.value = false;
+    }
+  }
+}
+
+function goBack(): void {
+  void router.push({ name: "archive-groups" });
+}
+
+function refresh(): void {
+  void loadDetail();
+}
+
+function viewTask(taskId?: number): void {
+  if (!taskId) {
+    return;
+  }
+  void router.push({ name: "task-detail", params: { taskId } });
+}
+
+function openCreateIdItem(): void {
+  actionErrorMessage.value = "";
+  activeIdItem.value = null;
+  idDialogMode.value = "create";
+  idDialogVisible.value = true;
+}
+
+function openCreateTimeItem(): void {
+  actionErrorMessage.value = "";
+  activeTimeItem.value = null;
+  timeDialogMode.value = "create";
+  timeDialogVisible.value = true;
+}
+
+async function openEditItem(item: ArchiveGroupItemSummary): Promise<void> {
+  if (!Number.isFinite(groupId.value) || groupId.value <= 0 || isItemBusy(item.id)) {
+    return;
+  }
+  busyItemIds.value.add(item.id);
+  actionErrorMessage.value = "";
+  try {
+    if (item.itemType === "ID") {
+      activeIdItem.value = await getArchiveGroupItemByIdApi(groupId.value, item.id);
+      idDialogMode.value = "edit";
+      idDialogVisible.value = true;
+      return;
+    }
+    activeTimeItem.value = await getArchiveGroupItemByTimeApi(groupId.value, item.id);
+    timeDialogMode.value = "edit";
+    timeDialogVisible.value = true;
+  } catch (error) {
+    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.item.loadFailed");
+  } finally {
+    busyItemIds.value.delete(item.id);
+  }
+}
+
+async function submitIdItem(payload: ArchiveGroupItemByIdPayload): Promise<void> {
+  if (!Number.isFinite(groupId.value) || groupId.value <= 0 || itemDialogSubmitting.value) {
+    return;
+  }
+  itemDialogSubmitting.value = true;
+  successMessage.value = "";
+  actionErrorMessage.value = "";
+  try {
+    if (idDialogMode.value === "create") {
+      await createArchiveGroupItemByIdApi(groupId.value, payload);
+    } else if (activeIdItem.value) {
+      await updateArchiveGroupItemByIdApi(groupId.value, activeIdItem.value.id, payload);
+    }
+    successMessage.value = t("archiveGroup.item.saved");
+    resetItemDialogs();
+    await loadDetail();
+  } catch (error) {
+    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.item.saveFailed");
+  } finally {
+    itemDialogSubmitting.value = false;
+  }
+}
+
+async function submitTimeItem(payload: ArchiveGroupItemByTimePayload): Promise<void> {
+  if (!Number.isFinite(groupId.value) || groupId.value <= 0 || itemDialogSubmitting.value) {
+    return;
+  }
+  itemDialogSubmitting.value = true;
+  successMessage.value = "";
+  actionErrorMessage.value = "";
+  try {
+    if (timeDialogMode.value === "create") {
+      await createArchiveGroupItemByTimeApi(groupId.value, payload);
+    } else if (activeTimeItem.value) {
+      await updateArchiveGroupItemByTimeApi(groupId.value, activeTimeItem.value.id, payload);
+    }
+    successMessage.value = t("archiveGroup.item.saved");
+    resetItemDialogs();
+    await loadDetail();
+  } catch (error) {
+    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.item.saveFailed");
+  } finally {
+    itemDialogSubmitting.value = false;
+  }
+}
+
+async function toggleItemStatus(item: ArchiveGroupItemSummary): Promise<void> {
+  if (!Number.isFinite(groupId.value) || groupId.value <= 0 || isItemBusy(item.id)) {
+    return;
+  }
+  busyItemIds.value.add(item.id);
+  successMessage.value = "";
+  actionErrorMessage.value = "";
+  try {
+    const enableStatus = item.enableStatus === 0 ? 1 : 0;
+    if (item.itemType === "ID") {
+      await updateArchiveGroupItemByIdStatusApi(groupId.value, item.id, enableStatus);
+    } else {
+      await updateArchiveGroupItemByTimeStatusApi(groupId.value, item.id, enableStatus);
+    }
+    successMessage.value = t("archiveGroup.item.statusUpdated");
+    await loadDetail();
+  } catch (error) {
+    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.item.saveFailed");
+  } finally {
+    busyItemIds.value.delete(item.id);
+  }
+}
+
+async function deleteItem(item: ArchiveGroupItemSummary): Promise<void> {
+  if (!Number.isFinite(groupId.value) || groupId.value <= 0 || isItemBusy(item.id)) {
+    return;
+  }
+  const confirmed = window.confirm(t("archiveGroup.item.deleteConfirm"));
+  if (!confirmed) {
+    return;
+  }
+  busyItemIds.value.add(item.id);
+  successMessage.value = "";
+  actionErrorMessage.value = "";
+  try {
+    if (item.itemType === "ID") {
+      await deleteArchiveGroupItemByIdApi(groupId.value, item.id);
+    } else {
+      await deleteArchiveGroupItemByTimeApi(groupId.value, item.id);
+    }
+    successMessage.value = t("archiveGroup.item.deleted");
+    await loadDetail();
+  } catch (error) {
+    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.item.saveFailed");
+  } finally {
+    busyItemIds.value.delete(item.id);
+  }
+}
+
+watch(
+  () => route.params.id,
+  () => {
+    resetItemDialogs();
+    successMessage.value = "";
+    actionErrorMessage.value = "";
+    void loadDetail();
+  },
+  { immediate: true }
+);
+</script>
+
+<template>
+  <section class="archive-group-detail-page">
+    <header class="page-card archive-group-detail-hero">
+      <div>
+        <p class="archive-group-detail-hero__eyebrow">{{ t("archiveGroupDetail.title") }}</p>
+        <h1>{{ group?.groupName || t("archiveGroupDetail.title") }}</h1>
+        <p class="archive-group-detail-hero__meta">
+          <span>{{ group?.groupCode || "-" }}</span>
+          <span v-if="group?.groupPath">{{ group.groupPath }}</span>
+        </p>
+      </div>
+      <div class="actions">
+        <button class="btn btn--subtle" @click="goBack">{{ t("common.back") }}</button>
+        <button class="btn btn--subtle" :disabled="loading" @click="refresh">{{ t("common.refresh") }}</button>
+        <button class="btn btn--primary" :disabled="!group?.activeTaskId" @click="viewTask(group?.activeTaskId)">
+          {{ t("archiveGroupDetail.viewTask") }}
+        </button>
+      </div>
+    </header>
+
+    <p v-if="successMessage" class="feedback">{{ successMessage }}</p>
+    <p v-if="actionErrorMessage" class="error">{{ actionErrorMessage }}</p>
+    <p v-if="errorMessage" :class="notFound ? 'empty' : 'error'">{{ errorMessage }}</p>
+    <div v-else-if="loading" class="empty">{{ t("common.loading") }}</div>
+
+    <template v-if="group && overview">
+      <section class="archive-group-detail-grid">
+        <article class="page-card">
+          <h2 class="section-title section-title--top">{{ t("archiveGroup.items") }}</h2>
+          <div class="detail-grid">
+            <p><strong>{{ t("archiveGroup.columns.code") }}:</strong> {{ group.groupCode }}</p>
+            <p><strong>{{ t("archiveGroup.columns.name") }}:</strong> {{ group.groupName }}</p>
+            <p>
+              <strong>{{ t("archiveGroup.columns.status") }}:</strong>
+              <span :class="getStatusTagClass(archiveEnableStatusDictionary, group.enableStatus)">
+                {{ getStatusLabel(archiveEnableStatusDictionary, group.enableStatus) }}
+              </span>
+            </p>
+            <p><strong>{{ t("archiveGroup.columns.source") }}:</strong> <EntityLink type="datasource" :id="group.sourceDatasourceId">{{ datasourceName(group.sourceDatasourceId) }}</EntityLink></p>
+            <p><strong>{{ t("archiveGroup.columns.target") }}:</strong> <EntityLink type="datasource" :id="group.targetDatasourceId">{{ datasourceName(group.targetDatasourceId) }}</EntityLink></p>
+            <p><strong>{{ t("archiveGroup.columns.activeTaskStartTime") }}:</strong> {{ group.activeTaskStartTime || "-" }}</p>
+            <p class="full-width"><strong>{{ t("common.remark") }}:</strong> {{ group.remark || "-" }}</p>
+          </div>
+        </article>
+
+        <article class="page-card">
+          <h2 class="section-title section-title--top">{{ t("archiveGroup.item.title") }}</h2>
+          <div class="archive-group-detail-stats">
+            <div class="metric-card">
+              <p class="metric-card__label">{{ t("archiveGroup.items") }}</p>
+              <p class="metric-card__value">{{ overview.itemStats.totalCount }}</p>
+            </div>
+            <div class="metric-card">
+              <p class="metric-card__label">{{ t("status.enabled") }}</p>
+              <p class="metric-card__value">{{ overview.itemStats.enabledCount }}</p>
+            </div>
+            <div class="metric-card">
+              <p class="metric-card__label">{{ t("status.disabled") }}</p>
+              <p class="metric-card__value">{{ overview.itemStats.disabledCount }}</p>
+            </div>
+            <div class="metric-card">
+              <p class="metric-card__label">ID</p>
+              <p class="metric-card__value">{{ overview.itemStats.idTypeCount }}</p>
+            </div>
+            <div class="metric-card">
+              <p class="metric-card__label">TIME</p>
+              <p class="metric-card__value">{{ overview.itemStats.timeTypeCount }}</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="page-card">
+        <header class="page-toolbar">
+          <div class="section-title-row">
+            <h2>{{ t("archiveGroup.item.title") }}</h2>
+            <span class="archive-group-detail-count">{{ items.length }}</span>
+          </div>
+          <div class="actions">
+            <button class="btn btn--subtle" :disabled="loading" @click="refresh">{{ t("common.refresh") }}</button>
+            <button class="btn btn--subtle" :disabled="loading" @click="openCreateIdItem">
+              {{ t("archiveGroup.item.newId") }}
+            </button>
+            <button class="btn btn--primary" :disabled="loading" @click="openCreateTimeItem">
+              {{ t("archiveGroup.item.newTime") }}
+            </button>
+          </div>
+        </header>
+        <div v-if="!items.length" class="empty">{{ t("archiveGroup.item.empty") }}</div>
+        <div v-else class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{ t("archiveGroup.item.type") }}</th>
+                <th>{{ t("archiveGroup.item.sourceTable") }}</th>
+                <th>{{ t("archiveGroup.item.targetTable") }}</th>
+                <th>{{ t("archiveGroup.item.priority") }}</th>
+                <th>{{ t("archiveGroup.item.stepCount") }}</th>
+                <th>{{ t("archiveGroup.item.enableWrite") }}</th>
+                <th>{{ t("archiveGroup.item.enableClean") }}</th>
+                <th>{{ t("archiveGroup.item.status") }}</th>
+                <th>{{ t("common.actions") }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in items" :key="`${item.itemType}:${item.id}`">
+                <td>{{ item.itemType }}</td>
+                <td>{{ item.sourceTable }}</td>
+                <td>{{ item.targetTable }}</td>
+                <td>{{ item.priority }}</td>
+                <td>{{ item.stepCount || "-" }}</td>
+                <td>{{ formatSwitchFlag(item.enableWrite) }}</td>
+                <td>{{ formatSwitchFlag(item.enableClean) }}</td>
+                <td>
+                  <span :class="getStatusTagClass(archiveEnableStatusDictionary, item.enableStatus)">
+                    {{ getStatusLabel(archiveEnableStatusDictionary, item.enableStatus) }}
+                  </span>
+                </td>
+                <td class="row-actions">
+                  <button class="btn btn--subtle" :disabled="isItemBusy(item.id)" @click="openEditItem(item)">
+                    {{ t("common.edit") }}
+                  </button>
+                  <button class="btn btn--subtle" :disabled="isItemBusy(item.id)" @click="toggleItemStatus(item)">
+                    {{ item.enableStatus === 0 ? t("common.disable") : t("common.enable") }}
+                  </button>
+                  <button class="btn btn--subtle" :disabled="isItemBusy(item.id)" @click="deleteItem(item)">
+                    {{ t("common.delete") }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="archive-group-detail-grid">
+        <article class="page-card">
+          <h2 class="section-title section-title--top">{{ t("archiveGroupDetail.summary") }}</h2>
+          <div class="archive-group-detail-stats">
+            <div class="metric-card">
+              <p class="metric-card__label">{{ t("task.title") }}</p>
+              <p class="metric-card__value">{{ overview.taskStats.totalCount }}</p>
+            </div>
+            <div class="metric-card">
+              <p class="metric-card__label">{{ t("task.status.success") }}</p>
+              <p class="metric-card__value">{{ overview.taskStats.successCount }}</p>
+            </div>
+            <div class="metric-card">
+              <p class="metric-card__label">{{ t("task.status.failed") }}</p>
+              <p class="metric-card__value">{{ overview.taskStats.failedCount }}</p>
+            </div>
+            <div class="metric-card">
+              <p class="metric-card__label">{{ t("task.status.running") }}</p>
+              <p class="metric-card__value">{{ overview.taskStats.runningCount }}</p>
+            </div>
+            <div class="metric-card">
+              <p class="metric-card__label">{{ t("task.columns.status") }}</p>
+              <p class="metric-card__value">
+                {{ getStatusLabel(taskStatusDictionary, overview.taskStats.lastExecuteStatus) }}
+              </p>
+            </div>
+            <div class="metric-card">
+              <p class="metric-card__label">{{ t("task.columns.start") }}</p>
+              <p class="metric-card__value archive-group-detail-metric-time">
+                {{ formattedLastExecuteTime }}
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="page-card">
+          <h2 class="section-title section-title--top">{{ t("archiveGroupDetail.recentTasks") }}</h2>
+          <div v-if="!overview.recentTasks.length" class="empty">{{ t("archiveGroupDetail.emptyTasks") }}</div>
+          <div v-else class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>{{ t("task.columns.id") }}</th>
+                  <th>{{ t("task.columns.status") }}</th>
+                  <th>{{ t("task.columns.start") }}</th>
+                  <th>{{ t("task.columns.end") }}</th>
+                  <th>{{ t("task.columns.processed") }}</th>
+                  <th>{{ t("common.actions") }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="task in overview.recentTasks" :key="task.id">
+                  <td><EntityLink type="task" :id="task.id">{{ task.id }}</EntityLink></td>
+                  <td><TaskStatusTag :status="task.executeStatus" /></td>
+                  <td>{{ task.startTime || "-" }}</td>
+                  <td>{{ task.endTime || "-" }}</td>
+                  <td>{{ task.processedRecords ?? "-" }}</td>
+                  <td class="row-actions">
+                    <button class="btn btn--subtle" @click="viewTask(task.id)">{{ t("archiveGroupDetail.viewTask") }}</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+    </template>
+
+    <ArchiveGroupItemByIdFormDialog
+      :visible="idDialogVisible"
+      :mode="idDialogMode"
+      :initial-value="activeIdItem"
+      :submitting="itemDialogSubmitting"
+      @close="resetItemDialogs"
+      @submit="submitIdItem"
+    />
+    <ArchiveGroupItemByTimeFormDialog
+      :visible="timeDialogVisible"
+      :mode="timeDialogMode"
+      :initial-value="activeTimeItem"
+      :submitting="itemDialogSubmitting"
+      @close="resetItemDialogs"
+      @submit="submitTimeItem"
+    />
+  </section>
+</template>
