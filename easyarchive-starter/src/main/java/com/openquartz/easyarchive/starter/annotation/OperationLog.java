@@ -21,6 +21,21 @@ public @interface OperationLog {
     String type() default "OTHER";
 
     /**
+     * 模块编码
+     */
+    String module() default "";
+
+    /**
+     * 动作编码
+     */
+    String action() default "";
+
+    /**
+     * 按钮名称
+     */
+    String button() default "";
+
+    /**
      * 是否记录参数
      */
     boolean logParams() default true;
