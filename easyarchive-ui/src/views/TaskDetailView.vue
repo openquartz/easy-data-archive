@@ -4,6 +4,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { cancelTaskApi, getTaskDetailApi, getTaskLogsApi, type TaskItem, type TaskLogItem } from "../api/task";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
 import { useI18n } from "../i18n";
+import EntityLink from "../components/EntityLink.vue";
 import { createPolling } from "../utils/polling";
 
 const route = useRoute();
@@ -26,6 +27,9 @@ const canCancel = computed(() => {
   const status = task.value?.executeStatus;
   return status === 0 || status === 1 || status === 4;
 });
+const cancelButtonText = computed(() =>
+  task.value?.executeStatus === 4 ? t("task.cancelling") : t("task.cancelAction")
+);
 const logTotalPages = computed(() => Math.max(1, Math.ceil(logTotal.value / logSize.value)));
 const emptyLogText = computed(() => (loadingLogs.value ? t("task.logEmptyLoading") : t("task.logEmpty")));
 const logPagerText = computed(() =>
@@ -63,7 +67,7 @@ async function loadAll(): Promise<void> {
 }
 
 async function cancelTask(): Promise<void> {
-  if (!canCancel.value || cancelling.value || !task.value) {
+  if (!canCancel.value || cancelling.value || !task.value || task.value.executeStatus === 4) {
     return;
   }
   const confirmed = window.confirm(t("task.cancelConfirm", { id: task.value.id }));
@@ -132,8 +136,8 @@ onBeforeUnmount(() => {
       <div class="actions">
         <button class="btn btn--subtle" @click="router.push({ name: 'tasks' })">{{ t("common.back") }}</button>
         <button class="btn btn--subtle" :disabled="loading || loadingLogs" @click="refresh">{{ t("common.refresh") }}</button>
-        <button class="btn btn--primary" :disabled="!canCancel || cancelling" @click="cancelTask">
-          {{ cancelling ? t("task.cancelling") : t("task.cancelAction") }}
+        <button class="btn btn--primary" :disabled="!canCancel || cancelling || task?.executeStatus === 4" @click="cancelTask">
+          {{ cancelling ? t("task.cancelling") : cancelButtonText }}
         </button>
       </div>
     </header>
@@ -145,7 +149,7 @@ onBeforeUnmount(() => {
     <div v-else-if="!task" class="empty">{{ t("task.detailEmpty") }}</div>
     <div v-else class="detail-grid">
       <p><strong>{{ t("task.columns.id") }}:</strong> {{ task.id }}</p>
-      <p><strong>{{ t("task.columns.groupId") }}:</strong> {{ task.groupId }}</p>
+      <p><strong>{{ t("task.columns.groupId") }}:</strong> <EntityLink type="group" :id="task.groupId">{{ task.groupId }}</EntityLink></p>
       <p><strong>{{ t("task.columns.status") }}:</strong> <TaskStatusTag :status="task.executeStatus" /></p>
       <p><strong>{{ t("task.columns.processed") }}:</strong> {{ task.processedRecords ?? 0 }}</p>
       <p><strong>{{ t("task.columns.speed") }}:</strong> {{ task.processedSpeed ?? "-" }}</p>
