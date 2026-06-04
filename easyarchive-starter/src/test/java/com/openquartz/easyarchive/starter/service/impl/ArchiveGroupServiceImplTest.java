@@ -132,6 +132,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldRejectEnabledNotificationWithoutChannelOnCreate() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setId(null);
         input.setNotifyEnabled(1);
@@ -143,6 +144,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldRejectEnabledNotificationWithoutWebhookOnCreate() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setId(null);
         input.setNotifyEnabled(1);
@@ -154,6 +156,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldAllowValidNotificationConfigOnCreate() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setId(null);
         input.setNotifyEnabled(1);
