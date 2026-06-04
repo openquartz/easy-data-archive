@@ -24,6 +24,9 @@ const form = reactive<ArchiveGroupPayload>({
   sourceDatasourceId: 0,
   targetDatasourceId: 0,
   enableStatus: 0,
+  notifyEnabled: 0,
+  notifyChannel: undefined,
+  notifyWebhookUrl: "",
   remark: ""
 });
 const errorMessage = ref("");
@@ -48,6 +51,9 @@ watch(
       form.targetDatasourceId = props.initialValue.targetDatasourceId;
       form.ownerUserId = props.initialValue.ownerUserId;
       form.enableStatus = props.initialValue.enableStatus ?? 0;
+      form.notifyEnabled = props.initialValue.notifyEnabled ?? 0;
+      form.notifyChannel = props.initialValue.notifyChannel;
+      form.notifyWebhookUrl = props.initialValue.notifyWebhookUrl || "";
       form.remark = props.initialValue.remark || "";
       return;
     }
@@ -60,6 +66,9 @@ watch(
     form.targetDatasourceId = 0;
     form.ownerUserId = undefined;
     form.enableStatus = 0;
+    form.notifyEnabled = 0;
+    form.notifyChannel = undefined;
+    form.notifyWebhookUrl = "";
     form.remark = "";
   },
   { immediate: true }
@@ -86,6 +95,14 @@ function validate(): boolean {
     errorMessage.value = t("archiveGroup.form.validation.targetRequired");
     return false;
   }
+  if (form.notifyEnabled === 1 && !form.notifyChannel) {
+    errorMessage.value = t("archiveGroup.form.validation.notifyChannelRequired");
+    return false;
+  }
+  if (form.notifyEnabled === 1 && !form.notifyWebhookUrl?.trim()) {
+    errorMessage.value = t("archiveGroup.form.validation.notifyWebhookRequired");
+    return false;
+  }
   return true;
 }
 
@@ -101,6 +118,7 @@ function handleSubmit(): void {
     ...form,
     groupCode: form.groupCode.trim(),
     groupName: form.groupName.trim(),
+    notifyWebhookUrl: form.notifyWebhookUrl?.trim(),
     remark: form.remark?.trim()
   });
 }
@@ -135,6 +153,25 @@ function handleSubmit(): void {
             <option :value="0">{{ t("status.enabled") }}</option>
             <option :value="1">{{ t("status.disabled") }}</option>
           </select>
+        </label>
+        <label>
+          {{ t("archiveGroup.form.notifyEnabled") }}
+          <select v-model.number="form.notifyEnabled" :disabled="submitting">
+            <option :value="0">{{ t("common.no") }}</option>
+            <option :value="1">{{ t("common.yes") }}</option>
+          </select>
+        </label>
+        <label>
+          {{ t("archiveGroup.form.notifyChannel") }}
+          <select v-model="form.notifyChannel" :disabled="submitting || form.notifyEnabled !== 1">
+            <option :value="undefined">{{ t("archiveGroup.form.selectNotifyChannel") }}</option>
+            <option value="FEISHU">{{ t("archiveGroup.form.notifyChannels.feishu") }}</option>
+            <option value="WECOM">{{ t("archiveGroup.form.notifyChannels.wecom") }}</option>
+          </select>
+        </label>
+        <label class="full-width">
+          {{ t("archiveGroup.form.notifyWebhookUrl") }}
+          <input v-model="form.notifyWebhookUrl" :disabled="submitting || form.notifyEnabled !== 1" />
         </label>
         <label class="full-width">{{ t("archiveGroup.form.remark") }}<textarea v-model="form.remark" :disabled="submitting" /></label>
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>

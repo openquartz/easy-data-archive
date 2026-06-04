@@ -17,6 +17,7 @@ import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupItemStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupTaskStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
+import com.openquartz.easyarchive.starter.model.enums.NotificationChannelEnum;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupOperationLogPresenter;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupService;
@@ -252,6 +253,12 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         if (group.getGroupName() != null) {
             group.setGroupName(group.getGroupName().trim());
         }
+        if (group.getNotifyChannel() != null) {
+            group.setNotifyChannel(group.getNotifyChannel().trim().toUpperCase());
+        }
+        if (group.getNotifyWebhookUrl() != null) {
+            group.setNotifyWebhookUrl(group.getNotifyWebhookUrl().trim());
+        }
         if (group.getGroupCode() == null || group.getGroupCode().isEmpty()) {
             throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_CODE_REQUIRED);
         }
@@ -263,6 +270,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         }
         validateDatasourceEnabled(group.getSourceDatasourceId(), "源归档连接必须为已启用状态");
         validateDatasourceEnabled(group.getTargetDatasourceId(), "目标归档连接必须为已启用状态");
+        validateNotificationConfig(group);
         ArchiveGroup existing = groupMapper.selectByCode(group.getGroupCode());
         if (existing != null && (create || !existing.getId().equals(group.getId()))) {
             throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_CODE_DUPLICATED);
@@ -283,6 +291,26 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     private void validateEnableStatus(Integer enableStatus) {
         if (EnableStatusEnum.fromCode(enableStatus) == null) {
             throw new StarterManageException(StarterErrorCode.ENABLE_STATUS_INVALID);
+        }
+    }
+
+    private void validateNotificationConfig(ArchiveGroup group) {
+        Integer notifyEnabled = group.getNotifyEnabled();
+        if (notifyEnabled == null) {
+            group.setNotifyEnabled(0);
+            return;
+        }
+        if (notifyEnabled != 0 && notifyEnabled != 1) {
+            throw new IllegalArgumentException("通知状态不合法");
+        }
+        if (notifyEnabled == 0) {
+            return;
+        }
+        if (!NotificationChannelEnum.supports(group.getNotifyChannel())) {
+            throw new IllegalArgumentException("通知渠道不能为空或不合法");
+        }
+        if (group.getNotifyWebhookUrl() == null || group.getNotifyWebhookUrl().isEmpty()) {
+            throw new IllegalArgumentException("通知地址不能为空");
         }
     }
 }
