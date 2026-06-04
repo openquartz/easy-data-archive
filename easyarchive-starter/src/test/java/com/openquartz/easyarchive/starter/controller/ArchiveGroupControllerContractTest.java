@@ -56,6 +56,9 @@ class ArchiveGroupControllerContractTest {
         group.setId(10L);
         group.setGroupCode("ORDER_ARCHIVE");
         group.setGroupName("Order Archive");
+        group.setNotifyEnabled(1);
+        group.setNotifyChannel("FEISHU");
+        group.setNotifyWebhookUrl("https://open.feishu.cn/open-apis/bot/hook/test");
         group.setActiveTaskId(88L);
         group.setActiveTaskStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
         group.setCanTrigger(false);
@@ -68,6 +71,9 @@ class ArchiveGroupControllerContractTest {
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].id").value(10))
                 .andExpect(jsonPath("$.data[0].groupCode").value("ORDER_ARCHIVE"))
+                .andExpect(jsonPath("$.data[0].notifyEnabled").value(1))
+                .andExpect(jsonPath("$.data[0].notifyChannel").value("FEISHU"))
+                .andExpect(jsonPath("$.data[0].notifyWebhookUrl").value("https://open.feishu.cn/open-apis/bot/hook/test"))
                 .andExpect(jsonPath("$.data[0].activeTaskId").value(88))
                 .andExpect(jsonPath("$.data[0].activeTaskStatus").value(ArchiveGroupExecuteTask.STATUS_RUNNING))
                 .andExpect(jsonPath("$.data[0].canTrigger").value(false))

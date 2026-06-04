@@ -170,6 +170,14 @@ export const messages = {
         targetDatasource: "Target Archive Connection",
         selectDatasource: "Select archive connection",
         status: "Status",
+        notifyEnabled: "Notify On Completion",
+        notifyChannel: "Notification Channel",
+        selectNotifyChannel: "Select notification channel",
+        notifyWebhookUrl: "Notification Webhook URL",
+        notifyChannels: {
+          feishu: "Feishu",
+          wecom: "WeCom"
+        },
         triggerMode: "Trigger Mode",
         remark: "Remark",
         validation: {
@@ -177,7 +185,9 @@ export const messages = {
           codeInvalid: "Group code must be 2-64 chars, start with a letter, and use letters, numbers, _ or -",
           nameRequired: "Group name is required",
           sourceRequired: "Source archive connection is required",
-          targetRequired: "Target archive connection is required"
+          targetRequired: "Target archive connection is required",
+          notifyChannelRequired: "Notification channel is required when completion notification is enabled",
+          notifyWebhookRequired: "Notification webhook URL is required when completion notification is enabled"
         }
       },
       item: {
@@ -553,6 +563,14 @@ export const messages = {
         targetDatasource: "目标归档连接",
         selectDatasource: "选择归档连接",
         status: "状态",
+        notifyEnabled: "执行完成通知",
+        notifyChannel: "通知方式",
+        selectNotifyChannel: "请选择通知方式",
+        notifyWebhookUrl: "通知地址",
+        notifyChannels: {
+          feishu: "飞书",
+          wecom: "企业微信"
+        },
         triggerMode: "触发模式",
         remark: "备注",
         validation: {
@@ -560,7 +578,9 @@ export const messages = {
           codeInvalid: "分组编码长度需为 2-64 位，必须以字母开头，并且只能包含字母、数字、_ 或 -",
           nameRequired: "请输入分组名称",
           sourceRequired: "请选择源归档连接",
-          targetRequired: "请选择目标归档连接"
+          targetRequired: "请选择目标归档连接",
+          notifyChannelRequired: "启用执行完成通知时必须选择通知方式",
+          notifyWebhookRequired: "启用执行完成通知时必须填写通知地址"
         }
       },
       item: {

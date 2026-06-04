@@ -14,6 +14,9 @@
         <result column="target_datasource_id" property="targetDatasourceId"/>
         <result column="owner_user_id" property="ownerUserId"/>
         <result column="enable_status" property="enableStatus"/>
+        <result column="notify_enabled" property="notifyEnabled"/>
+        <result column="notify_channel" property="notifyChannel"/>
+        <result column="notify_webhook_url" property="notifyWebhookUrl"/>
         <result column="remark" property="remark"/>
         <result column="created_time" property="createdTime"/>
         <result column="updated_time" property="updatedTime"/>
@@ -25,7 +28,8 @@
     <sql id="Base_Column_List">
         id, parent_id, group_code, group_name, group_path, group_level,
         source_datasource_id, target_datasource_id, owner_user_id, enable_status,
-        remark, created_time, updated_time, creator_id, updater_id, deleted
+        notify_enabled, notify_channel, notify_webhook_url, remark,
+        created_time, updated_time, creator_id, updater_id, deleted
     </sql>
 
     <sql id="Where_Clause">
@@ -41,10 +45,12 @@
         INSERT INTO ea_archive_group (
             parent_id, group_code, group_name, group_path, group_level,
             source_datasource_id, target_datasource_id, owner_user_id, enable_status,
+            notify_enabled, notify_channel, notify_webhook_url,
             remark, creator_id, updater_id
         ) VALUES (
             #{parentId}, #{groupCode}, #{groupName}, #{groupPath}, #{groupLevel},
             #{sourceDatasourceId}, #{targetDatasourceId}, #{ownerUserId}, #{enableStatus},
+            #{notifyEnabled}, #{notifyChannel}, #{notifyWebhookUrl},
             #{remark}, #{creatorId}, #{updaterId}
         )
     </insert>
@@ -61,6 +67,9 @@
             <if test="targetDatasourceId != null">target_datasource_id = #{targetDatasourceId},</if>
             <if test="ownerUserId != null">owner_user_id = #{ownerUserId},</if>
             <if test="enableStatus != null">enable_status = #{enableStatus},</if>
+            <if test="notifyEnabled != null">notify_enabled = #{notifyEnabled},</if>
+            <if test="notifyChannel != null">notify_channel = #{notifyChannel},</if>
+            <if test="notifyWebhookUrl != null">notify_webhook_url = #{notifyWebhookUrl},</if>
             <if test="remark != null">remark = #{remark},</if>
             <if test="updaterId != null">updater_id = #{updaterId},</if>
             updated_time = CURRENT_TIMESTAMP
