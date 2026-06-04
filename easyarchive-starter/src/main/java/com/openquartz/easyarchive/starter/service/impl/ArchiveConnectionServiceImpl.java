@@ -2,6 +2,8 @@ package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
 import com.openquartz.easyarchive.starter.model.enums.DatasourceTypeEnum;
@@ -72,7 +74,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
         dataPermissionService.assertAdmin();
         ArchiveConnection before = datasourceMapper.selectById(datasource.getId());
         if (before == null) {
-            throw new IllegalArgumentException("归档连接不存在");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
         }
         if (isConnectionConfigChanged(before, datasource)) {
             datasource.setStatus(DatasourceStatusEnum.UNTESTED.getCode());
@@ -94,7 +96,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
         dataPermissionService.assertAdmin();
         ArchiveConnection before = datasourceMapper.selectById(id);
         if (before == null) {
-            throw new IllegalArgumentException("归档连接不存在");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
         }
         validateStatusForManualUpdate(status);
         ArchiveConnection datasource = new ArchiveConnection();
@@ -126,23 +128,23 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
 
     private void validateStatusForManualUpdate(Integer status) {
         if (status == null) {
-            throw new IllegalArgumentException("归档连接状态不能为空");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_STATUS_REQUIRED);
         }
         if (!DatasourceStatusEnum.DISABLED.getCode().equals(status)) {
-            throw new IllegalStateException("请先测试归档连接，测试成功后系统会自动启用");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_STATUS_MANUAL_UPDATE_UNSUPPORTED);
         }
     }
 
     private ArchiveConnection prepareDatasourceForTest(ArchiveConnection datasource) {
         if (datasource == null) {
-            throw new IllegalArgumentException("归档连接不能为空");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_REQUIRED);
         }
         if (datasource.getId() == null) {
             return datasource;
         }
         ArchiveConnection persisted = datasourceMapper.selectById(datasource.getId());
         if (persisted == null) {
-            throw new IllegalArgumentException("归档连接不存在");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
         }
         ArchiveConnection merged = new ArchiveConnection();
         merged.setId(persisted.getId());

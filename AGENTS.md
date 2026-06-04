@@ -171,3 +171,11 @@ git commit -m "feat: add new data source implementation"
 # Push to remote
 git push origin feature/new-data-source
 ```
+
+## Exception And Magic Value Rules
+
+- Business and service exceptions must use project-defined error codes and custom exceptions.
+- Do not introduce new `IllegalArgumentException` or `IllegalStateException` in service-layer business logic.
+- Convert closed-set status, switch, type, and unit values to enums.
+- Convert technical thresholds and defaults to named constants.
+- Prefer asserting exception codes in tests instead of relying only on raw exception messages.

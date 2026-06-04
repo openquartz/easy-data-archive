@@ -5,12 +5,12 @@ import com.openquartz.easyarchive.core.expr.cmd.Command;
 import com.openquartz.easyarchive.core.expr.cmd.Result;
 import com.openquartz.easyarchive.common.exception.Asserts;
 import com.openquartz.easyarchive.common.exception.CommonErrorCode;
+import com.openquartz.easyarchive.common.exception.EasyArchiveException;
 import com.openquartz.easyarchive.common.util.StringUtils;
+import com.openquartz.easyarchive.core.exception.CoreErrorCode;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -26,7 +26,6 @@ public class RandomAlphaNumExecutor implements CommandExecutor {
     private static final List<Character> LOWER_CASE_SET;
     private static final List<Character> NUMBER_SET;
     private static final List<Character> TOTAL_SET;
-    private static final Map<String, List<Character>> CLASSIFY_MAP;
 
     private static final Random RANDOM = new Random();
 
@@ -56,12 +55,6 @@ public class RandomAlphaNumExecutor implements CommandExecutor {
         TOTAL_SET.addAll(UP_CASE_SET);
         TOTAL_SET.addAll(LOWER_CASE_SET);
         TOTAL_SET.addAll(NUMBER_SET);
-
-        CLASSIFY_MAP = new HashMap<>();
-        CLASSIFY_MAP.put("type1", UP_CASE_IGNORE_I_SET);
-        CLASSIFY_MAP.put("type2", UP_CASE_SET);
-        CLASSIFY_MAP.put("type3", LOWER_CASE_SET);
-        CLASSIFY_MAP.put("type4", NUMBER_SET);
     }
 
     @Override
@@ -76,13 +69,8 @@ public class RandomAlphaNumExecutor implements CommandExecutor {
     }
 
     private Character randGetCharacter(String type) {
-        List<Character> characterSet;
-        if (CLASSIFY_MAP.get(type) != null) {
-            characterSet = CLASSIFY_MAP.get(type);
-        } else {
-            characterSet = TOTAL_SET;
-        }
-        int index = RANDOM.nextInt(characterSet.size() - 1);
+        List<Character> characterSet = CharacterClass.resolveCharacters(type);
+        int index = RANDOM.nextInt(characterSet.size());
         return characterSet.get(index);
     }
 
@@ -96,5 +84,32 @@ public class RandomAlphaNumExecutor implements CommandExecutor {
     @Override
     public void init(Environment environment) {
 
+    }
+
+    private enum CharacterClass {
+        UPPERCASE_NO_I("UPPERCASE_NO_I", UP_CASE_IGNORE_I_SET),
+        UPPERCASE("UPPERCASE", UP_CASE_SET),
+        LOWERCASE("LOWERCASE", LOWER_CASE_SET),
+        NUMBER("NUMBER", NUMBER_SET);
+
+        private final String code;
+        private final List<Character> characters;
+
+        CharacterClass(String code, List<Character> characters) {
+            this.code = code;
+            this.characters = characters;
+        }
+
+        private static List<Character> resolveCharacters(String code) {
+            if (StringUtils.isBlank(code)) {
+                return TOTAL_SET;
+            }
+            return Arrays.stream(values())
+                .filter(item -> item.code.equals(code))
+                .findFirst()
+                .map(item -> item.characters)
+                .orElseThrow(() -> EasyArchiveException.withPlaceholders(
+                    CoreErrorCode.RANDOM_ALPHA_NUM_TYPE_UNSUPPORTED, code));
+        }
     }
 }

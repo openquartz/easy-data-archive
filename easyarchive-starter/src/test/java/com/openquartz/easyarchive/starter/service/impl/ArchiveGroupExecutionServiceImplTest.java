@@ -1,6 +1,8 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.common.entity.Pair;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.rule.ArchiveRuleLoader;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
@@ -51,7 +53,8 @@ class ArchiveGroupExecutionServiceImplTest {
         when(groupMapper.selectById(10L)).thenReturn(group);
         when(taskMapper.countActiveByGroupId(10L)).thenReturn(1);
 
-        assertThrows(IllegalStateException.class, () -> service.trigger(10L));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.trigger(10L));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_HAS_ACTIVE_TASK, error.getErrorCode());
         verify(taskMapper, never()).insert(any());
         verify(dispatcher, never()).dispatch(any(), any(), any());
     }
@@ -64,7 +67,8 @@ class ArchiveGroupExecutionServiceImplTest {
         when(idMapper.countEnabledByGroupId(10L)).thenReturn(0);
         when(timeMapper.countEnabledByGroupId(10L)).thenReturn(0);
 
-        assertThrows(IllegalStateException.class, () -> service.trigger(10L));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.trigger(10L));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_HAS_NO_ENABLED_ITEM, error.getErrorCode());
         verify(taskMapper, never()).insert(any());
         verify(dispatcher, never()).dispatch(any(), any(), any());
     }
@@ -126,7 +130,8 @@ class ArchiveGroupExecutionServiceImplTest {
 
     @Test
     void shouldRejectTriggerWhenGroupCodeIsBlank() {
-        assertThrows(IllegalArgumentException.class, () -> service.trigger("  "));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.trigger("  "));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_CODE_REQUIRED, error.getErrorCode());
         verify(groupMapper, never()).selectByCode(any());
     }
 
@@ -136,7 +141,8 @@ class ArchiveGroupExecutionServiceImplTest {
         group.setEnableStatus(1);
         when(groupMapper.selectById(10L)).thenReturn(group);
 
-        assertThrows(IllegalStateException.class, () -> service.trigger(10L));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.trigger(10L));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_DISABLED, error.getErrorCode());
         verify(taskMapper, never()).insert(any());
         verify(dispatcher, never()).dispatch(any(), any(), any());
     }
@@ -163,7 +169,9 @@ class ArchiveGroupExecutionServiceImplTest {
         when(groupMapper.selectById(10L)).thenReturn(group);
         when(taskMapper.selectLatestActiveByGroupId(10L)).thenReturn(null);
 
-        assertThrows(IllegalStateException.class, () -> service.cancelActiveTask(10L, "user request"));
+        StarterManageException error = assertThrows(StarterManageException.class,
+                () -> service.cancelActiveTask(10L, "user request"));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_HAS_NO_ACTIVE_TASK, error.getErrorCode());
         verify(taskLogService, never()).cancelTask(any(), anyString());
     }
 

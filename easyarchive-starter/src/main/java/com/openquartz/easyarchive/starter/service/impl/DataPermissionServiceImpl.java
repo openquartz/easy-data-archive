@@ -3,6 +3,8 @@ package com.openquartz.easyarchive.starter.service.impl;
 import com.openquartz.easyarchive.core.common.SysUser;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
 import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
@@ -32,7 +34,7 @@ public class DataPermissionServiceImpl implements DataPermissionService {
     public CurrentUserInfo getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getPrincipal() == null) {
-            throw new IllegalStateException("未获取到当前登录用户");
+            throw new StarterManageException(StarterErrorCode.CURRENT_USER_MISSING);
         }
 
         String username;
@@ -45,7 +47,7 @@ public class DataPermissionServiceImpl implements DataPermissionService {
 
         SysUser user = sysUserMapper.selectByUsername(username);
         if (user == null) {
-            throw new IllegalStateException("当前登录用户不存在");
+            throw new StarterManageException(StarterErrorCode.CURRENT_USER_NOT_FOUND);
         }
 
         CurrentUserInfo currentUser = new CurrentUserInfo();
@@ -63,7 +65,7 @@ public class DataPermissionServiceImpl implements DataPermissionService {
     @Override
     public void assertAdmin() {
         if (!isAdmin()) {
-            throw new IllegalStateException("无管理员权限");
+            throw new StarterManageException(StarterErrorCode.ADMIN_PERMISSION_REQUIRED);
         }
     }
 
@@ -76,28 +78,28 @@ public class DataPermissionServiceImpl implements DataPermissionService {
     @Override
     public void assertDatasourceReadable(Long datasourceId) {
         if (datasourceId == null) {
-            throw new IllegalArgumentException("数据源ID不能为空");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_ID_REQUIRED);
         }
         if (isAdmin()) {
             return;
         }
         CurrentUserInfo currentUser = getCurrentUser();
         if (!getAuthorizedDatasourceIds(currentUser.getUserId()).contains(datasourceId)) {
-            throw new IllegalStateException("无权限访问该数据源");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_ACCESS_DENIED);
         }
     }
 
     @Override
     public void assertGroupReadable(Long groupId) {
         if (groupId == null) {
-            throw new IllegalArgumentException("分组ID不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ID_REQUIRED);
         }
         if (isAdmin()) {
             return;
         }
         ArchiveGroup group = groupMapper.selectById(groupId);
         if (group == null) {
-            throw new IllegalArgumentException("归档分组不存在");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND);
         }
         assertDatasourceReadable(group.getSourceDatasourceId());
     }
@@ -105,14 +107,14 @@ public class DataPermissionServiceImpl implements DataPermissionService {
     @Override
     public void assertTaskReadable(Long taskId) {
         if (taskId == null) {
-            throw new IllegalArgumentException("任务ID不能为空");
+            throw new StarterManageException(StarterErrorCode.TASK_ID_REQUIRED);
         }
         if (isAdmin()) {
             return;
         }
         ArchiveGroupExecuteTask task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new IllegalArgumentException("任务不存在");
+            throw new StarterManageException(StarterErrorCode.TASK_NOT_FOUND);
         }
         assertGroupReadable(task.getGroupId());
     }
