@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1780210071057,
+  "lastScanned": 1780493459829,
   "projectRoot": "/Users/jackxu/Documents/Code/local/easy-archive-master",
   "techStack": {
     "languages": [
@@ -34,7 +34,8 @@
     "isMonorepo": false,
     "workspaces": [],
     "mainDirectories": [
-      "docs"
+      "docs",
+      "scripts"
     ],
     "gitBranches": null
   },
@@ -44,14 +45,14 @@
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 0,
-      "lastAccessed": 1780210071048,
+      "lastAccessed": 1780493459821,
       "keyFiles": []
     },
     "easyarchive-common": {
       "path": "easyarchive-common",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1780210071048,
+      "lastAccessed": 1780493459821,
       "keyFiles": [
         "pom.xml"
       ]
@@ -60,7 +61,7 @@
       "path": "easyarchive-core",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1780210071048,
+      "lastAccessed": 1780493459822,
       "keyFiles": [
         "pom.xml"
       ]
@@ -69,7 +70,7 @@
       "path": "easyarchive-starter",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1780210071049,
+      "lastAccessed": 1780493459822,
       "keyFiles": [
         "pom.xml"
       ]
@@ -77,331 +78,347 @@
     "easyarchive-ui": {
       "path": "easyarchive-ui",
       "purpose": null,
-      "fileCount": 0,
-      "lastAccessed": 1780210071049,
-      "keyFiles": []
+      "fileCount": 7,
+      "lastAccessed": 1780493459823,
+      "keyFiles": [
+        "index.html",
+        "package-lock.json",
+        "package.json",
+        "tsconfig.json",
+        "tsconfig.tsbuildinfo"
+      ]
+    },
+    "logs": {
+      "path": "logs",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1780493459823,
+      "keyFiles": [
+        "easy-archive-platform.log",
+        "easy-archive-platform.log.2026-06-01.0.gz",
+        "easy-archive-platform.log.2026-06-02.0.gz"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 1,
+      "lastAccessed": 1780493459823,
+      "keyFiles": [
+        "preflight-check.sh"
+      ]
     },
     "easyarchive-common/src": {
       "path": "easyarchive-common/src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1780210071049,
+      "lastAccessed": 1780493459823,
       "keyFiles": []
     },
     "easyarchive-core/src": {
       "path": "easyarchive-core/src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1780210071049,
+      "lastAccessed": 1780493459824,
       "keyFiles": []
     },
     "easyarchive-starter/src": {
       "path": "easyarchive-starter/src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1780210071049,
+      "lastAccessed": 1780493459824,
       "keyFiles": []
+    },
+    "easyarchive-ui/dist": {
+      "path": "easyarchive-ui/dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 1,
+      "lastAccessed": 1780493459824,
+      "keyFiles": [
+        "index.html"
+      ]
+    },
+    "easyarchive-ui/node_modules": {
+      "path": "easyarchive-ui/node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 1,
+      "lastAccessed": 1780493459825,
+      "keyFiles": []
+    },
+    "easyarchive-ui/scripts": {
+      "path": "easyarchive-ui/scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 3,
+      "lastAccessed": 1780493459825,
+      "keyFiles": [
+        "auth-contract-check.mjs",
+        "smoke-check.mjs",
+        "user-status-contract-check.mjs"
+      ]
+    },
+    "easyarchive-ui/src": {
+      "path": "easyarchive-ui/src",
+      "purpose": "Source code",
+      "fileCount": 3,
+      "lastAccessed": 1780493459825,
+      "keyFiles": [
+        "App.vue",
+        "env.d.ts",
+        "main.ts"
+      ]
     }
   },
   "hotPaths": [
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/executor/ArchiveExecutor.java",
-      "accessCount": 29,
-      "lastAccessed": 1780233476617,
+      "path": "easyarchive-ui/src/views/ArchiveGroupDetailView.vue",
+      "accessCount": 10,
+      "lastAccessed": 1780495193410,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/ArchiveGroupExecutor.java",
-      "accessCount": 23,
-      "lastAccessed": 1780233476457,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/config/EasyArchiveAutoConfiguration.java",
-      "accessCount": 19,
-      "lastAccessed": 1780236669921,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupExecuteTask.java",
-      "accessCount": 18,
-      "lastAccessed": 1780233476511,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/property/ArchiveConfig.java",
-      "accessCount": 15,
-      "lastAccessed": 1780231282590,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveTaskLog.java",
-      "accessCount": 11,
-      "lastAccessed": 1780231294287,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupItem.java",
+      "path": "easyarchive-ui/src/i18n/messages.ts",
       "accessCount": 7,
-      "lastAccessed": 1780231282487,
+      "lastAccessed": 1780494823584,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/connection/ConnectionFactory.java",
+      "path": "easyarchive-ui/src/views/ArchiveGroupView.vue",
       "accessCount": 7,
-      "lastAccessed": 1780236359880,
+      "lastAccessed": 1780495165123,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/entity/BaseEntity.java",
+      "path": "easyarchive-ui/src/views/DashboardView.vue",
       "accessCount": 6,
-      "lastAccessed": 1780231309842,
+      "lastAccessed": 1780495162005,
       "type": "file"
     },
     {
-      "path": "easyarchive-starter/src/main/resources/application.yml",
-      "accessCount": 6,
-      "lastAccessed": 1780231311665,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/connection/property/ConnectionProperties.java",
-      "accessCount": 6,
-      "lastAccessed": 1780236502628,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/SyncExecutor.java",
+      "path": "easyarchive-ui/src/styles/theme.css",
       "accessCount": 5,
-      "lastAccessed": 1780231273443,
+      "lastAccessed": 1780494818776,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupItemByTime.java",
+      "path": "easyarchive-ui/src/views/TaskListView.vue",
       "accessCount": 5,
-      "lastAccessed": 1780231282569,
+      "lastAccessed": 1780495156368,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroupItemById.java",
+      "path": "easyarchive-ui/src/views/TaskDetailView.vue",
       "accessCount": 5,
-      "lastAccessed": 1780231282623,
+      "lastAccessed": 1780495157293,
       "type": "file"
     },
     {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/model/dto/ApiResponse.java",
-      "accessCount": 5,
-      "lastAccessed": 1780232186818,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/connection/entity/ArchiveConnection.java",
-      "accessCount": 5,
-      "lastAccessed": 1780236366675,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/entity/ArchiveGroup.java",
+      "path": "docs/superpowers/specs/2026-06-03-ui-navigation-tabs-design.md",
       "accessCount": 4,
-      "lastAccessed": 1780231282641,
+      "lastAccessed": 1780494524289,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/ArchiveRuleLoader.java",
+      "path": "easyarchive-ui/src/layouts/AppLayout.vue",
       "accessCount": 4,
-      "lastAccessed": 1780231282677,
+      "lastAccessed": 1780495041331,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/rule/DbArchiveRuleLoader.java",
-      "accessCount": 4,
-      "lastAccessed": 1780231306893,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/controller/ArchiveDatasourceController.java",
-      "accessCount": 3,
-      "lastAccessed": 1780231259564,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/connection/factory/ArchiveConnectionFactory.java",
-      "accessCount": 3,
-      "lastAccessed": 1780231296583,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/connection/ArchiveConnectionService.java",
-      "accessCount": 3,
-      "lastAccessed": 1780231325002,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/sink/mysql/MysqlSink.java",
-      "accessCount": 3,
-      "lastAccessed": 1780235359372,
-      "type": "file"
-    },
-    {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/source/mysql/MysqlSource.java",
-      "accessCount": 3,
-      "lastAccessed": 1780235359422,
-      "type": "file"
-    },
-    {
-      "path": "docs/superpowers/specs/2026-05-31-archive-execution-log-design.md",
+      "path": "easyarchive-ui/src/stores/auth.ts",
       "accessCount": 2,
-      "lastAccessed": 1780220649380,
+      "lastAccessed": 1780494529743,
       "type": "file"
     },
     {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/service/impl/ArchiveDatasourceServiceImpl.java",
+      "path": "easyarchive-ui/src/api/archiveGroup.ts",
       "accessCount": 2,
-      "lastAccessed": 1780224283572,
+      "lastAccessed": 1780494540992,
       "type": "file"
     },
     {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/service/ArchiveDatasourceService.java",
+      "path": "easyarchive-ui/src/router/index.ts",
       "accessCount": 2,
-      "lastAccessed": 1780224283586,
+      "lastAccessed": 1780494541043,
       "type": "file"
     },
     {
-      "path": "CLAUDE.md",
+      "path": "easyarchive-ui/src/api/datasource.ts",
       "accessCount": 2,
-      "lastAccessed": 1780224283862,
+      "lastAccessed": 1780494544694,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/sink/EmptySink.java",
-      "accessCount": 1,
-      "lastAccessed": 1780219613061,
+      "path": "easyarchive-ui/src/main.ts",
+      "accessCount": 2,
+      "lastAccessed": 1780494580247,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/PageReader.java",
-      "accessCount": 1,
-      "lastAccessed": 1780219613072,
+      "path": "docs/superpowers/plans/2026-06-03-ui-navigation-tabs.md",
+      "accessCount": 2,
+      "lastAccessed": 1780494695467,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/PageSource.java",
+      "path": "easyarchive-ui/vite.config.ts",
       "accessCount": 1,
-      "lastAccessed": 1780219613087,
+      "lastAccessed": 1780494003625,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Sink.java",
+      "path": "easyarchive-ui/package.json",
       "accessCount": 1,
-      "lastAccessed": 1780219613113,
+      "lastAccessed": 1780494003681,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Writer.java",
+      "path": "easyarchive-ui/src/App.vue",
       "accessCount": 1,
-      "lastAccessed": 1780219613154,
+      "lastAccessed": 1780494003751,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/TableInfo.java",
+      "path": "easyarchive-ui/src/views/GuideView.vue",
       "accessCount": 1,
-      "lastAccessed": 1780219646472,
+      "lastAccessed": 1780494014585,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Connection.java",
+      "path": "easyarchive-ui/src/views/DatasourceView.vue",
       "accessCount": 1,
-      "lastAccessed": 1780219646505,
+      "lastAccessed": 1780494014694,
       "type": "file"
     },
     {
-      "path": "easyarchive-core/src/main/java/com/openquartz/easyarchive/core/expr/ExpressionService.java",
+      "path": "easyarchive-ui/src/views/UserView.vue",
       "accessCount": 1,
-      "lastAccessed": 1780219646552,
+      "lastAccessed": 1780494014797,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/DataIterator.java",
+      "path": "easyarchive-ui/src/views/LoginView.vue",
       "accessCount": 1,
-      "lastAccessed": 1780219646566,
+      "lastAccessed": 1780494014849,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/StepIdDataIterator.java",
+      "path": "easyarchive-ui/src/utils/dictionaries.ts",
       "accessCount": 1,
-      "lastAccessed": 1780219646587,
+      "lastAccessed": 1780494026392,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/DataRecord.java",
+      "path": "easyarchive-ui/src/utils/http.ts",
       "accessCount": 1,
-      "lastAccessed": 1780219646609,
+      "lastAccessed": 1780494026423,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/Cleaner.java",
+      "path": "easyarchive-ui/src/components/TaskStatusTag.vue",
       "accessCount": 1,
-      "lastAccessed": 1780219646661,
+      "lastAccessed": 1780494026454,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/statistic/ArchiveStaticGroupInfo.java",
+      "path": "easyarchive-ui/src/utils/polling.ts",
       "accessCount": 1,
-      "lastAccessed": 1780219661156,
+      "lastAccessed": 1780494026474,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/statistic/ArchiveStatistics.java",
+      "path": "easyarchive-ui/src/i18n/index.ts",
       "accessCount": 1,
-      "lastAccessed": 1780219661208,
+      "lastAccessed": 1780494026506,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/statistic/ArchiveStatisticInfo.java",
+      "path": "easyarchive-ui/src/api/auth.ts",
       "accessCount": 1,
-      "lastAccessed": 1780219661262,
+      "lastAccessed": 1780494026517,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/EmptyDataIterator.java",
+      "path": "easyarchive-ui/src/components/LanguageSwitcher.vue",
       "accessCount": 1,
-      "lastAccessed": 1780219661488,
+      "lastAccessed": 1780494026578,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/util/ExceptionUtils.java",
+      "path": "easyarchive-ui/src/types/api.ts",
       "accessCount": 1,
-      "lastAccessed": 1780219678285,
+      "lastAccessed": 1780494026629,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/IdResolver.java",
+      "path": "easyarchive-ui/src/components/UserFormDialog.vue",
       "accessCount": 1,
-      "lastAccessed": 1780219678300,
+      "lastAccessed": 1780494039198,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/api/model/FetchDataRecordByIdsFunction.java",
+      "path": "easyarchive-ui/src/api/task.ts",
       "accessCount": 1,
-      "lastAccessed": 1780219678341,
+      "lastAccessed": 1780494039222,
       "type": "file"
     },
     {
-      "path": "easyarchive-common/src/main/java/com/openquartz/easyarchive/common/concurrent/ILock.java",
+      "path": "easyarchive-ui/src/components/ArchiveGroupFormDialog.vue",
       "accessCount": 1,
-      "lastAccessed": 1780219678393,
+      "lastAccessed": 1780494039242,
       "type": "file"
     },
     {
-      "path": "easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/mapper/EaArchiveDatasourceMapper.java",
+      "path": "easyarchive-ui/src/components/DatasourceFormDialog.vue",
       "accessCount": 1,
-      "lastAccessed": 1780220798011,
+      "lastAccessed": 1780494039254,
       "type": "file"
     },
     {
-      "path": "easyarchive-starter/src/main/resources/mapper/EaArchiveDatasourceMapper.xml",
+      "path": "easyarchive-ui/src/api/archiveGroupItem.ts",
       "accessCount": 1,
-      "lastAccessed": 1780220798063,
+      "lastAccessed": 1780494039275,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-ui/src/api/user.ts",
+      "accessCount": 1,
+      "lastAccessed": 1780494039306,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-ui/src/api/dashboard.ts",
+      "accessCount": 1,
+      "lastAccessed": 1780494039465,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-ui/src/components/ArchiveGroupItemByIdFormDialog.vue",
+      "accessCount": 1,
+      "lastAccessed": 1780494051706,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-ui/src/components/ArchiveGroupItemByTimeFormDialog.vue",
+      "accessCount": 1,
+      "lastAccessed": 1780494051756,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-ui/index.html",
+      "accessCount": 1,
+      "lastAccessed": 1780494051808,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-ui/src/stores/workTabs.ts",
+      "accessCount": 1,
+      "lastAccessed": 1780494824979,
+      "type": "file"
+    },
+    {
+      "path": "easyarchive-ui/src/components/EntityLink.vue",
+      "accessCount": 1,
+      "lastAccessed": 1780495018235,
       "type": "file"
     }
   ],

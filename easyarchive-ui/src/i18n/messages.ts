@@ -64,6 +64,14 @@ export const messages = {
       title: "Dashboard",
       loading: "Loading dashboard...",
       empty: "No dashboard data.",
+      trend: {
+        title: "Daily Archive Task Trend",
+        subtitle: "Submitted tasks over the last 7 days with success and failure distribution.",
+        submitted: "Submitted",
+        success: "Succeeded",
+        failed: "Failed",
+        empty: "No trend data."
+      },
       cards: {
         running: "Tasks Running",
         succeeded: "Tasks Succeeded",
@@ -447,6 +455,14 @@ export const messages = {
       title: "仪表盘",
       loading: "正在加载仪表盘...",
       empty: "暂无仪表盘数据。",
+      trend: {
+        title: "每日归档任务趋势",
+        subtitle: "统一汇总最近 7 天提交的归档任务，并展示成功与失败分布。",
+        submitted: "提交",
+        success: "成功",
+        failed: "失败",
+        empty: "暂无趋势数据。"
+      },
       cards: {
         running: "运行中任务",
         succeeded: "成功任务",
@@ -479,11 +495,13 @@ export const messages = {
       created: "归档连接已创建。",
       updated: "归档连接已更新。",
       statusUpdated: "归档连接状态已更新。",
+      testedAndEnabled: "归档连接测试成功，已自动启用。",
       saveFailed: "保存失败",
       loadFailed: "加载归档连接失败",
       statusUpdateFailed: "更新状态失败",
       connectionTestFailed: "连接测试失败",
-      connectionTip: "出于安全考虑，请先编辑归档连接并填写密码后再测试连接。",
+      connectionTestSuccess: "连接测试成功。",
+      connectionTip: "连接参数变更后状态会重置为未测试，需重新测试成功后才能启用。",
       form: {
         createTitle: "新建归档连接",
         editTitle: "编辑归档连接",
@@ -493,7 +511,6 @@ export const messages = {
         jdbcUrl: "连接地址",
         username: "用户名",
         password: "密码",
-        status: "状态",
         remark: "备注",
         keepPassword: "留空则保持不变",
         validation: {
@@ -758,7 +775,8 @@ export const messages = {
     },
     status: {
       enabled: "已启用",
-      disabled: "已停用"
+      disabled: "已停用",
+      untested: "未测试"
     },
     workTab: {
       groupDetail: "分组详情",

@@ -54,4 +54,7 @@ public interface ArchiveGroupExecuteTaskMapper {
     List<ArchiveGroupExecuteTask> selectRecentTasks(@Param("limit") int limit);
 
     List<ArchiveGroupExecuteTask> selectFailedTasks(@Param("limit") int limit);
+
+    List<Map<String, Object>> selectDailyTrend(@Param("startDay") String startDay,
+                                               @Param("endDay") String endDay);
 }

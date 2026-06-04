@@ -24,7 +24,7 @@ public class DatasourceConnectionTester {
             connection = DriverManager.getConnection(
                     datasource.getJdbcUrl(),
                     datasource.getUsername(),
-                    "******" // 实际应该解密密码
+                    datasource.getPasswordCipher()
             );
 
             // 测试基础SQL

@@ -23,7 +23,7 @@ const form = reactive<DatasourcePayload>({
   jdbcUrl: "",
   username: "",
   passwordCipher: "",
-  status: 1,
+  status: 0,
   remark: ""
 });
 const errorMessage = ref("");
@@ -46,7 +46,7 @@ watch(
       form.jdbcUrl = props.initialValue.jdbcUrl || "";
       form.username = props.initialValue.username || "";
       form.passwordCipher = "";
-      form.status = props.initialValue.status ?? 1;
+      form.status = props.initialValue.status ?? 0;
       form.remark = props.initialValue.remark || "";
       return;
     }
@@ -56,7 +56,7 @@ watch(
     form.jdbcUrl = "";
     form.username = "";
     form.passwordCipher = "";
-    form.status = 1;
+    form.status = 0;
     form.remark = "";
   },
   { immediate: true }
@@ -141,13 +141,6 @@ function handleSubmit(): void {
             :placeholder="mode === 'edit' ? t('datasource.form.keepPassword') : ''"
             :disabled="submitting"
           />
-        </label>
-        <label>
-          {{ t("datasource.form.status") }}
-          <select v-model.number="form.status" :disabled="submitting">
-            <option :value="1">{{ t("status.enabled") }}</option>
-            <option :value="0">{{ t("status.disabled") }}</option>
-          </select>
         </label>
         <label class="full-width">{{ t("datasource.form.remark") }}<textarea v-model="form.remark" :disabled="submitting" /></label>
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>

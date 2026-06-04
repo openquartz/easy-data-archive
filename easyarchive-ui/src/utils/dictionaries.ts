@@ -6,8 +6,9 @@ export interface StatusDictionaryItem {
 import { translate } from "../i18n";
 
 export const datasourceStatusDictionary: Record<number, StatusDictionaryItem> = {
-  0: { labelKey: "status.disabled", tone: "neutral" },
-  1: { labelKey: "status.enabled", tone: "success" }
+  0: { labelKey: "status.untested", tone: "neutral" },
+  1: { labelKey: "status.enabled", tone: "success" },
+  2: { labelKey: "status.disabled", tone: "danger" }
 };
 
 export const userStatusDictionary: Record<number, StatusDictionaryItem> = {

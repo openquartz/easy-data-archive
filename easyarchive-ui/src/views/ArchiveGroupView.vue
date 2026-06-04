@@ -43,7 +43,7 @@ const getActionKey = (action: string, id: number): string => `${action}:${id}`;
 const isRowBusy = (id: number): boolean => busyRows.value.has(id);
 const isActionBusy = (action: string, id: number): boolean => busyActions.value.has(getActionKey(action, id));
 const datasourceName = (id: number): string => datasources.value.find((item) => item.id === id)?.datasourceName || String(id);
-const datasourceCode = (id: number): string => datasources.value.find((item) => item.id === id)?.datasourceCode || "";
+const enabledDatasources = computed(() => datasources.value.filter((item) => item.status === 1));
 
 async function loadData(): Promise<void> {
   loading.value = true;
@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
       :visible="groupDialogVisible"
       :mode="groupDialogMode"
       :initial-value="activeGroup"
-      :datasources="datasources"
+      :datasources="enabledDatasources"
       :submitting="groupDialogSubmitting"
       @close="groupDialogVisible = false"
       @submit="submitGroup"

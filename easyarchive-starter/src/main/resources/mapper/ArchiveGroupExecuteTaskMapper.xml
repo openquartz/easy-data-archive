@@ -240,4 +240,16 @@
         LIMIT #{limit}
     </select>
 
+    <select id="selectDailyTrend" resultType="map">
+        SELECT DATE_FORMAT(created_time, '%Y-%m-%d') AS day,
+               COUNT(1) AS submittedCount,
+               SUM(CASE WHEN execute_status = 2 THEN 1 ELSE 0 END) AS successCount,
+               SUM(CASE WHEN execute_status = 3 THEN 1 ELSE 0 END) AS failedCount
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+          AND DATE(created_time) BETWEEN #{startDay} AND #{endDay}
+        GROUP BY DATE_FORMAT(created_time, '%Y-%m-%d')
+        ORDER BY DATE_FORMAT(created_time, '%Y-%m-%d') ASC
+    </select>
+
 </mapper>

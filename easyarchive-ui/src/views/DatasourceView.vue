@@ -6,6 +6,7 @@ import {
   type DatasourceTypeOption,
   getDatasourcesApi,
   getDatasourceTypesApi,
+  testDatasourceConnectionApi,
   updateDatasourceApi,
   updateDatasourceStatusApi
 } from "../api/datasource";
@@ -92,7 +93,7 @@ async function toggleStatus(item: Datasource): Promise<void> {
   if (isRowBusy(item.id) || isActionBusy("toggleStatus", item.id)) {
     return;
   }
-  const nextStatus = item.status === 1 ? 0 : 1;
+  const nextStatus = 2;
   const actionKey = getActionKey("toggleStatus", item.id);
   busyRows.value.add(item.id);
   busyActions.value.add(actionKey);
@@ -120,9 +121,23 @@ async function testConnection(item: Datasource): Promise<void> {
   successMessage.value = "";
   actionErrorMessage.value = "";
   try {
-    actionErrorMessage.value = "";
-    actionErrorMessage.value = t("datasource.connectionTip");
-    openEdit(item);
+    const success = await testDatasourceConnectionApi({
+      id: item.id,
+      datasourceCode: item.datasourceCode,
+      datasourceName: item.datasourceName,
+      datasourceType: item.datasourceType,
+      jdbcUrl: item.jdbcUrl,
+      username: item.username,
+      ownerUserId: item.ownerUserId,
+      remark: item.remark,
+      status: item.status
+    });
+    if (success) {
+      successMessage.value = t("datasource.testedAndEnabled");
+    } else {
+      actionErrorMessage.value = `${t("datasource.connectionTestFailed")} ${t("datasource.connectionTip")}`;
+    }
+    await loadData();
   } catch (error) {
     actionErrorMessage.value = error instanceof Error ? error.message : t("datasource.connectionTestFailed");
   } finally {
@@ -144,6 +159,7 @@ void loadData();
       </div>
     </header>
     <p v-if="successMessage" class="feedback">{{ successMessage }}</p>
+    <p class="hint">{{ t("datasource.connectionTip") }}</p>
     <p v-if="actionErrorMessage" class="error">{{ actionErrorMessage }}</p>
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     <div v-if="loading" class="empty">{{ emptyText }}</div>
@@ -171,8 +187,8 @@ void loadData();
             <td><span :class="getStatusTagClass(datasourceStatusDictionary, item.status)">{{ getStatusLabel(datasourceStatusDictionary, item.status) }}</span></td>
             <td class="row-actions">
               <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">{{ t("common.edit") }}</button>
-              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
-                {{ item.status === 1 ? t("common.disable") : t("common.enable") }}
+              <button class="btn btn--subtle" :disabled="isRowBusy(item.id) || item.status !== 1" @click="toggleStatus(item)">
+                {{ t("common.disable") }}
               </button>
               <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="testConnection(item)">
                 {{ isActionBusy("testConnection", item.id) ? t("common.testing") : t("common.test") }}

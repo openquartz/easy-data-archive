@@ -46,6 +46,9 @@ class DashboardControllerContractTest {
                 mapOf("status", 0, "count", 1),
                 mapOf("status", 1, "count", 2)
         ));
+        payload.put("dailyTaskTrend", Arrays.asList(
+                mapOf("day", "2026-06-01", "submittedCount", 3, "successCount", 2, "failedCount", 1)
+        ));
         payload.put("recentTasks", Arrays.asList(mapOf("id", 10, "groupId", 2)));
         payload.put("failedTasks", Arrays.asList(mapOf("id", 11, "groupId", 2)));
         payload.put("datasourceStatusSummary", mapOf("total", 5, "enabled", 3, "disabled", 2));
@@ -57,9 +60,11 @@ class DashboardControllerContractTest {
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("成功"))
                 .andExpect(jsonPath("$.data.taskStatusCounts").isArray())
+                .andExpect(jsonPath("$.data.dailyTaskTrend").isArray())
                 .andExpect(jsonPath("$.data.recentTasks").isArray())
                 .andExpect(jsonPath("$.data.failedTasks").isArray())
                 .andExpect(jsonPath("$.data.datasourceStatusSummary.total").value(5))
+                .andExpect(jsonPath("$.data.dailyTaskTrend[0].submittedCount").value(3))
                 .andExpect(jsonPath("$.data.taskStatusCounts[0].status").value(0));
     }
 

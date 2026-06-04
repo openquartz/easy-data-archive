@@ -10,11 +10,9 @@ public class OperationValueFormatter {
             case 0:
                 return "未测试";
             case 1:
-                return "正常";
+                return "已启用";
             case 2:
-                return "异常";
-            case 3:
-                return "禁用";
+                return "已停用";
             default:
                 return String.valueOf(value);
         }
