@@ -1,7 +1,9 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
@@ -31,7 +33,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ArchiveGroupServiceImpl implements ArchiveGroupService {
 
+    private static final int DATASOURCE_STATUS_ENABLED = 1;
+
     private final ArchiveGroupMapper groupMapper;
+    private final ArchiveConnectionMapper archiveConnectionMapper;
     private final ArchiveGroupExecuteTaskMapper taskMapper;
     private final ArchiveGroupItemByIdMapper idItemMapper;
     private final ArchiveGroupItemByTimeMapper timeItemMapper;
@@ -254,9 +259,21 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         if (group.getSourceDatasourceId() == null || group.getTargetDatasourceId() == null) {
             throw new IllegalArgumentException("源和目标数据源不能为空");
         }
+        validateDatasourceEnabled(group.getSourceDatasourceId(), "源归档连接必须为已启用状态");
+        validateDatasourceEnabled(group.getTargetDatasourceId(), "目标归档连接必须为已启用状态");
         ArchiveGroup existing = groupMapper.selectByCode(group.getGroupCode());
         if (existing != null && (create || !existing.getId().equals(group.getId()))) {
             throw new IllegalArgumentException("分组编码已存在");
+        }
+    }
+
+    private void validateDatasourceEnabled(Long datasourceId, String message) {
+        ArchiveConnection datasource = archiveConnectionMapper.selectById(datasourceId);
+        if (datasource == null) {
+            throw new IllegalArgumentException("归档连接不存在");
+        }
+        if (!Integer.valueOf(DATASOURCE_STATUS_ENABLED).equals(datasource.getStatus())) {
+            throw new IllegalArgumentException(message);
         }
     }
 

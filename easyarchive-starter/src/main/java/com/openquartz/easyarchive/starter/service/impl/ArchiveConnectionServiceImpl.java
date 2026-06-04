@@ -12,7 +12,9 @@ import com.openquartz.easyarchive.starter.support.DatasourceConnectionTester;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 数据源服务实现
@@ -20,6 +22,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
+
+    private static final int STATUS_UNTESTED = 0;
+    private static final int STATUS_ENABLED = 1;
+    private static final int STATUS_DISABLED = 2;
 
     private final ArchiveConnectionMapper datasourceMapper;
     private final DatasourceConnectionTester connectionTester;
@@ -53,6 +59,9 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     @Override
     public ArchiveConnection create(ArchiveConnection datasource) {
         dataPermissionService.assertAdmin();
+        if (datasource.getStatus() == null || datasource.getStatus() != STATUS_DISABLED) {
+            datasource.setStatus(STATUS_UNTESTED);
+        }
         datasourceMapper.insert(datasource);
         operationLogRecorder.record(datasourceOperationLogPresenter.buildCreate(datasource));
         return datasource;
@@ -62,16 +71,31 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     public ArchiveConnection update(ArchiveConnection datasource) {
         dataPermissionService.assertAdmin();
         ArchiveConnection before = datasourceMapper.selectById(datasource.getId());
+        if (before == null) {
+            throw new IllegalArgumentException("归档连接不存在");
+        }
+        if (isConnectionConfigChanged(before, datasource)) {
+            datasource.setStatus(STATUS_UNTESTED);
+        } else if (datasource.getStatus() == null) {
+            datasource.setStatus(before.getStatus());
+        }
+        if (!hasText(datasource.getPasswordCipher())) {
+            datasource.setPasswordCipher(before.getPasswordCipher());
+        }
         datasourceMapper.update(datasource);
         ArchiveConnection after = datasourceMapper.selectById(datasource.getId());
         operationLogRecorder.record(datasourceOperationLogPresenter.buildUpdate(before, after));
-        return datasource;
+        return after;
     }
 
     @Override
     public void updateStatus(Long id, Integer status) {
         dataPermissionService.assertAdmin();
         ArchiveConnection before = datasourceMapper.selectById(id);
+        if (before == null) {
+            throw new IllegalArgumentException("归档连接不存在");
+        }
+        validateStatusForManualUpdate(status);
         ArchiveConnection datasource = new ArchiveConnection();
         datasource.setId(id);
         datasource.setStatus(status);
@@ -83,8 +107,60 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     @Override
     public boolean testConnection(ArchiveConnection datasource) {
         dataPermissionService.assertAdmin();
-        boolean result = connectionTester.testConnection(datasource);
-        operationLogRecorder.record(datasourceOperationLogPresenter.buildTestConnection(datasource, result));
+        ArchiveConnection target = prepareDatasourceForTest(datasource);
+        boolean result = connectionTester.testConnection(target);
+        if (target.getId() != null) {
+            ArchiveConnection update = new ArchiveConnection();
+            update.setId(target.getId());
+            update.setLastCheckTime(new Date());
+            if (result) {
+                update.setStatus(STATUS_ENABLED);
+            }
+            datasourceMapper.update(update);
+        }
+        operationLogRecorder.record(datasourceOperationLogPresenter.buildTestConnection(target, result));
         return result;
+    }
+
+    private void validateStatusForManualUpdate(Integer status) {
+        if (status == null) {
+            throw new IllegalArgumentException("归档连接状态不能为空");
+        }
+        if (status != STATUS_DISABLED) {
+            throw new IllegalStateException("请先测试归档连接，测试成功后系统会自动启用");
+        }
+    }
+
+    private ArchiveConnection prepareDatasourceForTest(ArchiveConnection datasource) {
+        if (datasource == null) {
+            throw new IllegalArgumentException("归档连接不能为空");
+        }
+        if (datasource.getId() == null) {
+            return datasource;
+        }
+        ArchiveConnection persisted = datasourceMapper.selectById(datasource.getId());
+        if (persisted == null) {
+            throw new IllegalArgumentException("归档连接不存在");
+        }
+        ArchiveConnection merged = new ArchiveConnection();
+        merged.setId(persisted.getId());
+        merged.setDatasourceCode(hasText(datasource.getDatasourceCode()) ? datasource.getDatasourceCode() : persisted.getDatasourceCode());
+        merged.setDatasourceName(hasText(datasource.getDatasourceName()) ? datasource.getDatasourceName() : persisted.getDatasourceName());
+        merged.setDatasourceType(hasText(datasource.getDatasourceType()) ? datasource.getDatasourceType() : persisted.getDatasourceType());
+        merged.setJdbcUrl(hasText(datasource.getJdbcUrl()) ? datasource.getJdbcUrl() : persisted.getJdbcUrl());
+        merged.setUsername(hasText(datasource.getUsername()) ? datasource.getUsername() : persisted.getUsername());
+        merged.setPasswordCipher(hasText(datasource.getPasswordCipher()) ? datasource.getPasswordCipher() : persisted.getPasswordCipher());
+        merged.setStatus(persisted.getStatus());
+        return merged;
+    }
+
+    private boolean isConnectionConfigChanged(ArchiveConnection before, ArchiveConnection after) {
+        return !Objects.equals(before.getJdbcUrl(), after.getJdbcUrl())
+                || !Objects.equals(before.getUsername(), after.getUsername())
+                || hasText(after.getPasswordCipher());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }

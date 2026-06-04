@@ -9,6 +9,9 @@ const loading = ref(false);
 const errorMessage = ref("");
 const overview = ref<DashboardOverview | null>(null);
 const { t } = useI18n();
+const chartWidth = 640;
+const chartHeight = 240;
+const chartPadding = { top: 24, right: 20, bottom: 32, left: 36 };
 
 const statusCountMap = computed(() => {
   const result = new Map<number, number>();
@@ -33,6 +36,53 @@ const summaryCards = computed(() => {
     { label: t("dashboard.cards.datasourceTotal"), value: datasource?.total || 0 }
   ];
 });
+
+const trendItems = computed(() => overview.value?.dailyTaskTrend || []);
+
+const trendMaxValue = computed(() =>
+  Math.max(
+    1,
+    ...trendItems.value.flatMap((item) => [item.submittedCount, item.successCount, item.failedCount])
+  )
+);
+
+const trendSeries = computed(() => {
+  const width = chartWidth - chartPadding.left - chartPadding.right;
+  const height = chartHeight - chartPadding.top - chartPadding.bottom;
+  const stepX = trendItems.value.length > 1 ? width / (trendItems.value.length - 1) : 0;
+  const scaleY = (value: number) => chartPadding.top + height - (value / trendMaxValue.value) * height;
+  const buildPoints = (key: "submittedCount" | "successCount" | "failedCount") =>
+    trendItems.value.map((item, index) => ({
+      x: chartPadding.left + stepX * index,
+      y: scaleY(item[key]),
+      value: item[key],
+      day: item.day
+    }));
+
+  return [
+    { key: "submitted", label: t("dashboard.trend.submitted"), color: "#2563eb", points: buildPoints("submittedCount") },
+    { key: "success", label: t("dashboard.trend.success"), color: "#16a34a", points: buildPoints("successCount") },
+    { key: "failed", label: t("dashboard.trend.failed"), color: "#dc2626", points: buildPoints("failedCount") }
+  ];
+});
+
+const trendYAxisTicks = computed(() => {
+  const tickCount = Math.min(4, trendMaxValue.value);
+  return Array.from({ length: tickCount + 1 }, (_, index) => {
+    const value = Math.round((trendMaxValue.value * (tickCount - index)) / tickCount);
+    const usableHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+    const y = chartPadding.top + (usableHeight * index) / tickCount;
+    return { value, y };
+  });
+});
+
+function pointsToPolyline(points: Array<{ x: number; y: number }>): string {
+  return points.map((point) => `${point.x},${point.y}`).join(" ");
+}
+
+function shortDayLabel(day: string): string {
+  return day.slice(5);
+}
 
 async function loadData(): Promise<void> {
   loading.value = true;
@@ -67,6 +117,65 @@ void loadData();
           <p class="metric-card__label">{{ item.label }}</p>
           <p class="metric-card__value">{{ item.value }}</p>
         </article>
+      </section>
+
+      <section class="page-card">
+        <div class="dashboard-section-header">
+          <h2 class="section-title section-title--top">{{ t("dashboard.trend.title") }}</h2>
+          <p class="dashboard-section-note">{{ t("dashboard.trend.subtitle") }}</p>
+        </div>
+        <div v-if="!trendItems.length" class="empty">{{ t("dashboard.trend.empty") }}</div>
+        <div v-else class="dashboard-trend">
+          <div class="dashboard-trend__legend">
+            <span v-for="series in trendSeries" :key="series.key" class="dashboard-trend__legend-item">
+              <span class="dashboard-trend__legend-dot" :style="{ backgroundColor: series.color }"></span>
+              {{ series.label }}
+            </span>
+          </div>
+          <svg class="dashboard-trend__chart" :viewBox="`0 0 ${chartWidth} ${chartHeight}`" role="img" aria-label="task trend chart">
+            <g v-for="tick in trendYAxisTicks" :key="tick.y">
+              <line
+                :x1="chartPadding.left"
+                :x2="chartWidth - chartPadding.right"
+                :y1="tick.y"
+                :y2="tick.y"
+                class="dashboard-trend__grid"
+              />
+              <text :x="chartPadding.left - 8" :y="tick.y + 4" class="dashboard-trend__axis-label dashboard-trend__axis-label--left">
+                {{ tick.value }}
+              </text>
+            </g>
+            <polyline
+              v-for="series in trendSeries"
+              :key="series.key"
+              :points="pointsToPolyline(series.points)"
+              :stroke="series.color"
+              class="dashboard-trend__line"
+            />
+            <g v-for="series in trendSeries" :key="`${series.key}-points`">
+              <circle
+                v-for="point in series.points"
+                :key="`${series.key}-${point.day}`"
+                :cx="point.x"
+                :cy="point.y"
+                r="3.5"
+                :fill="series.color"
+              >
+                <title>{{ `${series.label} ${point.day}: ${point.value}` }}</title>
+              </circle>
+            </g>
+            <text
+              v-for="(item, index) in trendItems"
+              :key="item.day"
+              :x="chartPadding.left + ((chartWidth - chartPadding.left - chartPadding.right) * index) / Math.max(trendItems.length - 1, 1)"
+              :y="chartHeight - 10"
+              class="dashboard-trend__axis-label"
+              text-anchor="middle"
+            >
+              {{ shortDayLabel(item.day) }}
+            </text>
+          </svg>
+        </div>
       </section>
 
       <section class="page-card">

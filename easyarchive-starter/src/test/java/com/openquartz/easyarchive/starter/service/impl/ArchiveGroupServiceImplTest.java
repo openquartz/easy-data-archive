@@ -1,7 +1,9 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
@@ -31,7 +33,12 @@ import static org.mockito.Mockito.when;
 
 class ArchiveGroupServiceImplTest {
 
+    private static final int DATASOURCE_STATUS_UNTESTED = 0;
+    private static final int DATASOURCE_STATUS_ENABLED = 1;
+    private static final int DATASOURCE_STATUS_DISABLED = 2;
+
     private final ArchiveGroupMapper groupMapper = mock(ArchiveGroupMapper.class);
+    private final ArchiveConnectionMapper archiveConnectionMapper = mock(ArchiveConnectionMapper.class);
     private final ArchiveGroupExecuteTaskMapper taskMapper = mock(ArchiveGroupExecuteTaskMapper.class);
     private final ArchiveGroupItemByIdMapper idItemMapper = mock(ArchiveGroupItemByIdMapper.class);
     private final ArchiveGroupItemByTimeMapper timeItemMapper = mock(ArchiveGroupItemByTimeMapper.class);
@@ -39,11 +46,12 @@ class ArchiveGroupServiceImplTest {
     private final ArchiveGroupOperationLogPresenter archiveGroupOperationLogPresenter = mock(ArchiveGroupOperationLogPresenter.class);
     private final OperationLogRecorder operationLogRecorder = mock(OperationLogRecorder.class);
     private final ArchiveGroupServiceImpl service =
-            new ArchiveGroupServiceImpl(groupMapper, taskMapper, idItemMapper, timeItemMapper, dataPermissionService,
+            new ArchiveGroupServiceImpl(groupMapper, archiveConnectionMapper, taskMapper, idItemMapper, timeItemMapper, dataPermissionService,
                     archiveGroupOperationLogPresenter, operationLogRecorder);
 
     @Test
     void shouldRejectDuplicateGroupCodeOnCreate() {
+        stubEnabledDatasources();
         ArchiveGroup existing = new ArchiveGroup();
         existing.setId(1L);
         existing.setGroupCode("ORDER_ARCHIVE");
@@ -61,6 +69,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldRejectSoftDeletedGroupCodeOnCreateBecauseCodesAreNotReusable() {
+        stubEnabledDatasources();
         ArchiveGroup existing = new ArchiveGroup();
         existing.setId(1L);
         existing.setGroupCode("ORDER_ARCHIVE");
@@ -76,6 +85,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldRejectBlankGroupCodeOnCreate() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setId(null);
         input.setGroupCode("   ");
@@ -86,6 +96,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldRejectBlankGroupNameOnCreate() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setId(null);
         input.setGroupName("");
@@ -113,6 +124,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldCreateValidGroupWithDefaultStatus() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setId(null);
         input.setEnableStatus(null);
@@ -126,6 +138,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldRejectInvalidStatusOnCreate() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setId(null);
         input.setEnableStatus(2);
@@ -136,6 +149,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldTrimGroupCodeAndNameBeforeCreate() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setId(null);
         input.setGroupCode(" ORDER_ARCHIVE ");
@@ -152,6 +166,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldRejectDuplicateGroupCodeOnUpdate() {
+        stubEnabledDatasources();
         ArchiveGroup existing = enabledGroup();
         existing.setId(99L);
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
@@ -165,6 +180,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldRejectUpdateWhenGroupDoesNotExist() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         when(groupMapper.selectById(10L)).thenReturn(null);
 
@@ -174,6 +190,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldRejectInvalidStatusOnUpdate() {
+        stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setEnableStatus(-1);
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
@@ -184,6 +201,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldAllowNullStatusOnUpdateForPartialUpdate() {
+        stubEnabledDatasources();
         ArchiveGroup existing = enabledGroup();
         ArchiveGroup input = enabledGroup();
         input.setEnableStatus(null);
@@ -198,6 +216,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldTrimGroupCodeAndNameBeforeUpdate() {
+        stubEnabledDatasources();
         ArchiveGroup existing = enabledGroup();
         ArchiveGroup input = enabledGroup();
         input.setGroupCode(" ORDER_ARCHIVE ");
@@ -216,6 +235,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldUpdateGroupCodeWhenNewCodeIsNotDuplicate() {
+        stubEnabledDatasources();
         ArchiveGroup existing = enabledGroup();
         ArchiveGroup input = enabledGroup();
         input.setGroupCode(" ORDER_ARCHIVE_NEW ");
@@ -232,6 +252,7 @@ class ArchiveGroupServiceImplTest {
 
     @Test
     void shouldUpdateExistingGroupWhenCodeBelongsToSameGroup() {
+        stubEnabledDatasources();
         ArchiveGroup existing = enabledGroup();
         ArchiveGroup input = enabledGroup();
         input.setGroupName("Order Archive Updated");
@@ -259,6 +280,29 @@ class ArchiveGroupServiceImplTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.updateStatus(10L, 0));
         verify(groupMapper, never()).updateStatus(any(), any());
+    }
+
+    @Test
+    void shouldRejectCreateWhenSourceDatasourceIsNotEnabled() {
+        when(archiveConnectionMapper.selectById(1L)).thenReturn(datasourceWithStatus(1L, DATASOURCE_STATUS_UNTESTED));
+        when(archiveConnectionMapper.selectById(2L)).thenReturn(datasourceWithStatus(2L, DATASOURCE_STATUS_ENABLED));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> service.create(enabledGroup()));
+
+        assertEquals("源归档连接必须为已启用状态", error.getMessage());
+        verify(groupMapper, never()).insert(any());
+    }
+
+    @Test
+    void shouldRejectUpdateWhenTargetDatasourceIsDisabled() {
+        when(archiveConnectionMapper.selectById(1L)).thenReturn(datasourceWithStatus(1L, DATASOURCE_STATUS_ENABLED));
+        when(archiveConnectionMapper.selectById(2L)).thenReturn(datasourceWithStatus(2L, DATASOURCE_STATUS_DISABLED));
+        when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> service.update(enabledGroup()));
+
+        assertEquals("目标归档连接必须为已启用状态", error.getMessage());
+        verify(groupMapper, never()).update(any());
     }
 
     @Test
@@ -432,6 +476,18 @@ class ArchiveGroupServiceImplTest {
         group.setTargetDatasourceId(2L);
         group.setEnableStatus(0);
         return group;
+    }
+
+    private void stubEnabledDatasources() {
+        when(archiveConnectionMapper.selectById(1L)).thenReturn(datasourceWithStatus(1L, DATASOURCE_STATUS_ENABLED));
+        when(archiveConnectionMapper.selectById(2L)).thenReturn(datasourceWithStatus(2L, DATASOURCE_STATUS_ENABLED));
+    }
+
+    private ArchiveConnection datasourceWithStatus(Long id, int status) {
+        ArchiveConnection datasource = new ArchiveConnection();
+        datasource.setId(id);
+        datasource.setStatus(status);
+        return datasource;
     }
 
     private static DataPermissionService adminPermissionService() {

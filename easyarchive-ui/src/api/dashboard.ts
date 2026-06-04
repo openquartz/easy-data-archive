@@ -31,8 +31,16 @@ export interface DashboardTaskItem {
   updatedTime?: string;
 }
 
+export interface DashboardDailyTrendItem {
+  day: string;
+  submittedCount: number;
+  successCount: number;
+  failedCount: number;
+}
+
 export interface DashboardOverview {
   taskStatusCounts: DashboardStatusCount[];
+  dailyTaskTrend: DashboardDailyTrendItem[];
   recentTasks: DashboardTaskItem[];
   failedTasks: DashboardTaskItem[];
   datasourceStatusSummary: DashboardDatasourceSummary;

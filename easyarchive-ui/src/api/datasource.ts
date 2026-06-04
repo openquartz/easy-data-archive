@@ -21,6 +21,7 @@ export interface DatasourceTypeOption {
 }
 
 export interface DatasourcePayload {
+  id?: number;
   datasourceCode: string;
   datasourceName: string;
   datasourceType: string;

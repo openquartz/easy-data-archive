@@ -194,6 +194,73 @@ body {
   gap: 12px;
 }
 
+.dashboard-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dashboard-section-note {
+  margin: 0;
+  color: var(--ea-text-muted);
+  font-size: 13px;
+  text-align: right;
+}
+
+.dashboard-trend {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-trend__legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dashboard-trend__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ea-text-muted);
+  font-size: 13px;
+}
+
+.dashboard-trend__legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dashboard-trend__chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.dashboard-trend__grid {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.dashboard-trend__line {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dashboard-trend__axis-label {
+  fill: var(--ea-text-muted);
+  font-size: 11px;
+}
+
+.dashboard-trend__axis-label--left {
+  text-anchor: end;
+}
+
 .metric-card {
   border: 1px solid var(--ea-border);
   border-radius: 14px;
@@ -531,6 +598,14 @@ body {
   .page-toolbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .dashboard-section-header {
+    flex-direction: column;
+  }
+
+  .dashboard-section-note {
+    text-align: left;
   }
 
   .dashboard-cards {

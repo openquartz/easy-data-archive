@@ -3,6 +3,7 @@ package com.openquartz.easyarchive.starter.operationlog.presenter;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -13,6 +14,7 @@ public class ArchiveGroupOperationLogPresenter {
 
     private final Function<Long, String> datasourceNameResolver;
 
+    @Autowired
     public ArchiveGroupOperationLogPresenter(ArchiveConnectionMapper archiveConnectionMapper) {
         this(id -> {
             if (id == null) {

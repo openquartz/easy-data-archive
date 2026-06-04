@@ -4,6 +4,7 @@ import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -15,6 +16,7 @@ public class ArchiveTaskOperationLogPresenter {
 
     private final Function<Long, String> groupIdentifierResolver;
 
+    @Autowired
     public ArchiveTaskOperationLogPresenter(ArchiveGroupMapper archiveGroupMapper) {
         this(groupId -> {
             if (groupId == null) {
