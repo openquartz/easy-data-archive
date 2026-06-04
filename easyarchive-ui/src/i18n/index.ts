@@ -10,9 +10,7 @@ function resolveInitialLocale(): Locale {
   if (stored === "zh-CN" || stored === "en-US") {
     return stored;
   }
-
-  const browserLocale = navigator.language.toLowerCase();
-  return browserLocale.startsWith("zh") ? "zh-CN" : "en-US";
+  return fallbackLocale;
 }
 
 const locale = ref<Locale>(resolveInitialLocale());

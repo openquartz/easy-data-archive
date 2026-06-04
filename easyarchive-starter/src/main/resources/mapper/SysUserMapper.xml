@@ -9,6 +9,7 @@
         <result column="real_name" property="realName"/>
         <result column="mobile" property="mobile"/>
         <result column="email" property="email"/>
+        <result column="role_code" property="roleCode"/>
         <result column="status" property="status"/>
         <result column="last_login_time" property="lastLoginTime"/>
         <result column="remark" property="remark"/>
@@ -20,7 +21,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, username, password, real_name, mobile, email, status,
+        id, username, password, real_name, mobile, email, role_code, status,
         last_login_time, remark, created_time, updated_time, creator_id, updater_id, deleted
     </sql>
 
@@ -35,10 +36,10 @@
 
     <insert id="insert" parameterType="com.openquartz.easyarchive.core.common.SysUser" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO sys_user (
-            username, password, real_name, mobile, email, status,
+            username, password, real_name, mobile, email, role_code, status,
             last_login_time, remark, creator_id, updater_id
         ) VALUES (
-            #{username}, #{password}, #{realName}, #{mobile}, #{email}, #{status},
+            #{username}, #{password}, #{realName}, #{mobile}, #{email}, #{roleCode}, #{status},
             #{lastLoginTime}, #{remark}, #{creatorId}, #{updaterId}
         )
     </insert>
@@ -50,6 +51,7 @@
             <if test="realName != null">real_name = #{realName},</if>
             <if test="mobile != null">mobile = #{mobile},</if>
             <if test="email != null">email = #{email},</if>
+            <if test="roleCode != null">role_code = #{roleCode},</if>
             <if test="status != null">status = #{status},</if>
             <if test="lastLoginTime != null">last_login_time = #{lastLoginTime},</if>
             <if test="remark != null">remark = #{remark},</if>

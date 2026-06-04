@@ -98,6 +98,21 @@
         ORDER BY priority ASC, id ASC
     </select>
 
+    <select id="countByGroupId" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_group_item_by_time
+        WHERE group_id = #{groupId}
+          AND deleted = 0
+    </select>
+
+    <select id="countByGroupIdAndStatus" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_group_item_by_time
+        WHERE group_id = #{groupId}
+          AND enable_status = #{enableStatus}
+          AND deleted = 0
+    </select>
+
     <select id="countEnabledByGroupId" resultType="int">
         SELECT COUNT(1)
         FROM ea_archive_group_item_by_time

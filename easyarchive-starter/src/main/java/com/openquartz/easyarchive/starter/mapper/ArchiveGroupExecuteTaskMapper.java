@@ -15,13 +15,35 @@ public interface ArchiveGroupExecuteTaskMapper {
 
     ArchiveGroupExecuteTask selectById(@Param("id") Long id);
 
+    ArchiveGroupExecuteTask selectByIdAndUser(@Param("taskId") Long taskId,
+                                              @Param("userId") Long userId);
+
     List<ArchiveGroupExecuteTask> selectPage(@Param("offset") int offset,
                                               @Param("size") int size,
                                               @Param("status") String status);
 
+    List<ArchiveGroupExecuteTask> selectPageByUser(@Param("userId") Long userId,
+                                                   @Param("offset") int offset,
+                                                   @Param("size") int size,
+                                                   @Param("status") String status);
+
     int count(@Param("status") String status);
 
+    int countByUser(@Param("userId") Long userId, @Param("status") String status);
+
     int countActiveByGroupId(@Param("groupId") Long groupId);
+
+    ArchiveGroupExecuteTask selectLatestActiveByGroupId(@Param("groupId") Long groupId);
+
+    List<ArchiveGroupExecuteTask> selectLatestActiveByGroupIds(@Param("groupIds") List<Long> groupIds);
+
+    int countByGroupId(@Param("groupId") Long groupId);
+
+    int countByGroupIdAndStatus(@Param("groupId") Long groupId, @Param("status") Integer status);
+
+    ArchiveGroupExecuteTask selectLatestByGroupId(@Param("groupId") Long groupId);
+
+    List<ArchiveGroupExecuteTask> selectRecentByGroupId(@Param("groupId") Long groupId, @Param("limit") int limit);
 
     int updateExecuteStatus(@Param("id") Long id, @Param("status") Integer status);
 

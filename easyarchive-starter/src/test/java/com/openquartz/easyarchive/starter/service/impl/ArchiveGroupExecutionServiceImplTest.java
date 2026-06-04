@@ -10,6 +10,8 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
+import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
+import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import com.openquartz.easyarchive.starter.support.ArchiveGroupTaskDispatcher;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -21,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -36,8 +39,11 @@ class ArchiveGroupExecutionServiceImplTest {
     private final ArchiveGroupExecuteTaskMapper taskMapper = mock(ArchiveGroupExecuteTaskMapper.class);
     private final ArchiveConnectionMapper datasourceMapper = mock(ArchiveConnectionMapper.class);
     private final ArchiveGroupTaskDispatcher dispatcher = mock(ArchiveGroupTaskDispatcher.class);
+    private final ArchiveTaskLogService taskLogService = mock(ArchiveTaskLogService.class);
+    private final DataPermissionService dataPermissionService = mock(DataPermissionService.class);
     private final ArchiveGroupExecutionServiceImpl service = new ArchiveGroupExecutionServiceImpl(
-            groupMapper, idMapper, timeMapper, taskMapper, datasourceMapper, dispatcher);
+            groupMapper, idMapper, timeMapper, taskMapper, datasourceMapper, dispatcher, taskLogService,
+            dataPermissionService);
 
     @Test
     void shouldRejectTriggerWhenActiveTaskExists() {
@@ -108,6 +114,32 @@ class ArchiveGroupExecutionServiceImplTest {
         verify(dispatcher, never()).dispatch(any(), any(), any());
     }
 
+    @Test
+    void shouldCancelLatestActiveTaskForGroup() {
+        ArchiveGroup group = enabledGroup();
+        ArchiveGroupExecuteTask task = new ArchiveGroupExecuteTask();
+        task.setId(88L);
+        task.setGroupId(10L);
+        task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
+        when(groupMapper.selectById(10L)).thenReturn(group);
+        when(taskMapper.selectLatestActiveByGroupId(10L)).thenReturn(task);
+
+        ArchiveGroupExecuteTask cancelled = service.cancelActiveTask(10L, "user request");
+
+        assertSame(task, cancelled);
+        verify(taskLogService).cancelTask(88L, "user request");
+    }
+
+    @Test
+    void shouldRejectGroupCancelWhenNoActiveTaskExists() {
+        ArchiveGroup group = enabledGroup();
+        when(groupMapper.selectById(10L)).thenReturn(group);
+        when(taskMapper.selectLatestActiveByGroupId(10L)).thenReturn(null);
+
+        assertThrows(IllegalStateException.class, () -> service.cancelActiveTask(10L, "user request"));
+        verify(taskLogService, never()).cancelTask(any(), anyString());
+    }
+
     private ArchiveGroupExecuteTask captureInsertedTask() {
         ArgumentCaptor<ArchiveGroupExecuteTask> taskCaptor = ArgumentCaptor.forClass(ArchiveGroupExecuteTask.class);
         verify(taskMapper).insert(taskCaptor.capture());
@@ -136,7 +168,6 @@ class ArchiveGroupExecutionServiceImplTest {
             invokeSetter(datasource, "setJdbcUrl", String.class, jdbcUrl);
             invokeSetter(datasource, "setUsername", String.class, "root");
             invokeSetter(datasource, "setPasswordCipher", String.class, "secret");
-            invokeSetter(datasource, "setSchemaName", String.class, "archive");
             invokeSetter(datasource, "setStatus", Integer.class, 1);
             return datasource;
         } catch (ReflectiveOperationException ex) {

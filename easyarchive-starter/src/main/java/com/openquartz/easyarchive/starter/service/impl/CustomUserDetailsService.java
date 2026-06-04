@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.common.SysUser;
 import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
+import com.openquartz.easyarchive.starter.security.RoleConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -25,6 +26,9 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("用户不存在");
         }
         boolean enabled = user.getStatus() == null || user.getStatus() == 0;
+        String authority = RoleConstants.ADMIN.equalsIgnoreCase(user.getRoleCode())
+                ? "ROLE_ADMIN"
+                : "ROLE_USER";
         return new User(
                 user.getUsername(),
                 user.getPassword(),
@@ -32,7 +36,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 true,
                 true,
                 true,
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                Collections.singletonList(new SimpleGrantedAuthority(authority))
         );
     }
 }

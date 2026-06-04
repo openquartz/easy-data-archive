@@ -1,6 +1,8 @@
 package com.openquartz.easyarchive.starter.service;
 
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
+import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
+import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
 
 import java.util.List;
 
@@ -9,11 +11,13 @@ import java.util.List;
  */
 public interface ArchiveGroupService {
 
-    List<ArchiveGroup> findAll(Integer enableStatus);
+    List<ArchiveGroupView> findAll(Integer enableStatus);
 
     List<ArchiveGroup> tree();
 
-    ArchiveGroup findById(Long id);
+    ArchiveGroupView findById(Long id);
+
+    ArchiveGroupOverviewView findOverview(Long id);
 
     ArchiveGroup create(ArchiveGroup group);
 

@@ -11,6 +11,7 @@ export const useAuthStore = defineStore("auth", () => {
   const sessionHydrationPromise = ref<Promise<boolean> | null>(null);
 
   const isAuthenticated = computed(() => token.value.length > 0);
+  const isAdmin = computed(() => Boolean(profile.value?.isAdmin));
 
   function setAuth(nextToken: string, nextUsername = ""): void {
     token.value = nextToken;
@@ -83,6 +84,7 @@ export const useAuthStore = defineStore("auth", () => {
     token,
     username,
     profile,
+    isAdmin,
     isAuthenticated,
     sessionHydrated,
     setAuth,

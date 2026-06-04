@@ -13,11 +13,52 @@ export interface ArchiveGroup {
   ownerUserId?: number;
   enableStatus: number;
   remark?: string;
+  activeTaskId?: number;
+  activeTaskStatus?: number;
+  activeTaskStartTime?: string;
+  canTrigger?: boolean;
+  canCancelActiveTask?: boolean;
+  canViewActiveTask?: boolean;
   createdTime?: string;
   updatedTime?: string;
 }
 
-export type ArchiveGroupPayload = Omit<ArchiveGroup, "id" | "createdTime" | "updatedTime">;
+export interface ArchiveGroupItemStats {
+  totalCount: number;
+  enabledCount: number;
+  disabledCount: number;
+  idTypeCount: number;
+  timeTypeCount: number;
+}
+
+export interface ArchiveGroupTaskStats {
+  totalCount: number;
+  successCount: number;
+  failedCount: number;
+  runningCount: number;
+  lastExecuteStatus?: number;
+  lastExecuteTime?: number;
+}
+
+export interface ArchiveGroupOverview {
+  group: ArchiveGroup;
+  itemStats: ArchiveGroupItemStats;
+  taskStats: ArchiveGroupTaskStats;
+  recentTasks: TaskItem[];
+}
+
+export type ArchiveGroupPayload = Omit<
+  ArchiveGroup,
+  | "id"
+  | "activeTaskId"
+  | "activeTaskStatus"
+  | "activeTaskStartTime"
+  | "canTrigger"
+  | "canCancelActiveTask"
+  | "canViewActiveTask"
+  | "createdTime"
+  | "updatedTime"
+>;
 
 export function getArchiveGroupsApi(enableStatus?: number): Promise<ArchiveGroup[]> {
   const query = enableStatus === undefined ? "" : `?enableStatus=${enableStatus}`;
@@ -30,6 +71,10 @@ export function getArchiveGroupTreeApi(): Promise<ArchiveGroup[]> {
 
 export function getArchiveGroupApi(id: number): Promise<ArchiveGroup> {
   return http.get<ArchiveGroup>(`/archive/groups/${id}`);
+}
+
+export function getArchiveGroupOverviewApi(id: number): Promise<ArchiveGroupOverview> {
+  return http.get<ArchiveGroupOverview>(`/archive/groups/${id}/overview`);
 }
 
 export function createArchiveGroupApi(payload: ArchiveGroupPayload): Promise<ArchiveGroup> {
@@ -50,4 +95,8 @@ export function deleteArchiveGroupApi(id: number): Promise<void> {
 
 export function triggerArchiveGroupApi(id: number): Promise<TaskItem> {
   return http.post<TaskItem>(`/archive/groups/${id}/trigger`);
+}
+
+export function cancelArchiveGroupActiveTaskApi(id: number, cancelReason?: string): Promise<TaskItem> {
+  return http.post<TaskItem>(`/archive/groups/${id}/cancel-active-task`, { cancelReason });
 }

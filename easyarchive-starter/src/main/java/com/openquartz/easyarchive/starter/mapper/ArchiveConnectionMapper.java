@@ -23,7 +23,12 @@ public interface ArchiveConnectionMapper {
 
     ArchiveConnection selectByCode(String datasourceCode);
 
+    ArchiveConnection selectAuthorizedById(@Param("userId") Long userId, @Param("id") Long id);
+
     List<ArchiveConnection> selectList(@Param("status") Integer status, @Param("ownerUserId") Long ownerUserId);
+
+    List<ArchiveConnection> selectAuthorizedList(@Param("userId") Long userId,
+                                                 @Param("status") Integer status);
 
     List<ArchiveConnection> selectPage(@Param("start") int start, @Param("size") int size,
                                         @Param("status") Integer status, @Param("ownerUserId") Long ownerUserId);

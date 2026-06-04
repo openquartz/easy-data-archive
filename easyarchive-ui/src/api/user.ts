@@ -7,6 +7,7 @@ export interface User {
   realName?: string;
   mobile?: string;
   email?: string;
+  roleCode?: string;
   status: number;
   lastLoginTime?: string;
   remark?: string;
@@ -20,8 +21,20 @@ export interface UserPayload {
   realName?: string;
   mobile?: string;
   email?: string;
+  roleCode?: string;
   status?: number;
   remark?: string;
+}
+
+export interface UserDatasourcePermissionItem {
+  id: number;
+  datasourceCode: string;
+  datasourceName: string;
+  datasourceType: string;
+}
+
+export interface ReplaceUserDatasourcePermissionsPayload {
+  datasourceIds: number[];
 }
 
 export function getUsersApi(): Promise<User[]> {
@@ -38,4 +51,15 @@ export function updateUserApi(id: number, payload: UserPayload): Promise<User> {
 
 export function updateUserStatusApi(id: number, status: number): Promise<void> {
   return http.patch<void>(`/users/${id}/status?status=${status}`);
+}
+
+export function getUserDatasourcePermissionsApi(userId: number): Promise<UserDatasourcePermissionItem[]> {
+  return http.get<UserDatasourcePermissionItem[]>(`/users/${userId}/datasource-permissions`);
+}
+
+export function replaceUserDatasourcePermissionsApi(
+  userId: number,
+  payload: ReplaceUserDatasourcePermissionsPayload
+): Promise<void> {
+  return http.put<void>(`/users/${userId}/datasource-permissions`, payload);
 }

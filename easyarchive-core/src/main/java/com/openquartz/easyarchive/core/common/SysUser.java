@@ -22,6 +22,8 @@ public class SysUser extends BaseEntity {
 
     private String email;
 
+    private String roleCode;
+
     private Integer status;
 
     private Date lastLoginTime;
