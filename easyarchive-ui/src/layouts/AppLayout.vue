@@ -16,6 +16,8 @@ const workTabsStore = useWorkTabsStore();
 const accountLabel = computed(
   () => authStore.profile?.realName || authStore.username || authStore.profile?.username || ""
 );
+const showUserAdminEntry = computed(() => Boolean(authStore.profile?.isAdmin));
+const showOperationLogEntry = computed(() => Boolean(authStore.profile?.isAdmin));
 
 watch(
   () => route.fullPath,
@@ -106,7 +108,10 @@ function openWorkTab(tab: { type: string; id?: string; taskId?: string; title?: 
         <RouterLink class="nav__item" :to="{ name: 'archive-groups' }">{{ t("layout.nav.archiveGroups") }}</RouterLink>
         <RouterLink class="nav__item" :to="{ name: 'tasks' }">{{ t("layout.nav.tasks") }}</RouterLink>
         <RouterLink class="nav__item" :to="{ name: 'guide' }">{{ t("layout.nav.guide") }}</RouterLink>
-        <RouterLink class="nav__item" :to="{ name: 'users' }">{{ t("layout.nav.users") }}</RouterLink>
+        <RouterLink v-if="showOperationLogEntry" class="nav__item" :to="{ name: 'operation-logs' }">
+          {{ t("layout.nav.operationLogs") }}
+        </RouterLink>
+        <RouterLink v-if="showUserAdminEntry" class="nav__item" :to="{ name: 'users' }">{{ t("layout.nav.users") }}</RouterLink>
       </nav>
     </aside>
     <div class="app-shell__main">

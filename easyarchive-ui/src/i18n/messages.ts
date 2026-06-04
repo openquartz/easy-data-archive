@@ -9,10 +9,11 @@ export const messages = {
       brand: "EasyArchive",
       nav: {
         dashboard: "Dashboard",
-        datasources: "Datasources",
+        datasources: "Archive Connections",
         archiveGroups: "Archive Groups",
         tasks: "Archive Tasks",
         guide: "Guide",
+        operationLogs: "Operation Logs",
         users: "Users"
       },
       topbar: "Operations Console",
@@ -67,9 +68,9 @@ export const messages = {
         running: "Tasks Running",
         succeeded: "Tasks Succeeded",
         failed: "Tasks Failed",
-        datasourceEnabled: "Datasources Enabled",
-        datasourceDisabled: "Datasources Disabled",
-        datasourceTotal: "Datasources Total"
+        datasourceEnabled: "Active Archive Connections",
+        datasourceDisabled: "Disabled Archive Connections",
+        datasourceTotal: "Archive Connections Total"
       },
       recentTasks: "Recent Tasks",
       noRecentTasks: "No recent tasks.",
@@ -88,21 +89,21 @@ export const messages = {
       }
     },
     datasource: {
-      title: "Datasource Management",
-      new: "New Datasource",
-      emptyLoading: "Loading datasources...",
-      empty: "No datasource records.",
-      created: "Datasource created.",
-      updated: "Datasource updated.",
-      statusUpdated: "Datasource status updated.",
+      title: "Archive Connection Management",
+      new: "New Archive Connection",
+      emptyLoading: "Loading archive connections...",
+      empty: "No archive connection records.",
+      created: "Archive connection created.",
+      updated: "Archive connection updated.",
+      statusUpdated: "Archive connection status updated.",
       saveFailed: "Save failed",
-      loadFailed: "Failed to load datasources",
+      loadFailed: "Failed to load archive connections",
       statusUpdateFailed: "Status update failed",
       connectionTestFailed: "Connection test failed",
-      connectionTip: "For security, edit datasource and provide password before testing connection.",
+      connectionTip: "For security, edit the archive connection and provide password before testing connection.",
       form: {
-        createTitle: "Create Datasource",
-        editTitle: "Edit Datasource",
+        createTitle: "Create Archive Connection",
+        editTitle: "Edit Archive Connection",
         code: "Code",
         name: "Name",
         type: "Type",
@@ -113,10 +114,10 @@ export const messages = {
         remark: "Remark",
         keepPassword: "Leave blank to keep unchanged",
         validation: {
-          codeRequired: "Datasource code is required",
-          codeInvalid: "Datasource code must be 2-64 chars, start with a letter, and use letters, numbers, _ or -",
-          nameRequired: "Datasource name is required",
-          typeRequired: "Datasource type is required",
+          codeRequired: "Archive connection code is required",
+          codeInvalid: "Archive connection code must be 2-64 chars, start with a letter, and use letters, numbers, _ or -",
+          nameRequired: "Archive connection name is required",
+          typeRequired: "Archive connection type is required",
           jdbcRequired: "Connection address is required",
           jdbcInvalid: "Connection address must start with jdbc:",
           usernameRequired: "Username is required"
@@ -165,9 +166,9 @@ export const messages = {
         editTitle: "Edit Archive Group",
         code: "Code",
         name: "Name",
-        sourceDatasource: "Source Datasource",
-        targetDatasource: "Target Datasource",
-        selectDatasource: "Select datasource",
+        sourceDatasource: "Source Archive Connection",
+        targetDatasource: "Target Archive Connection",
+        selectDatasource: "Select archive connection",
         status: "Status",
         triggerMode: "Trigger Mode",
         remark: "Remark",
@@ -175,8 +176,8 @@ export const messages = {
           codeRequired: "Group code is required",
           codeInvalid: "Group code must be 2-64 chars, start with a letter, and use letters, numbers, _ or -",
           nameRequired: "Group name is required",
-          sourceRequired: "Source datasource is required",
-          targetRequired: "Target datasource is required"
+          sourceRequired: "Source archive connection is required",
+          targetRequired: "Target archive connection is required"
         }
       },
       item: {
@@ -240,6 +241,21 @@ export const messages = {
       saveFailed: "Save failed",
       loadFailed: "Failed to load users",
       statusUpdateFailed: "Status update failed",
+      noAccess: "Only administrators can manage users and archive connection permissions.",
+      roles: {
+        ADMIN: "Administrator",
+        USER: "User"
+      },
+      permissions: {
+        action: "Archive Connections",
+        title: "Archive Connection Permissions · {username}",
+        search: "Search archive connections",
+        empty: "No archive connection records.",
+        loadFailed: "Failed to load archive connection permissions",
+        updated: "Archive connection permissions updated.",
+        updateFailed: "Failed to update archive connection permissions",
+        adminReadonly: "Administrators can view all data and do not require additional archive connection permissions."
+      },
       form: {
         createTitle: "Create User",
         editTitle: "Edit User",
@@ -248,6 +264,7 @@ export const messages = {
         realName: "Real Name",
         mobile: "Mobile",
         email: "Email",
+        roleCode: "Role",
         status: "Status",
         remark: "Remark",
         keepPassword: "Leave blank to keep unchanged",
@@ -264,9 +281,45 @@ export const messages = {
         realName: "Real Name",
         email: "Email",
         mobile: "Mobile",
+        roleCode: "Role",
         status: "Status",
         lastLogin: "Last Login",
         actions: "Actions"
+      }
+    },
+    operationLog: {
+      title: "Operation Logs",
+      emptyLoading: "Loading operation logs...",
+      empty: "No operation logs.",
+      loadFailed: "Failed to load operation logs",
+      noAccess: "Only administrators can access operation logs.",
+      actions: {
+        search: "Search",
+        reset: "Reset"
+      },
+      pager: "Page {page} / {totalPages} · Total {total}",
+      result: {
+        all: "All",
+        success: "Success",
+        failed: "Failed"
+      },
+      filters: {
+        startTime: "Start Time",
+        endTime: "End Time",
+        operator: "Operator",
+        module: "Module",
+        result: "Result",
+        operatorPlaceholder: "Enter operator",
+        modulePlaceholder: "Enter module"
+      },
+      columns: {
+        time: "Time",
+        operator: "Operator",
+        module: "Module",
+        button: "Button",
+        result: "Result",
+        content: "Operation Content",
+        failureReason: "Failure Reason"
       }
     },
     task: {
@@ -339,10 +392,11 @@ export const messages = {
       brand: "EasyArchive",
       nav: {
         dashboard: "仪表盘",
-        datasources: "数据源",
+        datasources: "归档连接",
         archiveGroups: "归档分组",
         tasks: "归档任务",
         guide: "操作指南",
+        operationLogs: "操作日志",
         users: "用户"
       },
       topbar: "运维控制台",
@@ -397,9 +451,9 @@ export const messages = {
         running: "运行中任务",
         succeeded: "成功任务",
         failed: "失败任务",
-        datasourceEnabled: "已启用数据源",
-        datasourceDisabled: "已停用数据源",
-        datasourceTotal: "数据源总数"
+        datasourceEnabled: "已启用归档连接",
+        datasourceDisabled: "已停用归档连接",
+        datasourceTotal: "归档连接总数"
       },
       recentTasks: "最近任务",
       noRecentTasks: "暂无最近任务。",
@@ -418,21 +472,21 @@ export const messages = {
       }
     },
     datasource: {
-      title: "数据源管理",
-      new: "新建数据源",
-      emptyLoading: "正在加载数据源...",
-      empty: "暂无数据源记录。",
-      created: "数据源已创建。",
-      updated: "数据源已更新。",
-      statusUpdated: "数据源状态已更新。",
+      title: "归档连接管理",
+      new: "新建归档连接",
+      emptyLoading: "正在加载归档连接...",
+      empty: "暂无归档连接记录。",
+      created: "归档连接已创建。",
+      updated: "归档连接已更新。",
+      statusUpdated: "归档连接状态已更新。",
       saveFailed: "保存失败",
-      loadFailed: "加载数据源失败",
+      loadFailed: "加载归档连接失败",
       statusUpdateFailed: "更新状态失败",
       connectionTestFailed: "连接测试失败",
-      connectionTip: "出于安全考虑，请先编辑数据源并填写密码后再测试连接。",
+      connectionTip: "出于安全考虑，请先编辑归档连接并填写密码后再测试连接。",
       form: {
-        createTitle: "新建数据源",
-        editTitle: "编辑数据源",
+        createTitle: "新建归档连接",
+        editTitle: "编辑归档连接",
         code: "编码",
         name: "名称",
         type: "类型",
@@ -443,10 +497,10 @@ export const messages = {
         remark: "备注",
         keepPassword: "留空则保持不变",
         validation: {
-          codeRequired: "请输入数据源编码",
-          codeInvalid: "数据源编码长度需为 2-64 位，必须以字母开头，并且只能包含字母、数字、_ 或 -",
-          nameRequired: "请输入数据源名称",
-          typeRequired: "请输入数据源类型",
+          codeRequired: "请输入归档连接编码",
+          codeInvalid: "归档连接编码长度需为 2-64 位，必须以字母开头，并且只能包含字母、数字、_ 或 -",
+          nameRequired: "请输入归档连接名称",
+          typeRequired: "请输入归档连接类型",
           jdbcRequired: "请输入连接地址",
           jdbcInvalid: "连接地址必须以 jdbc: 开头",
           usernameRequired: "请输入用户名"
@@ -483,8 +537,8 @@ export const messages = {
       columns: {
         code: "编码",
         name: "名称",
-        source: "源数据源",
-        target: "目标数据源",
+        source: "源归档连接",
+        target: "目标归档连接",
         status: "状态",
         activeTask: "当前任务",
         activeTaskStartTime: "任务开始时间",
@@ -495,9 +549,9 @@ export const messages = {
         editTitle: "编辑归档分组",
         code: "编码",
         name: "名称",
-        sourceDatasource: "源数据源",
-        targetDatasource: "目标数据源",
-        selectDatasource: "选择数据源",
+        sourceDatasource: "源归档连接",
+        targetDatasource: "目标归档连接",
+        selectDatasource: "选择归档连接",
         status: "状态",
         triggerMode: "触发模式",
         remark: "备注",
@@ -505,8 +559,8 @@ export const messages = {
           codeRequired: "请输入分组编码",
           codeInvalid: "分组编码长度需为 2-64 位，必须以字母开头，并且只能包含字母、数字、_ 或 -",
           nameRequired: "请输入分组名称",
-          sourceRequired: "请选择源数据源",
-          targetRequired: "请选择目标数据源"
+          sourceRequired: "请选择源归档连接",
+          targetRequired: "请选择目标归档连接"
         }
       },
       item: {
@@ -570,6 +624,21 @@ export const messages = {
       saveFailed: "保存失败",
       loadFailed: "加载用户失败",
       statusUpdateFailed: "更新状态失败",
+      noAccess: "仅系统管理员支持管理用户和归档连接权限。",
+      roles: {
+        ADMIN: "系统管理员",
+        USER: "普通用户"
+      },
+      permissions: {
+        action: "归档连接权限",
+        title: "归档连接权限 · {username}",
+        search: "搜索归档连接",
+        empty: "暂无归档连接记录。",
+        loadFailed: "加载归档连接权限失败",
+        updated: "归档连接权限已更新。",
+        updateFailed: "更新归档连接权限失败",
+        adminReadonly: "系统管理员默认可查看全部数据，无需额外分配归档连接权限。"
+      },
       form: {
         createTitle: "新建用户",
         editTitle: "编辑用户",
@@ -578,6 +647,7 @@ export const messages = {
         realName: "姓名",
         mobile: "手机号",
         email: "邮箱",
+        roleCode: "角色",
         status: "状态",
         remark: "备注",
         keepPassword: "留空则保持不变",
@@ -594,9 +664,45 @@ export const messages = {
         realName: "姓名",
         email: "邮箱",
         mobile: "手机号",
+        roleCode: "角色",
         status: "状态",
         lastLogin: "最近登录",
         actions: "操作"
+      }
+    },
+    operationLog: {
+      title: "操作日志",
+      emptyLoading: "正在加载操作日志...",
+      empty: "暂无操作日志。",
+      loadFailed: "加载操作日志失败",
+      noAccess: "仅系统管理员可访问操作日志。",
+      actions: {
+        search: "查询",
+        reset: "重置"
+      },
+      pager: "第 {page} / {totalPages} 页 · 共 {total} 条",
+      result: {
+        all: "全部",
+        success: "成功",
+        failed: "失败"
+      },
+      filters: {
+        startTime: "开始时间",
+        endTime: "结束时间",
+        operator: "操作人",
+        module: "模块",
+        result: "结果",
+        operatorPlaceholder: "请输入操作人",
+        modulePlaceholder: "请输入模块"
+      },
+      columns: {
+        time: "时间",
+        operator: "操作人",
+        module: "模块",
+        button: "按钮",
+        result: "结果",
+        content: "操作内容",
+        failureReason: "失败原因"
       }
     },
     task: {

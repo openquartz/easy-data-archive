@@ -1,5 +1,6 @@
 package com.openquartz.easyarchive.starter.controller;
 
+import com.openquartz.easyarchive.starter.annotation.OperationLog;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class ArchiveTaskLogController {
     }
 
     @PostMapping("/cleanup")
+    @OperationLog(value = "清理任务日志", module = "ARCHIVE_TASK_LOG", action = "CLEANUP", button = "清理任务日志")
     public ApiResponse<Integer> cleanup(@RequestParam(defaultValue = "30") int retentionDays) {
         int deleted = taskLogService.cleanup(retentionDays);
         log.info("[ArchiveTaskLogController] cleanup deleted {} records, retentionDays:{}", deleted, retentionDays);
@@ -53,6 +55,7 @@ public class ArchiveTaskLogController {
     }
 
     @PostMapping("/tasks/{taskId}/cancel")
+    @OperationLog(value = "取消归档任务", module = "ARCHIVE_TASK", action = "CANCEL", button = "取消归档任务")
     public ApiResponse<Object> cancelTask(
             @PathVariable Long taskId,
             @RequestBody(required = false) Map<String, String> body) {

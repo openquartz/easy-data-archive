@@ -4,9 +4,12 @@ import LoginView from "../views/LoginView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import DatasourceView from "../views/DatasourceView.vue";
 import ArchiveGroupView from "../views/ArchiveGroupView.vue";
+import ArchiveGroupDetailView from "../views/ArchiveGroupDetailView.vue";
 import UserView from "../views/UserView.vue";
 import TaskListView from "../views/TaskListView.vue";
 import TaskDetailView from "../views/TaskDetailView.vue";
+import GuideView from "../views/GuideView.vue";
+import OperationLogView from "../views/OperationLogView.vue";
 import { useAuthStore } from "../stores/auth";
 import { AUTH_EXPIRED_EVENT } from "../utils/http";
 
@@ -38,14 +41,31 @@ const router = createRouter({
           component: ArchiveGroupView
         },
         {
+          path: "archive/groups/:id/detail",
+          name: "archive-group-detail",
+          component: ArchiveGroupDetailView
+        },
+        {
           path: "users",
           name: "users",
-          component: UserView
+          component: UserView,
+          meta: { adminOnly: true }
+        },
+        {
+          path: "system/operation-logs",
+          name: "operation-logs",
+          component: OperationLogView,
+          meta: { adminOnly: true }
         },
         {
           path: "tasks",
           name: "tasks",
           component: TaskListView
+        },
+        {
+          path: "guide",
+          name: "guide",
+          component: GuideView
         },
         {
           path: "tasks/:taskId",
@@ -72,6 +92,9 @@ router.beforeEach(async (to) => {
     const sessionOk = await authStore.ensureSession();
     if (!sessionOk) {
       return { name: "login", query: { redirect: to.fullPath } };
+    }
+    if (to.meta.adminOnly && !authStore.profile?.isAdmin) {
+      return { name: "dashboard" };
     }
   }
 
