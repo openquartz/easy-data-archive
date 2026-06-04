@@ -5,8 +5,10 @@ import com.openquartz.easyarchive.core.event.TaskEndEvent;
 import com.openquartz.easyarchive.core.listener.ArchiveEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class ArchiveNotificationListener implements ArchiveEventListener {
 

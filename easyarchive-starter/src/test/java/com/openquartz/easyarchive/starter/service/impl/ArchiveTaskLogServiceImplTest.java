@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog;
 import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
 import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
@@ -11,6 +12,7 @@ import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveTaskOper
 import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
 import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.Collections;
 import java.util.Map;
@@ -76,8 +78,12 @@ class ArchiveTaskLogServiceImplTest {
 
         service.cancelTask(12L, "manual");
 
+        ArchiveTaskLog log = captureSavedTaskLog();
         verify(archiveLogRepository).updateTaskStatus(12L, ArchiveGroupExecuteTask.STATUS_CANCELLED);
         verify(recorder).record(any());
+        assertEquals(enumCode("ArchiveTaskLogTypeEnum", "CANCEL"), log.getLogType());
+        assertEquals(enumCode("ArchiveTaskLogLevelEnum", "WARN"), log.getLogLevel());
+        assertEquals(enumCode("ArchiveTaskExecutePhaseEnum", "TASK_END"), log.getExecutePhase());
     }
 
     @Test
@@ -125,6 +131,22 @@ class ArchiveTaskLogServiceImplTest {
         currentUserInfo.setUserId(2L);
         currentUserInfo.setRoleCode("USER");
         return currentUserInfo;
+    }
+
+    private ArchiveTaskLog captureSavedTaskLog() {
+        ArgumentCaptor<ArchiveTaskLog> captor = ArgumentCaptor.forClass(ArchiveTaskLog.class);
+        verify(archiveLogRepository).saveTaskLog(captor.capture());
+        return captor.getValue();
+    }
+
+    private static String enumCode(String simpleClassName, String constantName) {
+        try {
+            Class<?> enumClass = Class.forName("com.openquartz.easyarchive.core.rule.enums." + simpleClassName);
+            Enum<?> constant = Enum.valueOf(enumClass.asSubclass(Enum.class), constantName);
+            return (String) enumClass.getMethod("getCode").invoke(constant);
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError("枚举定义缺失: " + simpleClassName + "." + constantName, exception);
+        }
     }
 
     private static OperationLogCommand command(String action) {

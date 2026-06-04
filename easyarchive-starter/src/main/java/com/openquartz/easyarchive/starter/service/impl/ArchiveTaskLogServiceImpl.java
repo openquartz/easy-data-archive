@@ -3,6 +3,9 @@ package com.openquartz.easyarchive.starter.service.impl;
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskExecutePhaseEnum;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogLevelEnum;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogTypeEnum;
 import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
 import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
@@ -110,10 +113,10 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
 
         ArchiveTaskLog log = new ArchiveTaskLog();
         log.setTaskId(taskId);
-        log.setLogType("CANCEL");
-        log.setLogLevel("WARN");
+        log.setLogType(ArchiveTaskLogTypeEnum.CANCEL);
+        log.setLogLevel(ArchiveTaskLogLevelEnum.WARN);
         log.setLogContent("任务取消请求" + (cancelReason != null ? ":" + cancelReason : ""));
-        log.setExecutePhase("TASK_END");
+        log.setExecutePhase(ArchiveTaskExecutePhaseEnum.TASK_END);
         log.setProcessedCount(task.getProcessedRecords() != null ? task.getProcessedRecords() : 0L);
         log.setProcessSpeed(BigDecimal.ZERO);
         log.setLogTime(new Date());

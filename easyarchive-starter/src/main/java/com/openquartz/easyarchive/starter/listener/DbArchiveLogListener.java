@@ -10,6 +10,9 @@ import com.openquartz.easyarchive.core.listener.ArchiveEventListener;
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskExecutePhaseEnum;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogLevelEnum;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogTypeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,9 +55,9 @@ public class DbArchiveLogListener implements ArchiveEventListener {
             repository.updateTaskExecution(task);
         }
 
-        saveLog(event.getTaskId(), "START", "INFO",
+        saveLog(event.getTaskId(), ArchiveTaskLogTypeEnum.START, ArchiveTaskLogLevelEnum.INFO,
                 "任务开始，规则数:" + event.getRuleCount(),
-                "TASK_START", 0L, BigDecimal.ZERO, new Date(event.getTimestamp()));
+                ArchiveTaskExecutePhaseEnum.TASK_START, 0L, BigDecimal.ZERO, new Date(event.getTimestamp()));
     }
 
     private void handleTaskEnd(TaskEndEvent event) {
@@ -64,15 +67,15 @@ public class DbArchiveLogListener implements ArchiveEventListener {
         task.setProcessedRecords(event.getTotalRows());
 
         String content;
-        String logType;
-        String level;
+        ArchiveTaskLogTypeEnum logType;
+        ArchiveTaskLogLevelEnum level;
 
         if (event.isCancelled()) {
             task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_CANCELLED);
             task.setFinishedFlag(event.getTaskId());
             content = "任务已取消" + (event.getErrorMsg() != null ? ":" + event.getErrorMsg() : "");
-            logType = "CANCEL";
-            level = "WARN";
+            logType = ArchiveTaskLogTypeEnum.CANCEL;
+            level = ArchiveTaskLogLevelEnum.WARN;
         } else {
             task.setExecuteStatus(event.isSuccess() ? 2 : 3);
             task.setFinishedFlag(event.getTaskId());
@@ -85,20 +88,20 @@ public class DbArchiveLogListener implements ArchiveEventListener {
             content = event.isSuccess()
                     ? "任务完成，总行数:" + event.getTotalRows() + "，耗时:" + event.getElapsedMs() + "ms"
                     : "任务失败:" + event.getErrorMsg();
-            logType = event.isSuccess() ? "FINISH" : "ERROR";
-            level = event.isSuccess() ? "INFO" : "ERROR";
+            logType = event.isSuccess() ? ArchiveTaskLogTypeEnum.FINISH : ArchiveTaskLogTypeEnum.ERROR;
+            level = event.isSuccess() ? ArchiveTaskLogLevelEnum.INFO : ArchiveTaskLogLevelEnum.ERROR;
         }
 
         repository.updateTaskExecution(task);
         saveLog(event.getTaskId(), logType, level, content,
-                "TASK_END", event.getTotalRows(), BigDecimal.ZERO, new Date(event.getTimestamp()));
+                ArchiveTaskExecutePhaseEnum.TASK_END, event.getTotalRows(), BigDecimal.ZERO, new Date(event.getTimestamp()));
     }
 
     private void handleRuleStart(RuleStartEvent event) {
         String content = "规则开始:" + event.getSourceTable() + " -> " + event.getTargetTable()
                 + ", 类型:" + event.getRuleType();
-        saveLog(event.getTaskId(), "START", "INFO", content,
-                "RULE_START", 0L, BigDecimal.ZERO, new Date(event.getTimestamp()));
+        saveLog(event.getTaskId(), ArchiveTaskLogTypeEnum.START, ArchiveTaskLogLevelEnum.INFO, content,
+                ArchiveTaskExecutePhaseEnum.RULE_START, 0L, BigDecimal.ZERO, new Date(event.getTimestamp()));
     }
 
     private void handleRuleEnd(RuleEndEvent event) {
@@ -110,10 +113,10 @@ public class DbArchiveLogListener implements ArchiveEventListener {
                     + ", 处理:" + event.getProcessedRows() + "行, 耗时:" + event.getElapsedMs() + "ms"
                 : "规则失败:" + event.getSourceTable() + " -> " + event.getTargetTable()
                     + ", " + event.getErrorMsg();
-        String logType = event.isSuccess() ? "FINISH" : "ERROR";
-        String level = event.isSuccess() ? "INFO" : "ERROR";
+        ArchiveTaskLogTypeEnum logType = event.isSuccess() ? ArchiveTaskLogTypeEnum.FINISH : ArchiveTaskLogTypeEnum.ERROR;
+        ArchiveTaskLogLevelEnum level = event.isSuccess() ? ArchiveTaskLogLevelEnum.INFO : ArchiveTaskLogLevelEnum.ERROR;
         saveLog(event.getTaskId(), logType, level, content,
-                "RULE_END", event.getProcessedRows(), speed, new Date(event.getTimestamp()));
+                ArchiveTaskExecutePhaseEnum.RULE_END, event.getProcessedRows(), speed, new Date(event.getTimestamp()));
     }
 
     private void handleTaskProgress(TaskProgressEvent event) {
@@ -135,12 +138,12 @@ public class DbArchiveLogListener implements ArchiveEventListener {
 
         String content = String.format("进度: 已处理 %d 行, 速度 %s 行/秒, 当前表: %s",
                 event.getProcessedRecords(), speed, event.getSourceTable());
-        saveLog(event.getTaskId(), "PROGRESS", "INFO", content,
-                "TASK_PROGRESS", event.getProcessedRecords(), speed, new Date(event.getTimestamp()));
+        saveLog(event.getTaskId(), ArchiveTaskLogTypeEnum.PROGRESS, ArchiveTaskLogLevelEnum.INFO, content,
+                ArchiveTaskExecutePhaseEnum.TASK_PROGRESS, event.getProcessedRecords(), speed, new Date(event.getTimestamp()));
     }
 
-    private void saveLog(Long taskId, String logType, String logLevel,
-                         String logContent, String executePhase,
+    private void saveLog(Long taskId, ArchiveTaskLogTypeEnum logType, ArchiveTaskLogLevelEnum logLevel,
+                         String logContent, ArchiveTaskExecutePhaseEnum executePhase,
                          Long processedCount, BigDecimal processSpeed, Date logTime) {
         ArchiveTaskLog log = new ArchiveTaskLog();
         log.setTaskId(taskId);
