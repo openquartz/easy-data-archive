@@ -1,6 +1,9 @@
 package com.openquartz.easyarchive.core.rule.entity;
 
 import com.openquartz.easyarchive.common.entity.BaseEntity;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskExecutePhaseEnum;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogLevelEnum;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -51,5 +54,16 @@ public class ArchiveTaskLog extends BaseEntity {
      * 执行阶段
      */
     private String executePhase;
-}
 
+    public void setLogType(ArchiveTaskLogTypeEnum logType) {
+        this.logType = logType == null ? null : logType.getCode();
+    }
+
+    public void setLogLevel(ArchiveTaskLogLevelEnum logLevel) {
+        this.logLevel = logLevel == null ? null : logLevel.getCode();
+    }
+
+    public void setExecutePhase(ArchiveTaskExecutePhaseEnum executePhase) {
+        this.executePhase = executePhase == null ? null : executePhase.getCode();
+    }
+}
