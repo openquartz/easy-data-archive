@@ -68,6 +68,7 @@ public class ArchiveGroupTaskDispatcher {
             update.setId(taskId);
             update.setExecuteStatus(status);
             update.setEndTime(new java.util.Date());
+            update.setFinishedFlag(taskId);
             archiveLogRepository.updateTaskExecution(update);
         }
     }
