@@ -1,5 +1,6 @@
 package com.openquartz.easyarchive.starter.repository;
 
+import com.openquartz.easyarchive.common.enums.ArchiveTaskStatusEnum;
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog;
@@ -23,6 +24,7 @@ public class JdbcArchiveLogRepository implements ArchiveLogRepository {
 
     @Override
     public void updateTaskExecution(ArchiveGroupExecuteTask task) {
+        normalizeFinishedFlag(task);
         executeTaskMapper.update(task);
     }
 
@@ -60,6 +62,14 @@ public class JdbcArchiveLogRepository implements ArchiveLogRepository {
 
     @Override
     public void updateTaskStatus(Long taskId, int status) {
+        if (ArchiveTaskStatusEnum.isTerminal(status)) {
+            ArchiveGroupExecuteTask task = new ArchiveGroupExecuteTask();
+            task.setId(taskId);
+            task.setExecuteStatus(status);
+            task.setFinishedFlag(taskId);
+            executeTaskMapper.update(task);
+            return;
+        }
         executeTaskMapper.updateExecuteStatus(taskId, status);
     }
 
@@ -68,5 +78,14 @@ public class JdbcArchiveLogRepository implements ArchiveLogRepository {
         int taskLogs = taskLogMapper.deleteByRetentionDays(retentionDays);
         int tasks = executeTaskMapper.deleteByRetentionDays(retentionDays);
         return taskLogs + tasks;
+    }
+
+    private void normalizeFinishedFlag(ArchiveGroupExecuteTask task) {
+        if (task == null || task.getId() == null) {
+            return;
+        }
+        if (ArchiveTaskStatusEnum.isTerminal(task.getExecuteStatus()) && task.getFinishedFlag() == null) {
+            task.setFinishedFlag(task.getId());
+        }
     }
 }

@@ -69,13 +69,13 @@ public class DbArchiveLogListener implements ArchiveEventListener {
 
         if (event.isCancelled()) {
             task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_CANCELLED);
-            task.setFinishedFlag(0L);
+            task.setFinishedFlag(event.getTaskId());
             content = "任务已取消" + (event.getErrorMsg() != null ? ":" + event.getErrorMsg() : "");
             logType = "CANCEL";
             level = "WARN";
         } else {
             task.setExecuteStatus(event.isSuccess() ? 2 : 3);
-            task.setFinishedFlag(event.isSuccess() ? event.getTaskId() : 0L);
+            task.setFinishedFlag(event.getTaskId());
             if (event.getElapsedMs() > 0) {
                 task.setProcessedSpeed(BigDecimal.valueOf(event.getTotalRows() * 1000.0 / event.getElapsedMs()));
             }
