@@ -1,6 +1,8 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.common.entity.Pair;
+import com.openquartz.easyarchive.common.enums.ArchiveTaskStatusEnum;
+import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
@@ -16,6 +18,7 @@ import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import com.openquartz.easyarchive.starter.support.ArchiveGroupTaskDispatcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
@@ -33,6 +36,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
     private final DataPermissionService dataPermissionService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public synchronized ArchiveGroupExecuteTask trigger(Long groupId) {
         dataPermissionService.assertGroupReadable(groupId);
         ArchiveGroup group = requireEnabledGroup(groupId);
@@ -49,7 +53,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
         ArchiveGroupExecuteTask task = new ArchiveGroupExecuteTask();
         task.setGroupId(groupId);
         task.setStartTime(new Date());
-        task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_WAITING);
+        task.setExecuteStatus(ArchiveTaskStatusEnum.WAITING.getCode());
         task.setProcessedRecords(0L);
         task.setFinishedFlag(0L);
         taskMapper.insert(task);
@@ -60,6 +64,20 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
     }
 
     @Override
+    public ArchiveGroupExecuteTask trigger(String groupCode) {
+        String normalizedGroupCode = groupCode == null ? null : groupCode.trim();
+        if (normalizedGroupCode == null || normalizedGroupCode.isEmpty()) {
+            throw new IllegalArgumentException("groupCode is required");
+        }
+        ArchiveGroup group = groupMapper.selectByCode(normalizedGroupCode);
+        if (group == null) {
+            throw new IllegalArgumentException("Archive group not found");
+        }
+        return trigger(group.getId());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public ArchiveGroupExecuteTask cancelActiveTask(Long groupId, String cancelReason) {
         dataPermissionService.assertGroupReadable(groupId);
         requireExistingGroup(groupId);
@@ -73,7 +91,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
 
     private ArchiveGroup requireEnabledGroup(Long groupId) {
         ArchiveGroup group = requireExistingGroup(groupId);
-        if (group.getEnableStatus() == null || group.getEnableStatus() != 0) {
+        if (!EnableStatusEnum.isEnabled(group.getEnableStatus())) {
             throw new IllegalStateException("Archive group is disabled");
         }
         return group;

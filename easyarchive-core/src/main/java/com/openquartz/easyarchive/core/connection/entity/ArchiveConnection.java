@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.core.connection.entity;
 
 import com.openquartz.easyarchive.common.entity.BaseEntity;
+import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -13,9 +14,9 @@ import java.util.Date;
 @Data
 public class ArchiveConnection extends BaseEntity {
 
-    public static final int STATUS_UNTESTED = 0;
-    public static final int STATUS_ENABLED = 1;
-    public static final int STATUS_DISABLED = 2;
+    public static final int STATUS_UNTESTED = DatasourceStatusEnum.UNTESTED.getCode();
+    public static final int STATUS_ENABLED = DatasourceStatusEnum.ENABLED.getCode();
+    public static final int STATUS_DISABLED = DatasourceStatusEnum.DISABLED.getCode();
 
     private Long id;
 

@@ -3,6 +3,7 @@ package com.openquartz.easyarchive.starter.operationlog.presenter;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
+import com.openquartz.easyarchive.starter.operationlog.OperationValueFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import java.util.function.Function;
 public class ArchiveGroupOperationLogPresenter {
 
     private final Function<Long, String> datasourceNameResolver;
+    private final OperationValueFormatter formatter = new OperationValueFormatter();
 
     @Autowired
     public ArchiveGroupOperationLogPresenter(ArchiveConnectionMapper archiveConnectionMapper) {
@@ -60,6 +62,6 @@ public class ArchiveGroupOperationLogPresenter {
     }
 
     private String status(Integer enableStatus) {
-        return enableStatus != null && enableStatus == 0 ? "启用" : "停用";
+        return formatter.formatEnableStatus(enableStatus);
     }
 }

@@ -1,35 +1,24 @@
 package com.openquartz.easyarchive.starter.operationlog;
 
+import com.openquartz.easyarchive.common.enums.BinarySwitchEnum;
+import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
+import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
+
 public class OperationValueFormatter {
 
     public String formatDatasourceStatus(Integer value) {
-        if (value == null) {
-            return "";
-        }
-        switch (value) {
-            case 0:
-                return "未测试";
-            case 1:
-                return "已启用";
-            case 2:
-                return "已停用";
-            default:
-                return String.valueOf(value);
-        }
+        DatasourceStatusEnum status = DatasourceStatusEnum.fromCode(value);
+        return status == null ? valueToText(value) : status.getDesc();
     }
 
     public String formatEnableStatus(Integer value) {
-        if (value == null) {
-            return "";
-        }
-        return value == 0 ? "启用" : "停用";
+        EnableStatusEnum status = EnableStatusEnum.fromCode(value);
+        return status == null ? valueToText(value) : status.getDesc();
     }
 
     public String formatBooleanSwitch(Integer value) {
-        if (value == null) {
-            return "";
-        }
-        return value == 0 ? "是" : "否";
+        BinarySwitchEnum status = BinarySwitchEnum.fromCode(value);
+        return status == null ? valueToText(value) : status.getDesc();
     }
 
     public String changedPasswordText() {
@@ -37,10 +26,7 @@ public class OperationValueFormatter {
     }
 
     public String formatUserStatus(Integer value) {
-        if (value == null) {
-            return "";
-        }
-        return value == 0 ? "启用" : "停用";
+        return formatEnableStatus(value);
     }
 
     public String formatUserRole(String roleCode) {
@@ -54,6 +40,10 @@ public class OperationValueFormatter {
             return "普通用户";
         }
         return roleCode;
+    }
+
+    private String valueToText(Integer value) {
+        return value == null ? "" : String.valueOf(value);
     }
 
     public String joinNames(Iterable<String> values) {

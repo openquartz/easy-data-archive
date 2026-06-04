@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.starter.operationlog.presenter;
 
 import com.openquartz.easyarchive.core.common.SysUser;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
+import com.openquartz.easyarchive.starter.operationlog.OperationValueFormatter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -11,6 +12,8 @@ import java.util.List;
 
 @Component
 public class UserOperationLogPresenter {
+
+    private final OperationValueFormatter formatter = new OperationValueFormatter();
 
     public OperationLogCommand buildCreate(SysUser user) {
         List<String> segments = new ArrayList<>();
@@ -95,9 +98,6 @@ public class UserOperationLogPresenter {
     }
 
     private String statusName(Integer status) {
-        if (status == null) {
-            return "";
-        }
-        return status == 0 ? "启用" : "停用";
+        return formatter.formatUserStatus(status);
     }
 }

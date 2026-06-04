@@ -14,16 +14,24 @@ public enum DatasourceTypeEnum {
     MYSQL("MYSQL", "MySQL");
 
     private final String code;
-    private final String name;
+    private final String desc;
 
-    DatasourceTypeEnum(String code, String name) {
+    DatasourceTypeEnum(String code, String desc) {
         this.code = code;
-        this.name = name;
+        this.desc = desc;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getDesc() {
+        return desc;
     }
 
     public static List<DatasourceTypeOption> toOptions() {
         return Arrays.stream(values())
-                .map(item -> new DatasourceTypeOption(item.code, item.name))
+                .map(item -> new DatasourceTypeOption(item.code, item.desc))
                 .collect(Collectors.toList());
     }
 }

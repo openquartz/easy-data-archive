@@ -76,6 +76,7 @@ class ArchiveGroupExecutionServiceImplTest {
         Object source = datasource(1L, "SRC", "jdbc:mysql://source");
         Object target = datasource(2L, "DST", "jdbc:mysql://target");
         when(groupMapper.selectById(10L)).thenReturn(group);
+        when(groupMapper.selectByCode("ORDER_ARCHIVE")).thenReturn(group);
         when(taskMapper.countActiveByGroupId(10L)).thenReturn(0);
         when(idMapper.countEnabledByGroupId(10L)).thenReturn(1);
         when(timeMapper.countEnabledByGroupId(10L)).thenReturn(0);
@@ -101,6 +102,32 @@ class ArchiveGroupExecutionServiceImplTest {
         assertEquals("jdbc:mysql://source", dispatchedSource.getUrl());
         assertEquals("DST", dispatchedTarget.getConnectCode());
         assertEquals("jdbc:mysql://target", dispatchedTarget.getUrl());
+    }
+
+    @Test
+    void shouldCreateWaitingTaskWhenTriggeredByGroupCode() {
+        ArchiveGroup group = enabledGroup();
+        Object source = datasource(1L, "SRC", "jdbc:mysql://source");
+        Object target = datasource(2L, "DST", "jdbc:mysql://target");
+        when(groupMapper.selectByCode("ORDER_ARCHIVE")).thenReturn(group);
+        when(groupMapper.selectById(10L)).thenReturn(group);
+        when(taskMapper.countActiveByGroupId(10L)).thenReturn(0);
+        when(idMapper.countEnabledByGroupId(10L)).thenReturn(1);
+        when(timeMapper.countEnabledByGroupId(10L)).thenReturn(0);
+        doReturn(source).when(datasourceMapper).selectById(1L);
+        doReturn(target).when(datasourceMapper).selectById(2L);
+
+        ArchiveGroupExecuteTask task = service.trigger("ORDER_ARCHIVE");
+
+        assertEquals(10L, task.getGroupId());
+        assertEquals(ArchiveGroupExecuteTask.STATUS_WAITING, task.getExecuteStatus());
+        verify(groupMapper).selectByCode("ORDER_ARCHIVE");
+    }
+
+    @Test
+    void shouldRejectTriggerWhenGroupCodeIsBlank() {
+        assertThrows(IllegalArgumentException.class, () -> service.trigger("  "));
+        verify(groupMapper, never()).selectByCode(any());
     }
 
     @Test

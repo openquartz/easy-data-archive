@@ -1,5 +1,6 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
+import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
@@ -21,9 +22,6 @@ public class DashboardServiceImpl implements DashboardService {
     private static final int RECENT_TASK_LIMIT = 10;
     private static final int FAILED_TASK_LIMIT = 10;
     private static final int TREND_DAYS = 7;
-    private static final int DATASOURCE_STATUS_ENABLED = 1;
-    private static final int DATASOURCE_STATUS_DISABLED = 2;
-
     private final ArchiveGroupExecuteTaskMapper archiveGroupExecuteTaskMapper;
     private final ArchiveConnectionMapper eaArchiveDatasourceMapper;
 
@@ -80,9 +78,9 @@ public class DashboardServiceImpl implements DashboardService {
             }
             int countValue = count.intValue();
             summary.put("total", ((Integer) summary.get("total")) + countValue);
-            if (status != null && status.intValue() == DATASOURCE_STATUS_ENABLED) {
+            if (status != null && DatasourceStatusEnum.isEnabled(status.intValue())) {
                 summary.put("enabled", countValue);
-            } else if (status != null && status.intValue() == DATASOURCE_STATUS_DISABLED) {
+            } else if (status != null && DatasourceStatusEnum.DISABLED.getCode().equals(status.intValue())) {
                 summary.put("disabled", countValue);
             }
         }
