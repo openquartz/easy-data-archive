@@ -31,8 +31,8 @@ public class EasyArchiveException extends RuntimeException {
      * @param placeHold 占位
      * @return 异常
      */
-    public static EasyArchiveException replacePlaceHold(EasyArchiveErrorCode errorCode, Object... placeHold) {
-        throw new EasyArchiveException(errorCode, MessageFormat.format(errorCode.getErrorMsg(), placeHold));
+    public static EasyArchiveException withPlaceholders(EasyArchiveErrorCode errorCode, Object... placeHold) {
+        return new EasyArchiveException(errorCode, MessageFormat.format(errorCode.getErrorMsg(), placeHold));
     }
 
     @Override

@@ -28,6 +28,7 @@ public class MysqlSink implements Sink, Closeable {
 
     private static final String COMMA = ",";
     private static final String QUESTION_MASK = "?";
+    private static final int BATCH_FLUSH_SIZE = 500;
 
     private final ArchiveConnection archiveConnection;
     private Connection connection;
@@ -62,12 +63,12 @@ public class MysqlSink implements Sink, Closeable {
                 }
                 preSmt.addBatch();
                 ++j;
-                if (j % 500 == 0) {
-                    int[] r = preSmt.executeBatch();
+                if (j % BATCH_FLUSH_SIZE == 0) {
+                    preSmt.executeBatch();
                 }
             }
-            if (j % 500 != 0) {
-                int[] r = preSmt.executeBatch();
+            if (j % BATCH_FLUSH_SIZE != 0) {
+                preSmt.executeBatch();
             }
         }
         stopwatch.stop();

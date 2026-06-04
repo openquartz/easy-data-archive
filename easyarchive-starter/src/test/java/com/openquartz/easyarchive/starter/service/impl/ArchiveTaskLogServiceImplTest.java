@@ -2,6 +2,8 @@ package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
@@ -102,7 +104,8 @@ class ArchiveTaskLogServiceImplTest {
         when(archiveLogRepository.queryTaskById(14L)).thenReturn(task);
         doNothing().when(dataPermissionService).assertTaskReadable(14L);
 
-        assertThrows(IllegalStateException.class, () -> service.cancelTask(14L, "manual"));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.cancelTask(14L, "manual"));
+        assertEquals(StarterErrorCode.ARCHIVE_TASK_TERMINAL_CANNOT_CANCEL, error.getErrorCode());
 
         verify(recorder).recordFailure("任务已结束，无法取消");
     }

@@ -2,6 +2,8 @@ package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemById;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
@@ -41,7 +43,8 @@ class ArchiveGroupItemByIdServiceImplTest {
         item.setGroupId(10L);
         item.setPriority(5);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(10L, item));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(10L, item));
+        assertEquals(StarterErrorCode.PRIORITY_DUPLICATED, error.getErrorCode());
         verify(idMapper, never()).insert(any());
     }
 
@@ -73,7 +76,8 @@ class ArchiveGroupItemByIdServiceImplTest {
         ArchiveGroupItemById item = validIdItem();
         item.setSourceTable(" ");
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(10L, item));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(10L, item));
+        assertEquals(StarterErrorCode.SOURCE_TABLE_REQUIRED, error.getErrorCode());
         verify(idMapper, never()).insert(any());
     }
 
@@ -83,7 +87,8 @@ class ArchiveGroupItemByIdServiceImplTest {
         ArchiveGroupItemById item = validIdItem();
         item.setStepRounds(0);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(10L, item));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(10L, item));
+        assertEquals(StarterErrorCode.STEP_ROUNDS_INVALID, error.getErrorCode());
         verify(idMapper, never()).insert(any());
     }
 
@@ -95,7 +100,8 @@ class ArchiveGroupItemByIdServiceImplTest {
         item.setEnableClean(0);
         item.setEnableWrite(1);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(10L, item));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(10L, item));
+        assertEquals(StarterErrorCode.UNSAFE_CLEAN_WITHOUT_WRITE, error.getErrorCode());
         verify(idMapper, never()).insert(any());
     }
 
@@ -123,7 +129,8 @@ class ArchiveGroupItemByIdServiceImplTest {
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
         when(idMapper.selectById(20L, 10L)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.findById(10L, 20L));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.findById(10L, 20L));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_ITEM_NOT_FOUND, error.getErrorCode());
     }
 
     @Test
@@ -223,7 +230,9 @@ class ArchiveGroupItemByIdServiceImplTest {
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
         when(idMapper.selectById(20L, 10L)).thenReturn(existing);
 
-        assertThrows(IllegalArgumentException.class, () -> service.updateStatus(10L, 20L, 2));
+        StarterManageException error = assertThrows(StarterManageException.class,
+                () -> service.updateStatus(10L, 20L, 2));
+        assertEquals(StarterErrorCode.ENABLE_STATUS_INVALID, error.getErrorCode());
         verify(idMapper, never()).updateStatus(any(), any(), any());
     }
 
@@ -237,7 +246,9 @@ class ArchiveGroupItemByIdServiceImplTest {
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
         when(idMapper.selectById(20L, 10L)).thenReturn(existing);
 
-        assertThrows(IllegalArgumentException.class, () -> service.updateStatus(10L, 20L, 0));
+        StarterManageException error = assertThrows(StarterManageException.class,
+                () -> service.updateStatus(10L, 20L, 0));
+        assertEquals(StarterErrorCode.UNSAFE_CLEAN_WITHOUT_WRITE, error.getErrorCode());
         verify(idMapper, never()).updateStatus(any(), any(), any());
     }
 

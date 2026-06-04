@@ -40,7 +40,7 @@ public final class Asserts {
      */
     public static void isTrue(boolean expression, EasyArchiveErrorCode code, Object... placeHold) {
         if (!expression) {
-            throw EasyArchiveException.replacePlaceHold(code, placeHold);
+            throw EasyArchiveException.withPlaceholders(code, placeHold);
         }
     }
 
@@ -85,7 +85,7 @@ public final class Asserts {
      */
     public static void notNull(Object obj, EasyArchiveErrorCode code, Object... placeHold) {
         if (obj == null) {
-            throw EasyArchiveException.replacePlaceHold(code, placeHold);
+            throw EasyArchiveException.withPlaceholders(code, placeHold);
         }
     }
 

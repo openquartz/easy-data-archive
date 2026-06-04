@@ -6,6 +6,8 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
 import com.openquartz.easyarchive.starter.mapper.UserDatasourcePermissionMapper;
 import com.openquartz.easyarchive.starter.model.entity.UserDatasourcePermission;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.UserDatasourcePermissionOperationLogPresenter;
 import com.openquartz.easyarchive.starter.service.DataPermissionService;
@@ -119,7 +121,7 @@ public class UserDatasourcePermissionServiceImpl implements UserDatasourcePermis
     private SysUser ensureUserExists(Long userId) {
         SysUser user = sysUserMapper.selectById(userId);
         if (user == null) {
-            throw new IllegalArgumentException("用户不存在");
+            throw new StarterManageException(StarterErrorCode.USER_NOT_FOUND);
         }
         return user;
     }
@@ -127,7 +129,7 @@ public class UserDatasourcePermissionServiceImpl implements UserDatasourcePermis
     private void ensureDatasourceExists(Long datasourceId) {
         ArchiveConnection datasource = archiveConnectionMapper.selectById(datasourceId);
         if (datasource == null) {
-            throw new IllegalArgumentException("数据源不存在");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
         }
     }
 

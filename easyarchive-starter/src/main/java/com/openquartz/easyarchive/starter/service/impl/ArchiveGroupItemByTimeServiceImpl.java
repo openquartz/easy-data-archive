@@ -4,6 +4,8 @@ import com.openquartz.easyarchive.common.enums.BinarySwitchEnum;
 import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
@@ -46,7 +48,7 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
     public ArchiveGroupItemByTime create(Long groupId, ArchiveGroupItemByTime item) {
         ensureGroupExists(groupId);
         if (item == null) {
-            throw new IllegalArgumentException("按时间归档明细不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ITEM_REQUIRED);
         }
         item.setGroupId(groupId);
         applyCreateDefaults(item);
@@ -62,7 +64,7 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
         ensureGroupExists(groupId);
         ArchiveGroupItemByTime existing = ensureItemExists(groupId, itemId);
         if (item == null) {
-            throw new IllegalArgumentException("按时间归档明细不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ITEM_REQUIRED);
         }
         item.setId(itemId);
         item.setGroupId(groupId);
@@ -82,7 +84,7 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
         if (EnableStatusEnum.ENABLED.getCode().equals(enableStatus)
                 && BinarySwitchEnum.ON.getCode().equals(valueOrExisting(existing.getEnableClean(), existing.getEnableClean()))
                 && BinarySwitchEnum.OFF.getCode().equals(valueOrExisting(existing.getEnableWrite(), existing.getEnableWrite()))) {
-            throw new IllegalArgumentException("启用归档明细时不能只清理源数据而不写入目标数据");
+            throw new StarterManageException(StarterErrorCode.UNSAFE_CLEAN_WITHOUT_WRITE);
         }
         timeMapper.updateStatus(itemId, groupId, enableStatus);
         ArchiveGroupItemByTime after = timeMapper.selectById(itemId, groupId);
@@ -102,50 +104,50 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
         trimStrings(item);
         validateRequired(item);
         validatePriority(groupId, item.getPriority(), excludeId, false);
-        validatePositive(item.getStepCount(), "步长必须大于0");
-        validateNonNegative(item.getPauseMs(), "暂停时间不能小于0");
+        validatePositive(item.getStepCount(), StarterErrorCode.STEP_COUNT_INVALID);
+        validateNonNegative(item.getPauseMs(), StarterErrorCode.PAUSE_MS_INVALID);
         validateEnableStatusForSave(item.getEnableStatus());
-        validateFlag(item.getEnableClean(), "清理开关不合法");
-        validateFlag(item.getEnableWrite(), "写入开关不合法");
+        validateFlag(item.getEnableClean(), StarterErrorCode.CLEAN_FLAG_INVALID);
+        validateFlag(item.getEnableWrite(), StarterErrorCode.WRITE_FLAG_INVALID);
         validateUnsafeCleanWithoutWrite(item, existing);
         if (item.getStartTime() == null) {
-            throw new IllegalArgumentException("开始时间不能为空");
+            throw new StarterManageException(StarterErrorCode.START_TIME_REQUIRED);
         }
         if (item.getKeepDay() == null || item.getKeepDay() < 0) {
-            throw new IllegalArgumentException("保留天数不能小于0");
+            throw new StarterManageException(StarterErrorCode.KEEP_DAY_INVALID);
         }
-        validatePositive(item.getStepMinutes(), "时间滚动步长必须大于0");
+        validatePositive(item.getStepMinutes(), StarterErrorCode.STEP_MINUTES_INVALID);
     }
 
     private void validatePriority(Long groupId, Integer priority, Long excludeId, boolean idItem) {
         if (priority == null) {
-            throw new IllegalArgumentException("优先级不能为空");
+            throw new StarterManageException(StarterErrorCode.PRIORITY_REQUIRED);
         }
         int idCount = idMapper.countPriority(groupId, priority, idItem ? excludeId : null);
         int timeCount = timeMapper.countPriority(groupId, priority, idItem ? null : excludeId);
         if (idCount + timeCount > 0) {
-            throw new IllegalArgumentException("同一分组内优先级不能重复");
+            throw new StarterManageException(StarterErrorCode.PRIORITY_DUPLICATED);
         }
     }
 
     private ArchiveGroup ensureGroupExists(Long groupId) {
         if (groupId == null) {
-            throw new IllegalArgumentException("分组ID不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ID_REQUIRED);
         }
         ArchiveGroup group = groupMapper.selectById(groupId);
         if (group == null) {
-            throw new IllegalArgumentException("归档分组不存在");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND);
         }
         return group;
     }
 
     private ArchiveGroupItemByTime ensureItemExists(Long groupId, Long itemId) {
         if (itemId == null) {
-            throw new IllegalArgumentException("归档明细ID不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ITEM_ID_REQUIRED);
         }
         ArchiveGroupItemByTime item = timeMapper.selectById(itemId, groupId);
         if (item == null) {
-            throw new IllegalArgumentException("按时间归档明细不存在");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ITEM_NOT_FOUND);
         }
         return item;
     }
@@ -217,16 +219,16 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
 
     private void validateRequired(ArchiveGroupItemByTime item) {
         if (isBlank(item.getSourceTable())) {
-            throw new IllegalArgumentException("来源表不能为空");
+            throw new StarterManageException(StarterErrorCode.SOURCE_TABLE_REQUIRED);
         }
         if (isBlank(item.getTargetTable())) {
-            throw new IllegalArgumentException("目标表不能为空");
+            throw new StarterManageException(StarterErrorCode.TARGET_TABLE_REQUIRED);
         }
         if (isBlank(item.getFetchSql())) {
-            throw new IllegalArgumentException("查询SQL不能为空");
+            throw new StarterManageException(StarterErrorCode.FETCH_SQL_REQUIRED);
         }
         if (isBlank(item.getIdColumn())) {
-            throw new IllegalArgumentException("ID字段不能为空");
+            throw new StarterManageException(StarterErrorCode.ID_COLUMN_REQUIRED);
         }
     }
 
@@ -237,13 +239,13 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
         if (EnableStatusEnum.ENABLED.getCode().equals(enableStatus)
                 && BinarySwitchEnum.ON.getCode().equals(enableClean)
                 && BinarySwitchEnum.OFF.getCode().equals(enableWrite)) {
-            throw new IllegalArgumentException("启用归档明细时不能只清理源数据而不写入目标数据");
+            throw new StarterManageException(StarterErrorCode.UNSAFE_CLEAN_WITHOUT_WRITE);
         }
     }
 
     private void validateEnableStatus(Integer enableStatus) {
         if (EnableStatusEnum.fromCode(enableStatus) == null) {
-            throw new IllegalArgumentException("启用状态不合法");
+            throw new StarterManageException(StarterErrorCode.ENABLE_STATUS_INVALID);
         }
     }
 
@@ -253,21 +255,21 @@ public class ArchiveGroupItemByTimeServiceImpl implements ArchiveGroupItemByTime
         }
     }
 
-    private void validateFlag(Integer value, String message) {
+    private void validateFlag(Integer value, StarterErrorCode errorCode) {
         if (value != null && BinarySwitchEnum.fromCode(value) == null) {
-            throw new IllegalArgumentException(message);
+            throw new StarterManageException(errorCode);
         }
     }
 
-    private void validatePositive(Integer value, String message) {
+    private void validatePositive(Integer value, StarterErrorCode errorCode) {
         if (value == null || value <= 0) {
-            throw new IllegalArgumentException(message);
+            throw new StarterManageException(errorCode);
         }
     }
 
-    private void validateNonNegative(Integer value, String message) {
+    private void validateNonNegative(Integer value, StarterErrorCode errorCode) {
         if (value != null && value < 0) {
-            throw new IllegalArgumentException(message);
+            throw new StarterManageException(errorCode);
         }
     }
 
