@@ -5,6 +5,7 @@ import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
 import com.openquartz.easyarchive.starter.model.dto.LoginRequest;
 import com.openquartz.easyarchive.starter.model.dto.LoginResponse;
 import com.openquartz.easyarchive.starter.security.JwtTokenUtil;
+import com.openquartz.easyarchive.starter.security.RoleConstants;
 import com.openquartz.easyarchive.starter.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -46,7 +47,8 @@ public class AuthServiceImpl implements AuthService {
         response.setToken(token);
         response.setUsername(user.getUsername());
         response.setRealName(user.getRealName());
-        response.setPermissions(Collections.emptyList());
+        response.setRoleCode(user.getRoleCode());
+        response.setPermissions(Collections.singletonList(user.getRoleCode() == null ? RoleConstants.USER : user.getRoleCode()));
         response.setExpiresIn(86400L);
         return response;
     }
@@ -88,6 +90,8 @@ public class AuthServiceImpl implements AuthService {
         view.put("username", user.getUsername());
         view.put("realName", user.getRealName());
         view.put("status", user.getStatus());
+        view.put("roleCode", user.getRoleCode());
+        view.put("isAdmin", RoleConstants.ADMIN.equalsIgnoreCase(user.getRoleCode()));
         return view;
     }
 }

@@ -11,8 +11,8 @@ export const datasourceStatusDictionary: Record<number, StatusDictionaryItem> = 
 };
 
 export const userStatusDictionary: Record<number, StatusDictionaryItem> = {
-  0: { labelKey: "status.disabled", tone: "neutral" },
-  1: { labelKey: "status.enabled", tone: "success" }
+  0: { labelKey: "status.enabled", tone: "success" },
+  1: { labelKey: "status.disabled", tone: "neutral" }
 };
 
 export const archiveEnableStatusDictionary: Record<number, StatusDictionaryItem> = {

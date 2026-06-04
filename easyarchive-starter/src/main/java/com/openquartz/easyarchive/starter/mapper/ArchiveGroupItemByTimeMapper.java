@@ -24,6 +24,10 @@ public interface ArchiveGroupItemByTimeMapper {
 
     List<ArchiveGroupItemByTime> selectByGroupId(@Param("groupId") Long groupId, @Param("enableStatus") Integer enableStatus);
 
+    int countByGroupId(@Param("groupId") Long groupId);
+
+    int countByGroupIdAndStatus(@Param("groupId") Long groupId, @Param("enableStatus") Integer enableStatus);
+
     int countEnabledByGroupId(@Param("groupId") Long groupId);
 
     int countPriority(@Param("groupId") Long groupId, @Param("priority") Integer priority, @Param("excludeId") Long excludeId);

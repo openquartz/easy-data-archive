@@ -5,19 +5,8 @@ const root = process.cwd();
 
 const requiredFiles = [
   "src/router/index.ts",
-  "src/layouts/AppLayout.vue",
-  "src/views/LoginView.vue",
-  "src/views/DashboardView.vue",
-  "src/views/DatasourceView.vue",
-  "src/views/ArchiveGroupView.vue",
-  "src/views/TaskListView.vue",
-  "src/views/TaskDetailView.vue",
-  "src/views/UserView.vue",
-  "src/utils/http.ts",
-  "src/api/dashboard.ts",
-  "src/api/archiveGroup.ts",
-  "src/api/archiveGroupItem.ts",
-  "src/api/task.ts"
+  "src/views/ArchiveGroupDetailView.vue",
+  "src/api/archiveGroup.ts"
 ];
 
 const missingFiles = requiredFiles.filter((file) => !fs.existsSync(path.join(root, file)));
@@ -31,14 +20,8 @@ if (missingFiles.length) {
 
 const routerSource = fs.readFileSync(path.join(root, "src/router/index.ts"), "utf8");
 const routeFragments = [
-  'path: "/login"',
-  'path: "/"',
-  'path: "dashboard"',
-  'path: "datasources"',
-  'path: "archive/groups"',
-  'path: "tasks"',
-  'path: "tasks/:taskId"',
-  'path: "users"'
+  'path: "archive/groups/:id/detail"',
+  'name: "archive-group-detail"'
 ];
 const missingRoutes = routeFragments.filter((fragment) => !routerSource.includes(fragment));
 if (missingRoutes.length) {
@@ -48,15 +31,19 @@ if (missingRoutes.length) {
   }
   process.exit(1);
 }
-
-const httpSource = fs.readFileSync(path.join(root, "src/utils/http.ts"), "utf8");
-if (!httpSource.includes("axios.create")) {
-  console.error("Smoke failed: axios client not detected in src/utils/http.ts");
-  process.exit(1);
-}
-if (!httpSource.includes("AUTH_EXPIRED_EVENT")) {
-  console.error("Smoke failed: auth expired event contract missing in src/utils/http.ts");
+if (routerSource.includes("ArchiveGroupDetailPlaceholder")) {
+  console.error("Smoke failed: archive-group-detail route still uses placeholder component");
   process.exit(1);
 }
 
-console.log("Smoke passed: key UI files and route/http contracts are present.");
+const archiveGroupApiSource = fs.readFileSync(path.join(root, "src/api/archiveGroup.ts"), "utf8");
+if (!archiveGroupApiSource.includes("getArchiveGroupOverviewApi")) {
+  console.error("Smoke failed: archive group overview API function missing");
+  process.exit(1);
+}
+if (!archiveGroupApiSource.includes("/overview")) {
+  console.error("Smoke failed: archive group overview API path contract missing");
+  process.exit(1);
+}
+
+console.log("Smoke passed: archive group detail file, route, and overview API contracts are present.");

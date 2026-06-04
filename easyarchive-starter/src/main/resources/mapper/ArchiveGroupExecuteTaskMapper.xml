@@ -56,6 +56,24 @@
         WHERE id = #{id} AND deleted = 0
     </select>
 
+    <select id="selectByIdAndUser" resultMap="BaseResultMap">
+        SELECT t.id, t.group_id, t.start_time, t.end_time, t.execute_status, t.error_msg,
+               t.processed_records, t.processed_speed, t.heartbeat_time, t.finished_flag,
+               t.created_time, t.updated_time, t.creator_id, t.updater_id, t.deleted
+        FROM ea_archive_group_execute_task t
+        JOIN ea_archive_group g ON g.id = t.group_id AND g.deleted = 0
+        WHERE t.id = #{taskId}
+          AND t.deleted = 0
+          AND EXISTS (
+            SELECT 1
+            FROM ea_user_datasource_permission p
+            WHERE p.deleted = 0
+              AND p.user_id = #{userId}
+              AND p.datasource_id = g.source_datasource_id
+              AND p.permission_type = 'READ'
+          )
+    </select>
+
     <select id="selectPage" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ea_archive_group_execute_task
@@ -64,6 +82,28 @@
             AND deleted = 0
         </where>
         ORDER BY id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="selectPageByUser" resultMap="BaseResultMap">
+        SELECT t.id, t.group_id, t.start_time, t.end_time, t.execute_status, t.error_msg,
+               t.processed_records, t.processed_speed, t.heartbeat_time, t.finished_flag,
+               t.created_time, t.updated_time, t.creator_id, t.updater_id, t.deleted
+        FROM ea_archive_group_execute_task t
+        JOIN ea_archive_group g ON g.id = t.group_id AND g.deleted = 0
+        <where>
+            <if test="status != null and status != ''">AND t.execute_status = #{status}</if>
+            AND t.deleted = 0
+            AND EXISTS (
+                SELECT 1
+                FROM ea_user_datasource_permission p
+                WHERE p.deleted = 0
+                  AND p.user_id = #{userId}
+                  AND p.datasource_id = g.source_datasource_id
+                  AND p.permission_type = 'READ'
+            )
+        </where>
+        ORDER BY t.id DESC
         LIMIT #{offset}, #{size}
     </select>
 
@@ -76,12 +116,91 @@
         </where>
     </select>
 
+    <select id="countByUser" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_group_execute_task t
+        JOIN ea_archive_group g ON g.id = t.group_id AND g.deleted = 0
+        <where>
+            <if test="status != null and status != ''">AND t.execute_status = #{status}</if>
+            AND t.deleted = 0
+            AND EXISTS (
+                SELECT 1
+                FROM ea_user_datasource_permission p
+                WHERE p.deleted = 0
+                  AND p.user_id = #{userId}
+                  AND p.datasource_id = g.source_datasource_id
+                  AND p.permission_type = 'READ'
+            )
+        </where>
+    </select>
+
     <select id="countActiveByGroupId" resultType="int">
         SELECT COUNT(1)
         FROM ea_archive_group_execute_task
         WHERE deleted = 0
           AND group_id = #{groupId}
           AND execute_status IN (0, 1, 4)
+    </select>
+
+    <select id="selectLatestActiveByGroupId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+          AND group_id = #{groupId}
+          AND execute_status IN (0, 1, 4)
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectLatestActiveByGroupIds" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+          AND execute_status IN (0, 1, 4)
+          AND id IN (
+            SELECT MAX(id)
+            FROM ea_archive_group_execute_task
+            WHERE deleted = 0
+              AND execute_status IN (0, 1, 4)
+              AND group_id IN
+              <foreach collection="groupIds" item="groupId" open="(" separator="," close=")">
+                  #{groupId}
+              </foreach>
+            GROUP BY group_id
+          )
+    </select>
+
+    <select id="countByGroupId" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+          AND group_id = #{groupId}
+    </select>
+
+    <select id="countByGroupIdAndStatus" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+          AND group_id = #{groupId}
+          AND execute_status = #{status}
+    </select>
+
+    <select id="selectLatestByGroupId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+          AND group_id = #{groupId}
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectRecentByGroupId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group_execute_task
+        WHERE deleted = 0
+          AND group_id = #{groupId}
+        ORDER BY id DESC
+        LIMIT #{limit}
     </select>
 
     <update id="updateExecuteStatus">

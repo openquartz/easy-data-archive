@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "test:auth-contract": "node ./scripts/auth-contract-check.mjs",
+    "test:user-status-contract": "node ./scripts/user-status-contract-check.mjs",
     "preview": "vite preview",
     "smoke": "npm run build && node ./scripts/smoke-check.mjs"
   },

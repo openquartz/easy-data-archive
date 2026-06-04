@@ -21,7 +21,8 @@ const form = reactive<UserPayload>({
   realName: "",
   mobile: "",
   email: "",
-  status: 1,
+  roleCode: "USER",
+  status: 0,
   remark: ""
 });
 const errorMessage = ref("");
@@ -41,7 +42,8 @@ watch(
       form.realName = props.initialValue.realName || "";
       form.mobile = props.initialValue.mobile || "";
       form.email = props.initialValue.email || "";
-      form.status = props.initialValue.status ?? 1;
+      form.roleCode = props.initialValue.roleCode || "USER";
+      form.status = props.initialValue.status ?? 0;
       form.remark = props.initialValue.remark || "";
       return;
     }
@@ -50,7 +52,8 @@ watch(
     form.realName = "";
     form.mobile = "";
     form.email = "";
-    form.status = 1;
+    form.roleCode = "USER";
+    form.status = 0;
     form.remark = "";
   },
   { immediate: true }
@@ -99,6 +102,7 @@ function handleSubmit(): void {
     realName: form.realName?.trim(),
     mobile: form.mobile?.trim(),
     email: form.email?.trim(),
+    roleCode: form.roleCode?.trim() || "USER",
     remark: form.remark?.trim()
   });
 }
@@ -125,10 +129,17 @@ function handleSubmit(): void {
         <label>{{ t("user.form.mobile") }}<input v-model="form.mobile" :disabled="submitting" /></label>
         <label>{{ t("user.form.email") }}<input v-model="form.email" type="email" :disabled="submitting" /></label>
         <label>
+          {{ t("user.form.roleCode") }}
+          <select v-model="form.roleCode" :disabled="submitting">
+            <option value="USER">{{ t("user.roles.USER") }}</option>
+            <option value="ADMIN">{{ t("user.roles.ADMIN") }}</option>
+          </select>
+        </label>
+        <label>
           {{ t("user.form.status") }}
           <select v-model.number="form.status" :disabled="submitting">
-            <option :value="1">{{ t("status.enabled") }}</option>
-            <option :value="0">{{ t("status.disabled") }}</option>
+            <option :value="0">{{ t("status.enabled") }}</option>
+            <option :value="1">{{ t("status.disabled") }}</option>
           </select>
         </label>
         <label class="full-width">{{ t("user.form.remark") }}<textarea v-model="form.remark" :disabled="submitting" /></label>

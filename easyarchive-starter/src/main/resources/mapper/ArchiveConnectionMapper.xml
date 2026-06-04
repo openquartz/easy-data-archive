@@ -79,6 +79,21 @@
         WHERE id = #{id} AND deleted = 0
     </select>
 
+    <select id="selectAuthorizedById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_datasource d
+        WHERE d.id = #{id}
+          AND d.deleted = 0
+          AND EXISTS (
+            SELECT 1
+            FROM ea_user_datasource_permission p
+            WHERE p.deleted = 0
+              AND p.user_id = #{userId}
+              AND p.datasource_id = d.id
+              AND p.permission_type = 'READ'
+          )
+    </select>
+
     <select id="selectByCode" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ea_archive_datasource
@@ -90,6 +105,26 @@
         FROM ea_archive_datasource
         <include refid="Where_Clause"/>
         ORDER BY id DESC
+    </select>
+
+    <select id="selectAuthorizedList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_datasource d
+        <where>
+            <if test="status != null">
+                AND d.status = #{status}
+            </if>
+            AND d.deleted = 0
+            AND EXISTS (
+                SELECT 1
+                FROM ea_user_datasource_permission p
+                WHERE p.deleted = 0
+                  AND p.user_id = #{userId}
+                  AND p.datasource_id = d.id
+                  AND p.permission_type = 'READ'
+            )
+        </where>
+        ORDER BY d.id DESC
     </select>
 
     <select id="selectPage" resultMap="BaseResultMap">

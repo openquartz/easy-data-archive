@@ -5,4 +5,6 @@ import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 public interface ArchiveGroupExecutionService {
 
     ArchiveGroupExecuteTask trigger(Long groupId);
+
+    ArchiveGroupExecuteTask cancelActiveTask(Long groupId, String cancelReason);
 }

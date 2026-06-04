@@ -11,6 +11,8 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.rule.PlatformArchiveRuleLoader;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupExecutionService;
+import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
+import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import com.openquartz.easyarchive.starter.support.ArchiveGroupTaskDispatcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,9 +29,12 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
     private final ArchiveGroupExecuteTaskMapper taskMapper;
     private final ArchiveConnectionMapper datasourceMapper;
     private final ArchiveGroupTaskDispatcher dispatcher;
+    private final ArchiveTaskLogService taskLogService;
+    private final DataPermissionService dataPermissionService;
 
     @Override
     public synchronized ArchiveGroupExecuteTask trigger(Long groupId) {
+        dataPermissionService.assertGroupReadable(groupId);
         ArchiveGroup group = requireEnabledGroup(groupId);
         if (taskMapper.countActiveByGroupId(groupId) > 0) {
             throw new IllegalStateException("Archive group has active task");
@@ -54,16 +59,33 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
         return task;
     }
 
+    @Override
+    public ArchiveGroupExecuteTask cancelActiveTask(Long groupId, String cancelReason) {
+        dataPermissionService.assertGroupReadable(groupId);
+        requireExistingGroup(groupId);
+        ArchiveGroupExecuteTask activeTask = taskMapper.selectLatestActiveByGroupId(groupId);
+        if (activeTask == null) {
+            throw new IllegalStateException("Archive group has no active task");
+        }
+        taskLogService.cancelTask(activeTask.getId(), cancelReason);
+        return activeTask;
+    }
+
     private ArchiveGroup requireEnabledGroup(Long groupId) {
+        ArchiveGroup group = requireExistingGroup(groupId);
+        if (group.getEnableStatus() == null || group.getEnableStatus() != 0) {
+            throw new IllegalStateException("Archive group is disabled");
+        }
+        return group;
+    }
+
+    private ArchiveGroup requireExistingGroup(Long groupId) {
         if (groupId == null) {
             throw new IllegalArgumentException("groupId is required");
         }
         ArchiveGroup group = groupMapper.selectById(groupId);
         if (group == null) {
             throw new IllegalArgumentException("Archive group not found");
-        }
-        if (group.getEnableStatus() == null || group.getEnableStatus() != 0) {
-            throw new IllegalStateException("Archive group is disabled");
         }
         return group;
     }

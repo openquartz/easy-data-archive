@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.openquartz.easyarchive.starter.mapper.UserDatasourcePermissionMapper">
+
+    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.starter.model.entity.UserDatasourcePermission">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="datasource_id" property="datasourceId"/>
+        <result column="permission_type" property="permissionType"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="updated_time" property="updatedTime"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="updater_id" property="updaterId"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.openquartz.easyarchive.starter.model.entity.UserDatasourcePermission" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ea_user_datasource_permission (
+            user_id, datasource_id, permission_type, creator_id, updater_id, deleted
+        ) VALUES (
+            #{userId}, #{datasourceId}, #{permissionType}, #{creatorId}, #{updaterId}, 0
+        )
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO ea_user_datasource_permission (
+            user_id, datasource_id, permission_type, creator_id, updater_id, deleted
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.userId}, #{item.datasourceId}, #{item.permissionType}, #{item.creatorId}, #{item.updaterId}, 0)
+        </foreach>
+    </insert>
+
+    <update id="deleteByUserIdAndDatasourceId">
+        UPDATE ea_user_datasource_permission
+        SET deleted = id, updater_id = #{updaterId}, updated_time = CURRENT_TIMESTAMP
+        WHERE user_id = #{userId}
+          AND datasource_id = #{datasourceId}
+          AND deleted = 0
+    </update>
+
+    <update id="deleteByUserId">
+        UPDATE ea_user_datasource_permission
+        SET deleted = id, updater_id = #{updaterId}, updated_time = CURRENT_TIMESTAMP
+        WHERE user_id = #{userId}
+          AND deleted = 0
+    </update>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT id, user_id, datasource_id, permission_type,
+               created_time, updated_time, creator_id, updater_id, deleted
+        FROM ea_user_datasource_permission
+        WHERE user_id = #{userId}
+          AND deleted = 0
+        ORDER BY id DESC
+    </select>
+
+    <select id="selectDatasourceIdsByUserId" resultType="long">
+        SELECT datasource_id
+        FROM ea_user_datasource_permission
+        WHERE user_id = #{userId}
+          AND permission_type = #{permissionType}
+          AND deleted = 0
+    </select>
+
+    <select id="countByUserIdAndDatasourceId" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_user_datasource_permission
+        WHERE user_id = #{userId}
+          AND datasource_id = #{datasourceId}
+          AND permission_type = #{permissionType}
+          AND deleted = 0
+    </select>
+
+</mapper>

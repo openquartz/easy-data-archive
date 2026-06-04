@@ -22,7 +22,12 @@ public interface ArchiveGroupMapper {
 
     ArchiveGroup selectById(@Param("id") Long id);
 
+    ArchiveGroup selectAuthorizedById(@Param("userId") Long userId, @Param("id") Long id);
+
     ArchiveGroup selectByCode(@Param("groupCode") String groupCode);
 
     List<ArchiveGroup> selectList(@Param("enableStatus") Integer enableStatus);
+
+    List<ArchiveGroup> selectAuthorizedList(@Param("userId") Long userId,
+                                            @Param("enableStatus") Integer enableStatus);
 }

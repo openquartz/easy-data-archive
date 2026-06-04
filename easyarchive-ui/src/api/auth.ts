@@ -8,12 +8,17 @@ export interface LoginPayload {
 export interface LoginResponse {
   token: string;
   username?: string;
+  roleCode?: string;
 }
 
 export interface UserProfile {
+  id?: number;
   username: string;
-  displayName?: string;
+  realName?: string;
   email?: string;
+  status?: number;
+  roleCode?: string;
+  isAdmin?: boolean;
 }
 
 export function loginApi(payload: LoginPayload): Promise<LoginResponse> {
