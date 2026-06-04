@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.core.rule.entity;
 
 import com.openquartz.easyarchive.common.entity.BaseEntity;
+import com.openquartz.easyarchive.common.enums.ArchiveTaskStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,12 +17,12 @@ import java.util.Date;
 @Data
 public class ArchiveGroupExecuteTask extends BaseEntity {
 
-    public static final int STATUS_WAITING = 0;
-    public static final int STATUS_RUNNING = 1;
-    public static final int STATUS_SUCCESS = 2;
-    public static final int STATUS_FAILED = 3;
-    public static final int STATUS_CANCELLING = 4;
-    public static final int STATUS_CANCELLED = 5;
+    public static final int STATUS_WAITING = ArchiveTaskStatusEnum.WAITING.getCode();
+    public static final int STATUS_RUNNING = ArchiveTaskStatusEnum.RUNNING.getCode();
+    public static final int STATUS_SUCCESS = ArchiveTaskStatusEnum.SUCCESS.getCode();
+    public static final int STATUS_FAILED = ArchiveTaskStatusEnum.FAILED.getCode();
+    public static final int STATUS_CANCELLING = ArchiveTaskStatusEnum.CANCELLING.getCode();
+    public static final int STATUS_CANCELLED = ArchiveTaskStatusEnum.CANCELLED.getCode();
 
     private Long id;
 
@@ -73,9 +74,6 @@ public class ArchiveGroupExecuteTask extends BaseEntity {
     private Long finishedFlag;
 
     public boolean isTerminal() {
-        return executeStatus != null
-                && (executeStatus == STATUS_SUCCESS
-                    || executeStatus == STATUS_FAILED
-                    || executeStatus == STATUS_CANCELLED);
+        return ArchiveTaskStatusEnum.isTerminal(executeStatus);
     }
 }

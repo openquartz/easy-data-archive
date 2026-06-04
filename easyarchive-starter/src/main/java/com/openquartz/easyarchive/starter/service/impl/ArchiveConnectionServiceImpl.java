@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
+import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
 import com.openquartz.easyarchive.starter.model.enums.DatasourceTypeEnum;
@@ -11,6 +12,7 @@ import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import com.openquartz.easyarchive.starter.support.DatasourceConnectionTester;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -22,10 +24,6 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
-
-    private static final int STATUS_UNTESTED = 0;
-    private static final int STATUS_ENABLED = 1;
-    private static final int STATUS_DISABLED = 2;
 
     private final ArchiveConnectionMapper datasourceMapper;
     private final DatasourceConnectionTester connectionTester;
@@ -57,10 +55,11 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ArchiveConnection create(ArchiveConnection datasource) {
         dataPermissionService.assertAdmin();
-        if (datasource.getStatus() == null || datasource.getStatus() != STATUS_DISABLED) {
-            datasource.setStatus(STATUS_UNTESTED);
+        if (datasource.getStatus() == null || !DatasourceStatusEnum.DISABLED.getCode().equals(datasource.getStatus())) {
+            datasource.setStatus(DatasourceStatusEnum.UNTESTED.getCode());
         }
         datasourceMapper.insert(datasource);
         operationLogRecorder.record(datasourceOperationLogPresenter.buildCreate(datasource));
@@ -68,6 +67,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ArchiveConnection update(ArchiveConnection datasource) {
         dataPermissionService.assertAdmin();
         ArchiveConnection before = datasourceMapper.selectById(datasource.getId());
@@ -75,7 +75,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
             throw new IllegalArgumentException("归档连接不存在");
         }
         if (isConnectionConfigChanged(before, datasource)) {
-            datasource.setStatus(STATUS_UNTESTED);
+            datasource.setStatus(DatasourceStatusEnum.UNTESTED.getCode());
         } else if (datasource.getStatus() == null) {
             datasource.setStatus(before.getStatus());
         }
@@ -89,6 +89,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
         dataPermissionService.assertAdmin();
         ArchiveConnection before = datasourceMapper.selectById(id);
@@ -105,6 +106,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean testConnection(ArchiveConnection datasource) {
         dataPermissionService.assertAdmin();
         ArchiveConnection target = prepareDatasourceForTest(datasource);
@@ -114,7 +116,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
             update.setId(target.getId());
             update.setLastCheckTime(new Date());
             if (result) {
-                update.setStatus(STATUS_ENABLED);
+                update.setStatus(DatasourceStatusEnum.ENABLED.getCode());
             }
             datasourceMapper.update(update);
         }
@@ -126,7 +128,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
         if (status == null) {
             throw new IllegalArgumentException("归档连接状态不能为空");
         }
-        if (status != STATUS_DISABLED) {
+        if (!DatasourceStatusEnum.DISABLED.getCode().equals(status)) {
             throw new IllegalStateException("请先测试归档连接，测试成功后系统会自动启用");
         }
     }

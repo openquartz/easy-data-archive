@@ -51,6 +51,7 @@ public class UserDatasourcePermissionServiceImpl implements UserDatasourcePermis
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void grant(Long userId, Long datasourceId) {
         dataPermissionService.assertAdmin();
         SysUser user = ensureUserExists(userId);
@@ -74,6 +75,7 @@ public class UserDatasourcePermissionServiceImpl implements UserDatasourcePermis
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void revoke(Long userId, Long datasourceId) {
         dataPermissionService.assertAdmin();
         SysUser user = ensureUserExists(userId);

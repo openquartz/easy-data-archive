@@ -1,6 +1,8 @@
 package com.openquartz.easyarchive.core.rule.entity;
 
 import com.openquartz.easyarchive.common.entity.BaseEntity;
+import com.openquartz.easyarchive.common.enums.BinarySwitchEnum;
+import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -94,16 +96,16 @@ public class ArchiveGroupItemByTime extends BaseEntity implements ArchiveGroupIt
 
     @Override
     public boolean valid() {
-        return enableStatus != null && enableStatus == 0;
+        return EnableStatusEnum.isEnabled(enableStatus);
     }
 
     @Override
     public boolean isCleanEnabled() {
-        return enableClean != null && enableClean == 0;
+        return BinarySwitchEnum.isOn(enableClean);
     }
 
     @Override
     public boolean isWriteEnabled() {
-        return enableWrite != null && enableWrite == 0;
+        return BinarySwitchEnum.isOn(enableWrite);
     }
 }

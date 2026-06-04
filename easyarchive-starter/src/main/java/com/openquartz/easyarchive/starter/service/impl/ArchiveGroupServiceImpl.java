@@ -3,6 +3,9 @@ package com.openquartz.easyarchive.starter.service.impl;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.common.enums.ArchiveTaskStatusEnum;
+import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
+import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
@@ -19,6 +22,7 @@ import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,8 +36,6 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class ArchiveGroupServiceImpl implements ArchiveGroupService {
-
-    private static final int DATASOURCE_STATUS_ENABLED = 1;
 
     private final ArchiveGroupMapper groupMapper;
     private final ArchiveConnectionMapper archiveConnectionMapper;
@@ -109,8 +111,8 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
 
         int idTypeCount = idItemMapper.countByGroupId(id);
         int timeTypeCount = timeItemMapper.countByGroupId(id);
-        int enabledCount = idItemMapper.countByGroupIdAndStatus(id, 0)
-                + timeItemMapper.countByGroupIdAndStatus(id, 0);
+        int enabledCount = idItemMapper.countByGroupIdAndStatus(id, EnableStatusEnum.ENABLED.getCode())
+                + timeItemMapper.countByGroupIdAndStatus(id, EnableStatusEnum.ENABLED.getCode());
 
         ArchiveGroupExecuteTask latestTask = taskMapper.selectLatestByGroupId(id);
         List<ArchiveGroupExecuteTask> recentTasks = taskMapper.selectRecentByGroupId(id, 10);
@@ -125,8 +127,8 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
 
         ArchiveGroupTaskStatsView taskStats = new ArchiveGroupTaskStatsView();
         taskStats.setTotalCount((long) taskMapper.countByGroupId(id));
-        taskStats.setSuccessCount((long) taskMapper.countByGroupIdAndStatus(id, ArchiveGroupExecuteTask.STATUS_SUCCESS));
-        taskStats.setFailedCount((long) taskMapper.countByGroupIdAndStatus(id, ArchiveGroupExecuteTask.STATUS_FAILED));
+        taskStats.setSuccessCount((long) taskMapper.countByGroupIdAndStatus(id, ArchiveTaskStatusEnum.SUCCESS.getCode()));
+        taskStats.setFailedCount((long) taskMapper.countByGroupIdAndStatus(id, ArchiveTaskStatusEnum.FAILED.getCode()));
         taskStats.setRunningCount((long) taskMapper.countActiveByGroupId(id));
         if (latestTask != null) {
             taskStats.setLastExecuteStatus(latestTask.getExecuteStatus());
@@ -142,11 +144,12 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ArchiveGroup create(ArchiveGroup group) {
         dataPermissionService.assertAdmin();
         validateForSave(group, true);
         if (group.getEnableStatus() == null) {
-            group.setEnableStatus(0);
+            group.setEnableStatus(EnableStatusEnum.ENABLED.getCode());
         } else {
             validateEnableStatus(group.getEnableStatus());
         }
@@ -156,6 +159,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ArchiveGroup update(ArchiveGroup group) {
         dataPermissionService.assertAdmin();
         if (group == null || group.getId() == null) {
@@ -173,6 +177,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer enableStatus) {
         dataPermissionService.assertAdmin();
         ArchiveGroup before = ensureExists(id);
@@ -184,6 +189,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         dataPermissionService.assertAdmin();
         ArchiveGroup before = ensureExists(id);
@@ -206,7 +212,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
             view.setActiveTaskStatus(activeTask.getExecuteStatus());
             view.setActiveTaskStartTime(activeTask.getStartTime());
         }
-        boolean canTrigger = !hasActiveTask && group.getEnableStatus() != null && group.getEnableStatus() == 0;
+        boolean canTrigger = !hasActiveTask && EnableStatusEnum.isEnabled(group.getEnableStatus());
         view.setCanTrigger(canTrigger);
         view.setCanCancelActiveTask(hasActiveTask);
         view.setCanViewActiveTask(hasActiveTask);
@@ -214,13 +220,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     }
 
     private boolean isActiveTask(ArchiveGroupExecuteTask task) {
-        if (task == null || task.getExecuteStatus() == null) {
-            return false;
-        }
-        int status = task.getExecuteStatus();
-        return status == ArchiveGroupExecuteTask.STATUS_WAITING
-                || status == ArchiveGroupExecuteTask.STATUS_RUNNING
-                || status == ArchiveGroupExecuteTask.STATUS_CANCELLING;
+        return task != null && ArchiveTaskStatusEnum.isActive(task.getExecuteStatus());
     }
 
     private ArchiveGroup ensureExists(Long id) {
@@ -272,13 +272,13 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         if (datasource == null) {
             throw new IllegalArgumentException("归档连接不存在");
         }
-        if (!Integer.valueOf(DATASOURCE_STATUS_ENABLED).equals(datasource.getStatus())) {
+        if (!DatasourceStatusEnum.isEnabled(datasource.getStatus())) {
             throw new IllegalArgumentException(message);
         }
     }
 
     private void validateEnableStatus(Integer enableStatus) {
-        if (enableStatus == null || (enableStatus != 0 && enableStatus != 1)) {
+        if (EnableStatusEnum.fromCode(enableStatus) == null) {
             throw new IllegalArgumentException("启用状态不合法");
         }
     }

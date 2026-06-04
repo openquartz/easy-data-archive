@@ -1,5 +1,7 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
+import com.openquartz.easyarchive.common.enums.BinarySwitchEnum;
+import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemById;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
@@ -10,6 +12,7 @@ import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupIte
 import com.openquartz.easyarchive.starter.service.ArchiveGroupItemByIdService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -39,6 +42,7 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ArchiveGroupItemById create(Long groupId, ArchiveGroupItemById item) {
         ensureGroupExists(groupId);
         if (item == null) {
@@ -53,6 +57,7 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ArchiveGroupItemById update(Long groupId, Long itemId, ArchiveGroupItemById item) {
         ensureGroupExists(groupId);
         ArchiveGroupItemById existing = ensureItemExists(groupId, itemId);
@@ -69,12 +74,14 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long groupId, Long itemId, Integer enableStatus) {
         ensureGroupExists(groupId);
         ArchiveGroupItemById existing = ensureItemExists(groupId, itemId);
         validateEnableStatus(enableStatus);
-        if (enableStatus == 0 && valueOrExisting(existing.getEnableClean(), existing.getEnableClean()) == 0
-                && valueOrExisting(existing.getEnableWrite(), existing.getEnableWrite()) == 1) {
+        if (EnableStatusEnum.ENABLED.getCode().equals(enableStatus)
+                && BinarySwitchEnum.ON.getCode().equals(valueOrExisting(existing.getEnableClean(), existing.getEnableClean()))
+                && BinarySwitchEnum.OFF.getCode().equals(valueOrExisting(existing.getEnableWrite(), existing.getEnableWrite()))) {
             throw new IllegalArgumentException("启用归档明细时不能只清理源数据而不写入目标数据");
         }
         idMapper.updateStatus(itemId, groupId, enableStatus);
@@ -83,6 +90,7 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long groupId, Long itemId) {
         ensureGroupExists(groupId);
         ArchiveGroupItemById existing = ensureItemExists(groupId, itemId);
@@ -144,13 +152,13 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
 
     private void applyCreateDefaults(ArchiveGroupItemById item) {
         if (item.getEnableStatus() == null) {
-            item.setEnableStatus(0);
+            item.setEnableStatus(EnableStatusEnum.ENABLED.getCode());
         }
         if (item.getEnableClean() == null) {
-            item.setEnableClean(0);
+            item.setEnableClean(BinarySwitchEnum.ON.getCode());
         }
         if (item.getEnableWrite() == null) {
-            item.setEnableWrite(0);
+            item.setEnableWrite(BinarySwitchEnum.ON.getCode());
         }
     }
 
@@ -228,14 +236,15 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
         Integer enableStatus = valueOrExisting(item.getEnableStatus(), existing == null ? null : existing.getEnableStatus());
         Integer enableClean = valueOrExisting(item.getEnableClean(), existing == null ? null : existing.getEnableClean());
         Integer enableWrite = valueOrExisting(item.getEnableWrite(), existing == null ? null : existing.getEnableWrite());
-        if (enableStatus != null && enableStatus == 0 && enableClean != null && enableClean == 0
-                && enableWrite != null && enableWrite == 1) {
+        if (EnableStatusEnum.ENABLED.getCode().equals(enableStatus)
+                && BinarySwitchEnum.ON.getCode().equals(enableClean)
+                && BinarySwitchEnum.OFF.getCode().equals(enableWrite)) {
             throw new IllegalArgumentException("启用归档明细时不能只清理源数据而不写入目标数据");
         }
     }
 
     private void validateEnableStatus(Integer enableStatus) {
-        if (enableStatus == null || (enableStatus != 0 && enableStatus != 1)) {
+        if (EnableStatusEnum.fromCode(enableStatus) == null) {
             throw new IllegalArgumentException("启用状态不合法");
         }
     }
@@ -247,7 +256,7 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
     }
 
     private void validateFlag(Integer value, String message) {
-        if (value != null && value != 0 && value != 1) {
+        if (value != null && BinarySwitchEnum.fromCode(value) == null) {
             throw new IllegalArgumentException(message);
         }
     }
