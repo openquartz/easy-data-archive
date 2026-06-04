@@ -63,6 +63,22 @@ public class ArchiveGroup extends BaseEntity {
     private Integer enableStatus;
 
     /**
+     * 是否启用完成通知
+     * 0-关闭，1-开启
+     */
+    private Integer notifyEnabled;
+
+    /**
+     * 通知渠道
+     */
+    private String notifyChannel;
+
+    /**
+     * 通知 webhook 地址
+     */
+    private String notifyWebhookUrl;
+
+    /**
      * 备注
      */
     private String remark;

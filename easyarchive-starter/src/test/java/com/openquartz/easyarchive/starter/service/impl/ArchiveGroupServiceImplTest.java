@@ -112,6 +112,43 @@ class ArchiveGroupServiceImplTest {
     }
 
     @Test
+    void shouldRejectEnabledNotificationWithoutChannelOnCreate() {
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setNotifyEnabled(1);
+        input.setNotifyWebhookUrl("https://open.feishu.cn/open-apis/bot/hook/test");
+
+        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        verify(groupMapper, never()).insert(any());
+    }
+
+    @Test
+    void shouldRejectEnabledNotificationWithoutWebhookOnCreate() {
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setNotifyEnabled(1);
+        input.setNotifyChannel("FEISHU");
+
+        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        verify(groupMapper, never()).insert(any());
+    }
+
+    @Test
+    void shouldAllowValidNotificationConfigOnCreate() {
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setNotifyEnabled(1);
+        input.setNotifyChannel("FEISHU");
+        input.setNotifyWebhookUrl(" https://open.feishu.cn/open-apis/bot/hook/test ");
+
+        ArchiveGroup created = service.create(input);
+
+        assertSame(input, created);
+        assertEquals("https://open.feishu.cn/open-apis/bot/hook/test", input.getNotifyWebhookUrl());
+        verify(groupMapper).insert(input);
+    }
+
+    @Test
     void shouldCreateValidGroupWithDefaultStatus() {
         ArchiveGroup input = enabledGroup();
         input.setId(null);

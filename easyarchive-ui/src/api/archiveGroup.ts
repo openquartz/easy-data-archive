@@ -12,6 +12,9 @@ export interface ArchiveGroup {
   targetDatasourceId: number;
   ownerUserId?: number;
   enableStatus: number;
+  notifyEnabled?: number;
+  notifyChannel?: "FEISHU" | "WECOM";
+  notifyWebhookUrl?: string;
   remark?: string;
   activeTaskId?: number;
   activeTaskStatus?: number;

@@ -13,6 +13,7 @@ import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.ArchiveRuleLoader;
 import com.openquartz.easyarchive.core.rule.DbArchiveRuleLoader;
 import com.openquartz.easyarchive.starter.listener.DbArchiveLogListener;
+import com.openquartz.easyarchive.starter.notification.ArchiveNotificationListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -57,12 +58,14 @@ public class EasyArchiveAutoConfiguration {
     }
 
     @Bean
-    public ArchiveEventPublisher archiveEventPublisher(ArchiveLogRepository archiveLogRepository) {
+    public ArchiveEventPublisher archiveEventPublisher(ArchiveLogRepository archiveLogRepository,
+                                                       ArchiveNotificationListener archiveNotificationListener) {
         if (!archiveConfig.isLogEnabled()) {
             return NoOpArchiveEventPublisher.INSTANCE;
         }
         DefaultArchiveEventPublisher publisher = new DefaultArchiveEventPublisher();
         publisher.registerListener(new DbArchiveLogListener(archiveLogRepository));
+        publisher.registerListener(archiveNotificationListener);
         return publisher;
     }
 
