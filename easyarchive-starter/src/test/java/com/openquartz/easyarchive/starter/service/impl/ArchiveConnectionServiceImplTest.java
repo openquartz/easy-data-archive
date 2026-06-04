@@ -1,6 +1,8 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
@@ -199,7 +201,9 @@ class ArchiveConnectionServiceImplTest {
         ArchiveConnectionServiceImpl service =
                 new ArchiveConnectionServiceImpl(mapper, null, permissionService, presenter, recorder);
 
-        assertThrows(IllegalStateException.class, () -> service.updateStatus(1L, STATUS_ENABLED));
+        StarterManageException error = assertThrows(StarterManageException.class,
+                () -> service.updateStatus(1L, STATUS_ENABLED));
+        assertEquals(StarterErrorCode.DATASOURCE_STATUS_MANUAL_UPDATE_UNSUPPORTED, error.getErrorCode());
         verify(mapper, never()).update(any());
     }
 

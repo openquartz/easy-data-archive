@@ -6,6 +6,8 @@ import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.common.enums.ArchiveTaskStatusEnum;
 import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
 import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
@@ -88,7 +90,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     @Override
     public ArchiveGroupView findById(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("分组ID不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ID_REQUIRED);
         }
         ArchiveGroup group;
         if (dataPermissionService.isAdmin()) {
@@ -163,7 +165,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     public ArchiveGroup update(ArchiveGroup group) {
         dataPermissionService.assertAdmin();
         if (group == null || group.getId() == null) {
-            throw new IllegalArgumentException("分组ID不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ID_REQUIRED);
         }
         ArchiveGroup before = ensureExists(group.getId());
         ensureNoActiveTask(group.getId(), "分组存在执行中的任务，无法编辑");
@@ -225,24 +227,24 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
 
     private ArchiveGroup ensureExists(Long id) {
         if (id == null) {
-            throw new IllegalArgumentException("分组ID不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ID_REQUIRED);
         }
         ArchiveGroup group = groupMapper.selectById(id);
         if (group == null) {
-            throw new IllegalArgumentException("归档分组不存在");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND);
         }
         return group;
     }
 
     private void ensureNoActiveTask(Long id, String message) {
         if (taskMapper.countActiveByGroupId(id) > 0) {
-            throw new IllegalStateException(message);
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ACTIVE_TASK_CONFLICT, message);
         }
     }
 
     private void validateForSave(ArchiveGroup group, boolean create) {
         if (group == null) {
-            throw new IllegalArgumentException("归档分组不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_REQUIRED);
         }
         if (group.getGroupCode() != null) {
             group.setGroupCode(group.getGroupCode().trim());
@@ -251,35 +253,36 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
             group.setGroupName(group.getGroupName().trim());
         }
         if (group.getGroupCode() == null || group.getGroupCode().isEmpty()) {
-            throw new IllegalArgumentException("分组编码不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_CODE_REQUIRED);
         }
         if (group.getGroupName() == null || group.getGroupName().isEmpty()) {
-            throw new IllegalArgumentException("分组名称不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NAME_REQUIRED);
         }
         if (group.getSourceDatasourceId() == null || group.getTargetDatasourceId() == null) {
-            throw new IllegalArgumentException("源和目标数据源不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_DATASOURCE_REQUIRED);
         }
         validateDatasourceEnabled(group.getSourceDatasourceId(), "源归档连接必须为已启用状态");
         validateDatasourceEnabled(group.getTargetDatasourceId(), "目标归档连接必须为已启用状态");
         ArchiveGroup existing = groupMapper.selectByCode(group.getGroupCode());
         if (existing != null && (create || !existing.getId().equals(group.getId()))) {
-            throw new IllegalArgumentException("分组编码已存在");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_CODE_DUPLICATED);
         }
     }
 
     private void validateDatasourceEnabled(Long datasourceId, String message) {
         ArchiveConnection datasource = archiveConnectionMapper.selectById(datasourceId);
         if (datasource == null) {
-            throw new IllegalArgumentException("归档连接不存在");
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
         }
         if (!DatasourceStatusEnum.isEnabled(datasource.getStatus())) {
-            throw new IllegalArgumentException(message);
+            throw StarterManageException.withPlaceholders(
+                    StarterErrorCode.DATASOURCE_ENABLE_STATUS_REQUIRED, message.startsWith("源") ? "源" : "目标");
         }
     }
 
     private void validateEnableStatus(Integer enableStatus) {
         if (EnableStatusEnum.fromCode(enableStatus) == null) {
-            throw new IllegalArgumentException("启用状态不合法");
+            throw new StarterManageException(StarterErrorCode.ENABLE_STATUS_INVALID);
         }
     }
 }

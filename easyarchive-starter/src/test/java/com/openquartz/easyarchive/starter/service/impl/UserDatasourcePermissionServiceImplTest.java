@@ -2,6 +2,8 @@ package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.common.SysUser;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
 import com.openquartz.easyarchive.starter.mapper.UserDatasourcePermissionMapper;
@@ -104,7 +106,9 @@ class UserDatasourcePermissionServiceImplTest {
         doNothing().when(dataPermissionService).assertAdmin();
         when(sysUserMapper.selectById(9L)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.listUserPermissions(9L));
+        StarterManageException error = assertThrows(StarterManageException.class,
+                () -> service.listUserPermissions(9L));
+        assertEquals(StarterErrorCode.USER_NOT_FOUND, error.getErrorCode());
         verify(permissionMapper, never()).selectDatasourceIdsByUserId(9L, "READ");
     }
 

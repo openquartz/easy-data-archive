@@ -15,10 +15,10 @@ public enum DataExecuteErrorCode implements EasyArchiveErrorCode {
     private final String errorCode;
     private final String errorMsg;
 
-    private static final String SIMPLE_BASE_CODE = "DataExecute-";
+    private static final String BASE_CODE = "DataExecute-";
 
     DataExecuteErrorCode(String errorCode, String errorMsg) {
-        this.errorCode = errorCode;
+        this.errorCode = BASE_CODE + errorCode;
         this.errorMsg = errorMsg;
     }
 
