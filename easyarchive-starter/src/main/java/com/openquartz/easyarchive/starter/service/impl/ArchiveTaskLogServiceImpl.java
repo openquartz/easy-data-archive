@@ -3,7 +3,11 @@ package com.openquartz.easyarchive.starter.service.impl;
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog;
+import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
+import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
+import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveTaskOperationLogPresenter;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
+import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,11 +22,24 @@ import java.util.Date;
 public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
 
     private final ArchiveLogRepository archiveLogRepository;
+    private final ArchiveGroupExecuteTaskMapper archiveGroupExecuteTaskMapper;
+    private final DataPermissionService dataPermissionService;
+    private final ArchiveTaskOperationLogPresenter archiveTaskOperationLogPresenter;
+    private final OperationLogRecorder operationLogRecorder;
 
     @Override
     public Map<String, Object> queryTasks(int page, int size, String status) {
-        List<ArchiveGroupExecuteTask> list = archiveLogRepository.queryTasks(page, size, status);
-        int total = archiveLogRepository.countTasks(status);
+        List<ArchiveGroupExecuteTask> list;
+        int total;
+        if (dataPermissionService.isAdmin()) {
+            list = archiveLogRepository.queryTasks(page, size, status);
+            total = archiveLogRepository.countTasks(status);
+        } else {
+            int offset = (page - 1) * size;
+            Long userId = dataPermissionService.getCurrentUser().getUserId();
+            list = archiveGroupExecuteTaskMapper.selectPageByUser(userId, offset, size, status);
+            total = archiveGroupExecuteTaskMapper.countByUser(userId, status);
+        }
         Map<String, Object> result = new HashMap<>();
         result.put("list", list);
         result.put("total", total);
@@ -33,11 +50,13 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
 
     @Override
     public Object queryTaskById(Long taskId) {
+        dataPermissionService.assertTaskReadable(taskId);
         return archiveLogRepository.queryTaskById(taskId);
     }
 
     @Override
     public Map<String, Object> queryLogsByTaskId(Long taskId, int page, int size, String executePhase) {
+        dataPermissionService.assertTaskReadable(taskId);
         List<ArchiveTaskLog> list = archiveLogRepository.queryLogsByTaskId(taskId, page, size, executePhase);
         int total = archiveLogRepository.countLogsByTaskId(taskId, executePhase);
         Map<String, Object> result = new HashMap<>();
@@ -51,29 +70,41 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int cleanup(int retentionDays) {
-        return archiveLogRepository.deleteByRetentionDays(retentionDays);
+        int deleted = archiveLogRepository.deleteByRetentionDays(retentionDays);
+        operationLogRecorder.record(archiveTaskOperationLogPresenter.buildCleanup(retentionDays, deleted));
+        return deleted;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cancelTask(Long taskId, String cancelReason) {
+        dataPermissionService.assertTaskReadable(taskId);
         ArchiveGroupExecuteTask task = archiveLogRepository.queryTaskById(taskId);
         if (task == null) {
-            throw new IllegalArgumentException("任务不存在: " + taskId);
+            String message = "任务不存在: " + taskId;
+            operationLogRecorder.recordFailure(message);
+            throw new IllegalArgumentException(message);
         }
         if (task.isTerminal()) {
+            operationLogRecorder.recordFailure("任务已结束，无法取消");
             throw new IllegalStateException("任务已结束，无法取消");
         }
         if (task.getExecuteStatus() != null
                 && task.getExecuteStatus() == ArchiveGroupExecuteTask.STATUS_CANCELLING) {
+            operationLogRecorder.record(archiveTaskOperationLogPresenter.buildCancel(
+                    task, cancelReason, "重复请求，无需处理"));
             return; // already cancelling, idempotent
         }
+        String result;
         if (task.getExecuteStatus() != null
                 && task.getExecuteStatus() == ArchiveGroupExecuteTask.STATUS_WAITING) {
             archiveLogRepository.updateTaskStatus(taskId, ArchiveGroupExecuteTask.STATUS_CANCELLED);
+            result = "已取消";
         } else {
             archiveLogRepository.updateTaskStatus(taskId, ArchiveGroupExecuteTask.STATUS_CANCELLING);
+            result = "取消中";
         }
+        operationLogRecorder.record(archiveTaskOperationLogPresenter.buildCancel(task, cancelReason, result));
 
         ArchiveTaskLog log = new ArchiveTaskLog();
         log.setTaskId(taskId);

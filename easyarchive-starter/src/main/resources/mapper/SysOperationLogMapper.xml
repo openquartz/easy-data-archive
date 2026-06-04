@@ -38,4 +38,53 @@
         )
     </insert>
 
+    <sql id="Query_Where">
+        <where>
+            <if test="request != null and request.startTime != null">
+                AND l.operate_time <![CDATA[>=]]> #{request.startTime}
+            </if>
+            <if test="request != null and request.endTime != null">
+                AND l.operate_time <![CDATA[<=]]> #{request.endTime}
+            </if>
+            <if test="request != null and request.operator != null and request.operator != ''">
+                AND (
+                    u.username LIKE CONCAT('%', #{request.operator}, '%')
+                    OR u.real_name LIKE CONCAT('%', #{request.operator}, '%')
+                )
+            </if>
+            <if test="request != null and request.moduleCode != null and request.moduleCode != ''">
+                AND l.module_code = #{request.moduleCode}
+            </if>
+            <if test="request != null and request.resultStatus != null">
+                AND l.result_status = #{request.resultStatus}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="com.openquartz.easyarchive.starter.model.dto.OperationLogQueryItem">
+        SELECT
+            l.id AS id,
+            l.operate_time AS operateTime,
+            COALESCE(NULLIF(u.real_name, ''), u.username, CAST(l.user_id AS CHAR)) AS operator,
+            l.module_code AS moduleCode,
+            l.action_code AS actionCode,
+            l.button_name AS buttonName,
+            COALESCE(NULLIF(l.biz_key, ''), CAST(l.biz_id AS CHAR)) AS bizIdentifier,
+            l.content AS content,
+            l.result_status AS resultStatus,
+            l.error_message AS errorMessage
+        FROM sys_operation_log l
+        LEFT JOIN sys_user u ON u.id = l.user_id
+        <include refid="Query_Where"/>
+        ORDER BY l.operate_time DESC, l.id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1)
+        FROM sys_operation_log l
+        LEFT JOIN sys_user u ON u.id = l.user_id
+        <include refid="Query_Where"/>
+    </select>
+
 </mapper>
