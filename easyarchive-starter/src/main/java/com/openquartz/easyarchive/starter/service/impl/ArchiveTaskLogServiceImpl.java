@@ -3,6 +3,8 @@ package com.openquartz.easyarchive.starter.service.impl;
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveTaskOperationLogPresenter;
@@ -83,11 +85,11 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
         if (task == null) {
             String message = "任务不存在: " + taskId;
             operationLogRecorder.recordFailure(message);
-            throw new IllegalArgumentException(message);
+            throw new StarterManageException(StarterErrorCode.TASK_NOT_FOUND, message);
         }
         if (task.isTerminal()) {
             operationLogRecorder.recordFailure("任务已结束，无法取消");
-            throw new IllegalStateException("任务已结束，无法取消");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_TASK_TERMINAL_CANNOT_CANCEL);
         }
         if (task.getExecuteStatus() != null
                 && task.getExecuteStatus() == ArchiveGroupExecuteTask.STATUS_CANCELLING) {

@@ -35,6 +35,7 @@ import com.openquartz.easyarchive.core.source.mysql.MysqlSource;
  */
 @Slf4j
 public class ArchiveExecutor implements Runnable {
+    private static final int NO_CUSTOM_PAUSE_MS = 0;
 
     private final ArchiveConnection sourceConnection;
     private final ArchiveConnection sinkConnection;
@@ -194,7 +195,7 @@ public class ArchiveExecutor implements Runnable {
     }
 
     private int resolvePauseMs(ArchiveGroupItem rule) {
-        if (rule.getPauseMs() != null && rule.getPauseMs() != 0) {
+        if (rule.getPauseMs() != null && rule.getPauseMs() != NO_CUSTOM_PAUSE_MS) {
             return rule.getPauseMs();
         }
         return archiveConfig.getArchivePauseMs();

@@ -6,6 +6,8 @@ import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
@@ -25,6 +27,8 @@ import java.util.Date;
 @Service
 @RequiredArgsConstructor
 public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionService {
+    private static final long INITIAL_PROCESSED_RECORDS = 0L;
+    private static final long INITIAL_FINISHED_FLAG = 0L;
 
     private final ArchiveGroupMapper groupMapper;
     private final ArchiveGroupItemByIdMapper idMapper;
@@ -41,21 +45,21 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
         dataPermissionService.assertGroupReadable(groupId);
         ArchiveGroup group = requireEnabledGroup(groupId);
         if (taskMapper.countActiveByGroupId(groupId) > 0) {
-            throw new IllegalStateException("Archive group has active task");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_HAS_ACTIVE_TASK);
         }
         if (idMapper.countEnabledByGroupId(groupId) + timeMapper.countEnabledByGroupId(groupId) == 0) {
-            throw new IllegalStateException("Archive group has no enabled item");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_HAS_NO_ENABLED_ITEM);
         }
 
-        ArchiveConnection source = requireDatasource(group.getSourceDatasourceId(), "source datasource not found");
-        ArchiveConnection target = requireDatasource(group.getTargetDatasourceId(), "target datasource not found");
+        ArchiveConnection source = requireDatasource(group.getSourceDatasourceId());
+        ArchiveConnection target = requireDatasource(group.getTargetDatasourceId());
 
         ArchiveGroupExecuteTask task = new ArchiveGroupExecuteTask();
         task.setGroupId(groupId);
         task.setStartTime(new Date());
         task.setExecuteStatus(ArchiveTaskStatusEnum.WAITING.getCode());
-        task.setProcessedRecords(0L);
-        task.setFinishedFlag(0L);
+        task.setProcessedRecords(INITIAL_PROCESSED_RECORDS);
+        task.setFinishedFlag(INITIAL_FINISHED_FLAG);
         taskMapper.insert(task);
 
         PlatformArchiveRuleLoader loader = new PlatformArchiveRuleLoader(groupId, idMapper, timeMapper);
@@ -67,11 +71,11 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
     public ArchiveGroupExecuteTask trigger(String groupCode) {
         String normalizedGroupCode = groupCode == null ? null : groupCode.trim();
         if (normalizedGroupCode == null || normalizedGroupCode.isEmpty()) {
-            throw new IllegalArgumentException("groupCode is required");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_CODE_REQUIRED);
         }
         ArchiveGroup group = groupMapper.selectByCode(normalizedGroupCode);
         if (group == null) {
-            throw new IllegalArgumentException("Archive group not found");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND);
         }
         return trigger(group.getId());
     }
@@ -83,7 +87,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
         requireExistingGroup(groupId);
         ArchiveGroupExecuteTask activeTask = taskMapper.selectLatestActiveByGroupId(groupId);
         if (activeTask == null) {
-            throw new IllegalStateException("Archive group has no active task");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_HAS_NO_ACTIVE_TASK);
         }
         taskLogService.cancelTask(activeTask.getId(), cancelReason);
         return activeTask;
@@ -92,29 +96,29 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
     private ArchiveGroup requireEnabledGroup(Long groupId) {
         ArchiveGroup group = requireExistingGroup(groupId);
         if (!EnableStatusEnum.isEnabled(group.getEnableStatus())) {
-            throw new IllegalStateException("Archive group is disabled");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_DISABLED);
         }
         return group;
     }
 
     private ArchiveGroup requireExistingGroup(Long groupId) {
         if (groupId == null) {
-            throw new IllegalArgumentException("groupId is required");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ID_REQUIRED);
         }
         ArchiveGroup group = groupMapper.selectById(groupId);
         if (group == null) {
-            throw new IllegalArgumentException("Archive group not found");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND);
         }
         return group;
     }
 
-    private ArchiveConnection requireDatasource(Long datasourceId, String message) {
+    private ArchiveConnection requireDatasource(Long datasourceId) {
         if (datasourceId == null) {
-            throw new IllegalArgumentException(message);
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
         }
         Object datasource = datasourceMapper.selectById(datasourceId);
         if (datasource == null) {
-            throw new IllegalArgumentException(message);
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
         }
         return toArchiveConnection(datasource);
     }
@@ -155,7 +159,8 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
         try {
             return source.getClass().getMethod(methodName).invoke(source);
         } catch (ReflectiveOperationException ex) {
-            throw new IllegalArgumentException("Unsupported datasource type: " + source.getClass().getName(), ex);
+            throw StarterManageException.withPlaceholders(
+                StarterErrorCode.UNSUPPORTED_DATASOURCE_TYPE, source.getClass().getName());
         }
     }
 }

@@ -3,6 +3,8 @@ package com.openquartz.easyarchive.starter.service.impl;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
+import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
@@ -63,7 +65,8 @@ class ArchiveGroupServiceImplTest {
         input.setSourceDatasourceId(1L);
         input.setTargetDatasourceId(2L);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(input));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_CODE_DUPLICATED, error.getErrorCode());
         verify(groupMapper, never()).insert(any());
     }
 
@@ -79,7 +82,8 @@ class ArchiveGroupServiceImplTest {
         ArchiveGroup input = enabledGroup();
         input.setId(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(input));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_CODE_DUPLICATED, error.getErrorCode());
         verify(groupMapper, never()).insert(any());
     }
 
@@ -90,7 +94,8 @@ class ArchiveGroupServiceImplTest {
         input.setId(null);
         input.setGroupCode("   ");
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(input));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_CODE_REQUIRED, error.getErrorCode());
         verify(groupMapper, never()).insert(any());
     }
 
@@ -101,7 +106,8 @@ class ArchiveGroupServiceImplTest {
         input.setId(null);
         input.setGroupName("");
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(input));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_NAME_REQUIRED, error.getErrorCode());
         verify(groupMapper, never()).insert(any());
     }
 
@@ -111,14 +117,16 @@ class ArchiveGroupServiceImplTest {
         missingSource.setId(null);
         missingSource.setSourceDatasourceId(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(missingSource));
+        StarterManageException sourceError = assertThrows(StarterManageException.class, () -> service.create(missingSource));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_DATASOURCE_REQUIRED, sourceError.getErrorCode());
         verify(groupMapper, never()).insert(any());
 
         ArchiveGroup missingTarget = enabledGroup();
         missingTarget.setId(null);
         missingTarget.setTargetDatasourceId(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(missingTarget));
+        StarterManageException targetError = assertThrows(StarterManageException.class, () -> service.create(missingTarget));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_DATASOURCE_REQUIRED, targetError.getErrorCode());
         verify(groupMapper, never()).insert(any());
     }
 
@@ -143,7 +151,8 @@ class ArchiveGroupServiceImplTest {
         input.setId(null);
         input.setEnableStatus(2);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(input));
+        assertEquals(StarterErrorCode.ENABLE_STATUS_INVALID, error.getErrorCode());
         verify(groupMapper, never()).insert(any());
     }
 
@@ -174,7 +183,8 @@ class ArchiveGroupServiceImplTest {
 
         ArchiveGroup input = enabledGroup();
 
-        assertThrows(IllegalArgumentException.class, () -> service.update(input));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.update(input));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_CODE_DUPLICATED, error.getErrorCode());
         verify(groupMapper, never()).update(any());
     }
 
@@ -184,7 +194,8 @@ class ArchiveGroupServiceImplTest {
         ArchiveGroup input = enabledGroup();
         when(groupMapper.selectById(10L)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.update(input));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.update(input));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND, error.getErrorCode());
         verify(groupMapper, never()).update(any());
     }
 
@@ -195,7 +206,8 @@ class ArchiveGroupServiceImplTest {
         input.setEnableStatus(-1);
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
 
-        assertThrows(IllegalArgumentException.class, () -> service.update(input));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.update(input));
+        assertEquals(StarterErrorCode.ENABLE_STATUS_INVALID, error.getErrorCode());
         verify(groupMapper, never()).update(any());
     }
 
@@ -270,7 +282,8 @@ class ArchiveGroupServiceImplTest {
     void shouldRejectInvalidStatusUpdate() {
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
 
-        assertThrows(IllegalArgumentException.class, () -> service.updateStatus(10L, 2));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.updateStatus(10L, 2));
+        assertEquals(StarterErrorCode.ENABLE_STATUS_INVALID, error.getErrorCode());
         verify(groupMapper, never()).updateStatus(any(), any());
     }
 
@@ -278,7 +291,8 @@ class ArchiveGroupServiceImplTest {
     void shouldRejectStatusUpdateWhenGroupDoesNotExist() {
         when(groupMapper.selectById(10L)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.updateStatus(10L, 0));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.updateStatus(10L, 0));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND, error.getErrorCode());
         verify(groupMapper, never()).updateStatus(any(), any());
     }
 
@@ -287,8 +301,8 @@ class ArchiveGroupServiceImplTest {
         when(archiveConnectionMapper.selectById(1L)).thenReturn(datasourceWithStatus(1L, DATASOURCE_STATUS_UNTESTED));
         when(archiveConnectionMapper.selectById(2L)).thenReturn(datasourceWithStatus(2L, DATASOURCE_STATUS_ENABLED));
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> service.create(enabledGroup()));
-
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(enabledGroup()));
+        assertEquals(StarterErrorCode.DATASOURCE_ENABLE_STATUS_REQUIRED, error.getErrorCode());
         assertEquals("源归档连接必须为已启用状态", error.getMessage());
         verify(groupMapper, never()).insert(any());
     }
@@ -299,8 +313,8 @@ class ArchiveGroupServiceImplTest {
         when(archiveConnectionMapper.selectById(2L)).thenReturn(datasourceWithStatus(2L, DATASOURCE_STATUS_DISABLED));
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> service.update(enabledGroup()));
-
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.update(enabledGroup()));
+        assertEquals(StarterErrorCode.DATASOURCE_ENABLE_STATUS_REQUIRED, error.getErrorCode());
         assertEquals("目标归档连接必须为已启用状态", error.getMessage());
         verify(groupMapper, never()).update(any());
     }
@@ -322,7 +336,8 @@ class ArchiveGroupServiceImplTest {
     void shouldRejectDeleteWhenGroupDoesNotExist() {
         when(groupMapper.selectById(10L)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.delete(10L));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.delete(10L));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND, error.getErrorCode());
         verify(groupMapper, never()).deleteById(any());
     }
 
@@ -338,7 +353,8 @@ class ArchiveGroupServiceImplTest {
     void shouldRejectOverviewWhenGroupDoesNotExist() {
         when(groupMapper.selectById(10L)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> service.findOverview(10L));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.findOverview(10L));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND, error.getErrorCode());
     }
 
     @Test
@@ -454,7 +470,8 @@ class ArchiveGroupServiceImplTest {
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
         when(taskMapper.countActiveByGroupId(10L)).thenReturn(1);
 
-        assertThrows(IllegalStateException.class, () -> service.delete(10L));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.delete(10L));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_ACTIVE_TASK_CONFLICT, error.getErrorCode());
         verify(groupMapper, never()).deleteById(any());
     }
 
@@ -463,7 +480,8 @@ class ArchiveGroupServiceImplTest {
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
         when(taskMapper.countActiveByGroupId(10L)).thenReturn(1);
 
-        assertThrows(IllegalStateException.class, () -> service.updateStatus(10L, 1));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.updateStatus(10L, 1));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_ACTIVE_TASK_CONFLICT, error.getErrorCode());
         verify(groupMapper, never()).updateStatus(any(), any());
     }
 

@@ -1,14 +1,17 @@
 package com.openquartz.easyarchive.core.expr.executors;
 
 
+import com.openquartz.easyarchive.common.exception.EasyArchiveException;
 import com.google.common.collect.Sets;
 import com.openquartz.easyarchive.core.expr.cmd.Command;
 import com.openquartz.easyarchive.core.expr.cmd.Environment;
 import com.openquartz.easyarchive.core.expr.cmd.Result;
 import com.openquartz.easyarchive.common.exception.Asserts;
 import com.openquartz.easyarchive.common.exception.CommonErrorCode;
+import com.openquartz.easyarchive.core.exception.CoreErrorCode;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 
@@ -36,29 +39,8 @@ public class TimeAddExecutor extends TimeFormatExecutor {
     }
 
     private static LocalDateTime addTimeOperate(Command command, LocalDateTime localTime) {
-        switch (command.getParams().get(1)) {
-            case "Y":
-                localTime = localTime.plusYears(Long.parseLong(command.getParams().get(1)));
-                break;
-            case "M":
-                localTime = localTime.plusMonths(Long.parseLong(command.getParams().get(1)));
-                break;
-            case "D":
-                localTime = localTime.plusDays(Long.parseLong(command.getParams().get(1)));
-                break;
-            case "H":
-                localTime = localTime.plusHours(Long.parseLong(command.getParams().get(1)));
-                break;
-            case "m":
-                localTime = localTime.plusMinutes(Long.parseLong(command.getParams().get(1)));
-                break;
-            case "s":
-                localTime = localTime.plusSeconds(Long.parseLong(command.getParams().get(1)));
-                break;
-            default:
-                throw new IllegalArgumentException("time unit error");
-        }
-        return localTime;
+        long amount = Long.parseLong(command.getParams().get(0));
+        return SupportedTimeUnit.fromCode(command.getParams().get(1)).add(localTime, amount);
     }
 
     @Override
@@ -74,6 +56,61 @@ public class TimeAddExecutor extends TimeFormatExecutor {
     @Override
     public void init(Environment environment) {
 
+    }
+
+    private enum SupportedTimeUnit {
+        YEAR("Y") {
+            @Override
+            LocalDateTime add(LocalDateTime localTime, long amount) {
+                return localTime.plusYears(amount);
+            }
+        },
+        MONTH("M") {
+            @Override
+            LocalDateTime add(LocalDateTime localTime, long amount) {
+                return localTime.plusMonths(amount);
+            }
+        },
+        DAY("D") {
+            @Override
+            LocalDateTime add(LocalDateTime localTime, long amount) {
+                return localTime.plusDays(amount);
+            }
+        },
+        HOUR("H") {
+            @Override
+            LocalDateTime add(LocalDateTime localTime, long amount) {
+                return localTime.plusHours(amount);
+            }
+        },
+        MINUTE("m") {
+            @Override
+            LocalDateTime add(LocalDateTime localTime, long amount) {
+                return localTime.plusMinutes(amount);
+            }
+        },
+        SECOND("s") {
+            @Override
+            LocalDateTime add(LocalDateTime localTime, long amount) {
+                return localTime.plusSeconds(amount);
+            }
+        };
+
+        private final String code;
+
+        SupportedTimeUnit(String code) {
+            this.code = code;
+        }
+
+        abstract LocalDateTime add(LocalDateTime localTime, long amount);
+
+        private static SupportedTimeUnit fromCode(String code) {
+            return Arrays.stream(values())
+                .filter(item -> item.code.equals(code))
+                .findFirst()
+                .orElseThrow(() -> EasyArchiveException.withPlaceholders(
+                    CoreErrorCode.TIME_UNIT_UNSUPPORTED, code));
+        }
     }
 
 }
