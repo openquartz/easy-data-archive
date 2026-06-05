@@ -9,7 +9,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:openquartz}?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=${MYSQL_TIMEZONE:Asia/Shanghai}
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:openquartz}?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=${MYSQL_TIMEZONE:Asia/Shanghai}
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD:123456}
     hikari:
@@ -67,7 +67,7 @@ logging:
 
 sync:
   connection:
-    config: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:openquartz}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=${MYSQL_TIMEZONE:Asia/Shanghai}
+    config: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:openquartz}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=${MYSQL_TIMEZONE:Asia/Shanghai}
     config-username: ${MYSQL_USER:root}
     config-password: ${MYSQL_PASSWORD:123456}
 
