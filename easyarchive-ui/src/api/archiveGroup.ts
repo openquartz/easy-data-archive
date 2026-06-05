@@ -19,6 +19,9 @@ export interface ArchiveGroup {
   activeTaskId?: number;
   activeTaskStatus?: number;
   activeTaskStartTime?: string;
+  activeTaskProcessedRecords?: number;
+  activeTaskProcessedSpeed?: number;
+  activeTaskHeartbeatTime?: string;
   canTrigger?: boolean;
   canCancelActiveTask?: boolean;
   canViewActiveTask?: boolean;
