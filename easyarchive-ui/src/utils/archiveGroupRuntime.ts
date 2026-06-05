@@ -12,6 +12,11 @@ const ARCHIVE_GROUP_RUNTIME_CAPPED_PROGRESS = 95;
 const ARCHIVE_GROUP_RUNTIME_LOG_BASELINE = 12;
 const ARCHIVE_GROUP_RUNTIME_LOG_MULTIPLIER = 8;
 const ARCHIVE_GROUP_RUNTIME_LOG_CAP = 83;
+const ARCHIVE_GROUP_TASK_STATUS_RUNNING = 1;
+const ARCHIVE_GROUP_TASK_STATUS_SUCCESS = 2;
+const ARCHIVE_GROUP_TASK_STATUS_FAILED = 3;
+const ARCHIVE_GROUP_TASK_STATUS_CANCELLING = 4;
+const ARCHIVE_GROUP_TASK_STATUS_CANCELLED = 5;
 
 export function getArchiveGroupRuntimeProcessedRecords(group?: ArchiveGroupRuntimeState | null): number {
   return typeof group?.activeTaskProcessedRecords === "number" && group.activeTaskProcessedRecords > 0
@@ -57,11 +62,11 @@ export function resolveArchiveGroupRuntimeProgress(group?: ArchiveGroupRuntimeSt
     return 0;
   }
 
-  if (group?.activeTaskStatus === 2) {
+  if (group?.activeTaskStatus === ARCHIVE_GROUP_TASK_STATUS_SUCCESS) {
     return ARCHIVE_GROUP_RUNTIME_SUCCESS_PROGRESS;
   }
 
-  if (group?.activeTaskStatus === 4) {
+  if (group?.activeTaskStatus === ARCHIVE_GROUP_TASK_STATUS_CANCELLING) {
     return ARCHIVE_GROUP_RUNTIME_CAPPED_PROGRESS;
   }
 
@@ -70,7 +75,11 @@ export function resolveArchiveGroupRuntimeProgress(group?: ArchiveGroupRuntimeSt
     return 0;
   }
 
-  if (group?.activeTaskStatus === 1 || group?.activeTaskStatus === 3 || group?.activeTaskStatus === 5) {
+  if (
+    group?.activeTaskStatus === ARCHIVE_GROUP_TASK_STATUS_RUNNING
+    || group?.activeTaskStatus === ARCHIVE_GROUP_TASK_STATUS_FAILED
+    || group?.activeTaskStatus === ARCHIVE_GROUP_TASK_STATUS_CANCELLED
+  ) {
     return resolveArchiveGroupRuntimeSimulatedProgress(processedRecords);
   }
 
