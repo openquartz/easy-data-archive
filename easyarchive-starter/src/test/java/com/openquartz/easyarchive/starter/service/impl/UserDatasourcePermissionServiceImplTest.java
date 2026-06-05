@@ -135,7 +135,7 @@ class UserDatasourcePermissionServiceImplTest {
         CurrentUserInfo currentUserInfo = new CurrentUserInfo();
         currentUserInfo.setUserId(1L);
         currentUserInfo.setUsername("admin");
-        currentUserInfo.setRoleCode("ADMIN");
+        currentUserInfo.setRoleCode("platform_admin");
         return currentUserInfo;
     }
 }

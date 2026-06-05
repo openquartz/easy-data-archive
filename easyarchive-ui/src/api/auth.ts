@@ -1,4 +1,5 @@
 import { http } from "../utils/http";
+import type { RoleCode } from "../constants/roles";
 
 export interface LoginPayload {
   username: string;
@@ -8,7 +9,7 @@ export interface LoginPayload {
 export interface LoginResponse {
   token: string;
   username?: string;
-  roleCode?: string;
+  roleCode?: RoleCode | string;
 }
 
 export interface UserProfile {
@@ -17,7 +18,7 @@ export interface UserProfile {
   realName?: string;
   email?: string;
   status?: number;
-  roleCode?: string;
+  roleCode?: RoleCode | string;
   isAdmin?: boolean;
 }
 

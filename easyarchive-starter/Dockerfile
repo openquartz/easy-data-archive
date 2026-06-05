@@ -6,7 +6,7 @@ COPY easyarchive-common ./easyarchive-common
 COPY easyarchive-core ./easyarchive-core
 COPY easyarchive-starter ./easyarchive-starter
 
-RUN mvn -pl easyarchive-starter -am clean package -DskipTests
+RUN mvn -pl easyarchive-starter -am clean package -DskipTests -Dmaven.javadoc.skip=true
 
 FROM eclipse-temurin:11-jre
 WORKDIR /app

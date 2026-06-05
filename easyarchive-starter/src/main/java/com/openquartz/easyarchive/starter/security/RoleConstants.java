@@ -1,24 +1,70 @@
 package com.openquartz.easyarchive.starter.security;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
+
 public final class RoleConstants {
 
-    public static final String ADMIN = "platform_admin";
-    public static final String USER = "archive_admin";
+    public static final String PLATFORM_ADMIN = "platform_admin";
+    public static final String ARCHIVE_ADMIN = "archive_admin";
+    public static final String AUDITOR = "auditor";
+    public static final String OBSERVER = "observer";
     private static final String LEGACY_ADMIN = "ADMIN";
     private static final String LEGACY_USER = "USER";
+    private static final Set<String> SUPPORTED_ROLE_CODES = new LinkedHashSet<>(Arrays.asList(
+            PLATFORM_ADMIN,
+            ARCHIVE_ADMIN,
+            AUDITOR,
+            OBSERVER
+    ));
 
     private RoleConstants() {
     }
 
     public static boolean isAdmin(String roleCode) {
-        return matches(roleCode, ADMIN, LEGACY_ADMIN);
+        return PLATFORM_ADMIN.equals(normalizeRoleCode(roleCode));
     }
 
-    public static boolean isUser(String roleCode) {
-        return matches(roleCode, USER, LEGACY_USER);
+    public static boolean isArchiveAdmin(String roleCode) {
+        return ARCHIVE_ADMIN.equals(normalizeRoleCode(roleCode));
     }
 
-    private static boolean matches(String roleCode, String primary, String legacy) {
-        return primary.equalsIgnoreCase(roleCode) || legacy.equalsIgnoreCase(roleCode);
+    public static boolean isAuditor(String roleCode) {
+        return AUDITOR.equals(normalizeRoleCode(roleCode));
+    }
+
+    public static boolean isObserver(String roleCode) {
+        return OBSERVER.equals(normalizeRoleCode(roleCode));
+    }
+
+    public static boolean isSupported(String roleCode) {
+        return SUPPORTED_ROLE_CODES.contains(normalizeRoleCode(roleCode));
+    }
+
+    public static String defaultRoleCode() {
+        return OBSERVER;
+    }
+
+    public static String normalizeRoleCode(String roleCode) {
+        if (roleCode == null) {
+            return defaultRoleCode();
+        }
+        String normalized = roleCode.trim();
+        if (normalized.isEmpty()) {
+            return defaultRoleCode();
+        }
+        if (LEGACY_ADMIN.equalsIgnoreCase(normalized)) {
+            return PLATFORM_ADMIN;
+        }
+        if (LEGACY_USER.equalsIgnoreCase(normalized)) {
+            return ARCHIVE_ADMIN;
+        }
+        return normalized.toLowerCase(Locale.ROOT);
+    }
+
+    public static Set<String> supportedRoleCodes() {
+        return SUPPORTED_ROLE_CODES;
     }
 }

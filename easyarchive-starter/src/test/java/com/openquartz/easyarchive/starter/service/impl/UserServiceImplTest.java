@@ -10,12 +10,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.List;
 
 class UserServiceImplTest {
 
@@ -81,6 +85,22 @@ class UserServiceImplTest {
         verify(userMapper, times(2)).selectById(3L);
         verify(userMapper).update(any(SysUser.class));
         verify(recorder).record(any());
+    }
+
+    @Test
+    void shouldNormalizeLegacyRoleCodesWhenReadingUsers() {
+        SysUser admin = user(1L, "admin", 0);
+        admin.setRoleCode("ADMIN");
+        SysUser user = user(2L, "user", 0);
+        user.setRoleCode("USER");
+        when(userMapper.selectList(null)).thenReturn(Arrays.asList(admin, user));
+        doNothing().when(dataPermissionService).assertAdmin();
+
+        List<SysUser> result = service.findAll();
+
+        assertEquals("platform_admin", result.get(0).getRoleCode());
+        assertEquals("archive_admin", result.get(1).getRoleCode());
+        assertIterableEquals(Arrays.asList(admin, user), result);
     }
 
     private static SysUser user(Long id, String username, Integer status) {

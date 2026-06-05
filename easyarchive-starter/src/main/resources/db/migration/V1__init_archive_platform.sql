@@ -1,6 +1,7 @@
 -- EasyArchive Platform 数据库初始化脚本
 -- 版本: 1.0.0
 -- 创建时间: 2026-05-24
+SET NAMES utf8mb4;
 
 -- 权限与审计模块
 CREATE TABLE IF NOT EXISTS `sys_user` (

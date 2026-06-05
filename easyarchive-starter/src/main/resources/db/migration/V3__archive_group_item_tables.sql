@@ -1,4 +1,5 @@
 -- V3: Replace generic archive rule tables with concrete archive group item tables.
+SET NAMES utf8mb4;
 
 -- MySQL 5.7 does not support RENAME TABLE IF EXISTS or ADD COLUMN IF NOT EXISTS.
 -- Use a short migration procedure to preserve old generic rule data when present

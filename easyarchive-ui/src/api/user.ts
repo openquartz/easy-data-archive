@@ -1,4 +1,5 @@
 import { http } from "../utils/http";
+import type { RoleCode } from "../constants/roles";
 
 export interface User {
   id: number;
@@ -7,7 +8,7 @@ export interface User {
   realName?: string;
   mobile?: string;
   email?: string;
-  roleCode?: string;
+  roleCode?: RoleCode | string;
   status: number;
   lastLoginTime?: string;
   remark?: string;
@@ -21,7 +22,7 @@ export interface UserPayload {
   realName?: string;
   mobile?: string;
   email?: string;
-  roleCode?: string;
+  roleCode?: RoleCode | string;
   status?: number;
   remark?: string;
 }

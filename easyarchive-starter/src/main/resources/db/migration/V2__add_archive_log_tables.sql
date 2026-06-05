@@ -1,4 +1,5 @@
 -- V2: 新增归档执行任务表 + 补全日志表字段
+SET NAMES utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `ea_archive_group_execute_task` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',

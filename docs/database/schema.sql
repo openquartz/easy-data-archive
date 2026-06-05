@@ -1,5 +1,6 @@
 -- EasyArchive 数据库表结构
 -- MySQL 5.7+
+SET NAMES utf8mb4;
 
 -- 创建数据库
 CREATE DATABASE IF NOT EXISTS easy_archive DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

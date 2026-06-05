@@ -129,7 +129,7 @@ class ArchiveTaskLogServiceImplTest {
     private static CurrentUserInfo currentUser() {
         CurrentUserInfo currentUserInfo = new CurrentUserInfo();
         currentUserInfo.setUserId(2L);
-        currentUserInfo.setRoleCode("USER");
+        currentUserInfo.setRoleCode("observer");
         return currentUserInfo;
     }
 

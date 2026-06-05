@@ -1,5 +1,6 @@
 -- Keep notification columns aligned for upgraded databases that were created
 -- before the fields were folded back into V1.
+SET NAMES utf8mb4;
 DELIMITER //
 
 DROP PROCEDURE IF EXISTS `ea_archive_v6_add_group_notification`//
