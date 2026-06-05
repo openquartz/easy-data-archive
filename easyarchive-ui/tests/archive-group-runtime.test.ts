@@ -22,6 +22,16 @@ test("archive group without active task can be triggered when backend allows it"
   assert.equal(canCancelArchiveGroupActiveTask(group), false);
 });
 
+test("archive group without active task reports zero runtime progress", () => {
+  const group = {
+    id: 6,
+    activeTaskStatus: 1,
+    activeTaskProcessedRecords: 500
+  };
+
+  assert.equal(resolveArchiveGroupRuntimeProgress(group), 0);
+});
+
 test("archive group with active task suppresses trigger and enables task actions", () => {
   const group = {
     id: 2,
@@ -61,6 +71,28 @@ test("cancelling archive group is capped at 95 percent", () => {
   assert.equal(resolveArchiveGroupRuntimeProgress(group), 95);
 });
 
+test("failed archive group derives simulated progress from processed records", () => {
+  const group = {
+    id: 7,
+    activeTaskId: 102,
+    activeTaskStatus: 3,
+    activeTaskProcessedRecords: 1000
+  };
+
+  assert.equal(resolveArchiveGroupRuntimeProgress(group), 67);
+});
+
+test("cancelled archive group derives simulated progress from processed records", () => {
+  const group = {
+    id: 8,
+    activeTaskId: 103,
+    activeTaskStatus: 5,
+    activeTaskProcessedRecords: 1000
+  };
+
+  assert.equal(resolveArchiveGroupRuntimeProgress(group), 67);
+});
+
 test("successful archive group reports full progress", () => {
   const group = {
     id: 5,
@@ -70,4 +102,15 @@ test("successful archive group reports full progress", () => {
   };
 
   assert.equal(resolveArchiveGroupRuntimeProgress(group), 100);
+});
+
+test("unknown archive group task state reports zero progress", () => {
+  const group = {
+    id: 9,
+    activeTaskId: 104,
+    activeTaskStatus: 999,
+    activeTaskProcessedRecords: 1000
+  };
+
+  assert.equal(resolveArchiveGroupRuntimeProgress(group), 0);
 });
