@@ -53,3 +53,37 @@ test("guide content exposes technical-manual sections and rollout safety guidanc
     )
   );
 });
+
+test("guide content includes operator examples for expression-driven scenarios", () => {
+  const sections = buildGuideSections("zh-CN");
+  const exampleSection = sections.find((section) => section.id === "examples-validation");
+  const overviewSection = sections.find((section) => section.id === "rule-overview");
+
+  assert.ok(exampleSection);
+  assert.ok(overviewSection);
+  assert.ok(
+    exampleSection.items?.some(
+      (item) => item.includes("最大 ID") && item.includes("{sql") && item.includes("max(id)")
+    )
+  );
+  assert.ok(
+    exampleSection.items?.some(
+      (item) => item.includes("最小 ID") && item.includes("{sql") && item.includes("min(id)")
+    )
+  );
+  assert.ok(
+    exampleSection.items?.some(
+      (item) => item.includes("目标表名") && item.includes("{hash_mod") && item.includes("按某个字段实际值进行 hash 并取模")
+    )
+  );
+  assert.ok(
+    exampleSection.items?.some(
+      (item) => item.includes("来源表名") && item.includes("{time") && item.includes("_yyyyMMdd")
+    )
+  );
+  assert.ok(
+    overviewSection.items?.some(
+      (item) => item.includes("{mod") && item.includes("{hash_mod")
+    )
+  );
+});

@@ -19,6 +19,7 @@ import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
 import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import com.openquartz.easyarchive.starter.support.ArchiveGroupTaskDispatcher;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,8 +42,12 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public synchronized ArchiveGroupExecuteTask trigger(Long groupId) {
+    public ArchiveGroupExecuteTask trigger(Long groupId) {
         dataPermissionService.assertGroupReadable(groupId);
+        return triggerGroupWithoutPermission(groupId);
+    }
+
+    private synchronized @NonNull ArchiveGroupExecuteTask triggerGroupWithoutPermission(Long groupId) {
         ArchiveGroup group = requireEnabledGroup(groupId);
         if (taskMapper.countActiveByGroupId(groupId) > 0) {
             throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_HAS_ACTIVE_TASK);
@@ -67,6 +72,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
         return task;
     }
 
+
     @Override
     public ArchiveGroupExecuteTask trigger(String groupCode) {
         String normalizedGroupCode = groupCode == null ? null : groupCode.trim();
@@ -77,7 +83,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
         if (group == null) {
             throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND);
         }
-        return trigger(group.getId());
+        return triggerGroupWithoutPermission(group.getId());
     }
 
     @Override

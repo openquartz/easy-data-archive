@@ -62,6 +62,7 @@ const zhCNSections: GuideSection[] = [
     intro:
       "规则配置不仅是字段填写问题，更关键的是让读取范围、排序方式、删除条件和数据库索引保持一致，保证每一批数据都可验证、可回放、可停止。",
     items: [
+      "表达式统一使用 `$...$` 包裹，内部再按 `{指令 参数}` 方式组合；常用指令包括 `{sql}`、`{time}`、`{env}`、`{fix}`、`{mod}`、`{hash_mod}`。",
       "按 ID 规则适合主键递增、历史区间明确且能按 ID 窗口读取的数据表。",
       "按时间规则适合日志、流水、历史订单等按时间沉淀的数据表。",
       "批大小决定单批取数和写入规模；步进轮次、步进分钟和暂停毫秒共同决定执行节奏与源库压力。",
@@ -125,9 +126,16 @@ const zhCNSections: GuideSection[] = [
       "安全首发模式：开启写入，关闭清理，选择一段可人工核对的 ID 或时间窗口，执行后比对源库与目标库记录数和关键字段。",
       "按 ID 示例：订单历史表以 `order_id` 为边界，每批 2000 条，先归档 `1000001` 到 `1020000` 范围，确认目标表写入完整后再扩大范围。",
       "按时间示例：访问日志表以 `create_time` 为边界，保留近 30 天数据，步进 60 分钟，先验证某一天凌晨 2 小时窗口的归档结果。",
+      "查询表最大 ID：当结束 ID 需要跟随源表当前上界时，可使用 `$ {sql source_conn select max(id) from order_record limit 1} $`，适合把本轮归档的结束边界锁定为执行时刻的最大 ID。",
+      "查询表最小 ID：当开始 ID 需要从最早历史数据起步时，可使用 `$ {sql source_conn select min(id) from order_record limit 1} $`，先取最小 ID 再配合小批量窗口进行首轮验证。",
+      "目标表名按某个字段实际值进行 hash 并取模：如果要按租户或用户维度分表，可把目标表名配置为 `$ {const archive_order_}{hash_mod 16 {env tenantId}} $`，表示按某个字段实际值进行 hash 并取模后路由到 `archive_order_0` 到 `archive_order_15`。",
+      "目标表名按连续编号直接取模：如果业务已经拿到正整数分片号，可使用 `$ {const archive_order_}{mod 8 {env shardNo}} $`，直接得到 `0` 到 `7` 的目标后缀，避免重复做 hash。",
+      "来源表名拼接当前时间后缀：如果来源表按日滚动，可配置 `$ {const order_log_}{time yyyyMMdd} $`，生成类似 `order_log_20260605` 的来源表名，也就是给基础表名追加 `_yyyyMMdd` 后缀，用于按天读取当天或历史某天分表。",
+      "组合示例：先用 `$ {sql source_conn select min(id) from order_record limit 1} $` 和 `$ {sql source_conn select max(id) from order_record limit 1} $` 取边界，再把目标表写成 `$ {const archive_order_}{hash_mod 16 {env tenantId}} $`，适用于多租户订单历史表的分片归档。",
       "启用清理前检查项：目标表记录数一致、关键字段抽样一致、删除条件单独查询命中范围正确、回滚方案已准备、执行窗口已确认。"
     ],
     notes: [
+      "涉及动态表名、动态边界或分片路由时，建议先把表达式单独代入样例值演算一遍，确认生成结果与预期一致后再保存规则。",
       "首次运行和规则变更后都建议采用“先开启写入，关闭清理”的方式完成验收，再切换到正式清理模式。"
     ]
   },
