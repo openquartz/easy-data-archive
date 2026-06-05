@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
     `real_name` VARCHAR(64) NOT NULL COMMENT '姓名',
     `mobile` VARCHAR(32) NULL COMMENT '手机',
     `email` VARCHAR(128) NULL COMMENT '邮箱',
+    `role_code` VARCHAR(64) NOT NULL COMMENT '角色编码',
     `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
     `last_login_time` DATETIME NULL COMMENT '最近登录时间',
     `remark` VARCHAR(255) NULL COMMENT '备注',
@@ -305,8 +306,8 @@ CREATE TABLE IF NOT EXISTS `ea_alert_event` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='告警事件表';
 
 -- 初始化数据
-INSERT INTO `sys_user` (`username`, `password`, `real_name`, `mobile`, `email`, `status`, `remark`) VALUES
-('admin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '系统管理员', '13800000000', 'admin@example.com', 0, '系统管理员账户');
+INSERT INTO `sys_user` (`username`, `password`, `real_name`, `mobile`, `email`, `role_code`, `status`, `remark`) VALUES
+('admin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '系统管理员', '13800000000', 'admin@example.com', 'platform_admin', 0, '系统管理员账户');
 
 INSERT INTO `sys_role` (`role_code`, `role_name`, `status`, `data_scope_type`, `remark`) VALUES
 ('platform_admin', '平台管理员', 0, 'ALL', '平台管理员，拥有所有权限'),

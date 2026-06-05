@@ -19,12 +19,12 @@ class ContainerDatasourcePropertiesTest {
     void resolvesLocalDefaultsWhenOverridesAreMissing() throws Exception {
         PropertySourcesPropertyResolver resolver = createResolver(Map.of());
         assertEquals(
-                "jdbc:mysql://localhost:3306/openquartz?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai",
+                "jdbc:mysql://localhost:3306/openquartz?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai",
                 resolver.getProperty("spring.datasource.url"));
         assertEquals("root", resolver.getProperty("spring.datasource.username"));
         assertEquals("123456", resolver.getProperty("spring.datasource.password"));
         assertEquals(
-                "jdbc:mysql://localhost:3306/openquartz?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai",
+                "jdbc:mysql://localhost:3306/openquartz?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai",
                 resolver.getProperty("sync.connection.config"));
     }
 
@@ -38,12 +38,12 @@ class ContainerDatasourcePropertiesTest {
                 "MYSQL_PASSWORD", "easyarchive123",
                 "MYSQL_ROOT_PASSWORD", "root123"));
         assertEquals(
-                "jdbc:mysql://mysql:3306/easy_archive?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai",
+                "jdbc:mysql://mysql:3306/easy_archive?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai",
                 resolver.getProperty("spring.datasource.url"));
         assertEquals("easyarchive", resolver.getProperty("spring.datasource.username"));
         assertEquals("easyarchive123", resolver.getProperty("spring.datasource.password"));
         assertEquals(
-                "jdbc:mysql://mysql:3306/easy_archive?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai",
+                "jdbc:mysql://mysql:3306/easy_archive?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai",
                 resolver.getProperty("sync.connection.config"));
     }
 

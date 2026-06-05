@@ -184,9 +184,9 @@ CREATE TABLE archive_task_log (
 
 -- 插入示例数据
 INSERT INTO archive_connection (connect_code, connect_type, url, username, password, status, remark) VALUES
-('SOURCE_DB', 'MYSQL', 'jdbc:mysql://localhost:3306/source_db?useUnicode=true&characterEncoding=utf8&useSSL=false', 'root', 'password', 1, '源数据库'),
-('TARGET_DB', 'MYSQL', 'jdbc:mysql://localhost:3306/target_db?useUnicode=true&characterEncoding=utf8&useSSL=false', 'root', 'password', 1, '目标数据库'),
-('CONFIG_DB', 'MYSQL', 'jdbc:mysql://localhost:3306/config_db?useUnicode=true&characterEncoding=utf8&useSSL=false', 'root', 'password', 1, '配置数据库');
+('SOURCE_DB', 'MYSQL', 'jdbc:mysql://localhost:3306/source_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true', 'root', 'password', 1, '源数据库'),
+('TARGET_DB', 'MYSQL', 'jdbc:mysql://localhost:3306/target_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true', 'root', 'password', 1, '目标数据库'),
+('CONFIG_DB', 'MYSQL', 'jdbc:mysql://localhost:3306/config_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true', 'root', 'password', 1, '配置数据库');
 
 INSERT INTO archive_group (group_code, group_name, source_connection_id, target_connection_id, owner_user_id, enable_status) VALUES
 ('USER_DATA_GROUP', '用户数据归档组', 1, 2, 1001, 0);

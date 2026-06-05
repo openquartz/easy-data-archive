@@ -17,7 +17,7 @@ public class ConnectionProperties {
     /**
      * 配置数据库连接
      */
-    private String config = "jdbc:mysql://localhost:3306/config_db";
+    private String config = "jdbc:mysql://localhost:3306/config_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai";
     private String configUsername = "root";
     private String configPassword = "password";
 
