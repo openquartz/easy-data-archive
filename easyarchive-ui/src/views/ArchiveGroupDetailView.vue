@@ -32,7 +32,6 @@ import EntityLink from "../components/EntityLink.vue";
 import { getDatasourcesApi, type Datasource } from "../api/datasource";
 import { archiveEnableStatusDictionary, getStatusLabel, getStatusTagClass, taskStatusDictionary } from "../utils/dictionaries";
 import {
-  canViewArchiveGroupActiveTask,
   getArchiveGroupRuntimeProcessedRecords,
   hasArchiveGroupActiveTask,
   resolveArchiveGroupRuntimeProgress
@@ -63,7 +62,6 @@ const datasources = ref<Datasource[]>([]);
 
 const groupId = computed(() => Number(route.params.id));
 const formattedLastExecuteTime = computed(() => formatTimestamp(overview.value?.taskStats.lastExecuteTime));
-const canViewTask = computed(() => canViewArchiveGroupActiveTask(group.value));
 
 function formatTimestamp(value?: number): string {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
@@ -88,17 +86,6 @@ function formatSwitchFlag(value?: number): string {
 
 function datasourceName(id: number): string {
   return datasources.value.find((item) => item.id === id)?.datasourceName || String(id);
-}
-
-function formatRuntimeProcessedRecords(currentGroup?: ArchiveGroup | null): string {
-  if (!hasArchiveGroupActiveTask(currentGroup)) {
-    return "-";
-  }
-  return getArchiveGroupRuntimeProcessedRecords(currentGroup).toLocaleString();
-}
-
-function resolveRuntimeProgressLabel(currentGroup?: ArchiveGroup | null): string {
-  return `${resolveArchiveGroupRuntimeProgress(currentGroup)}%`;
 }
 
 async function syncTitle(title: string, token: number): Promise<void> {
@@ -364,7 +351,7 @@ watch(
       <div class="actions">
         <button class="btn btn--subtle" @click="goBack">{{ t("common.back") }}</button>
         <button class="btn btn--subtle" :disabled="loading" @click="refresh">{{ t("common.refresh") }}</button>
-        <button class="btn btn--primary" :disabled="!canViewTask" @click="viewTask(group?.activeTaskId)">
+        <button class="btn btn--primary" :disabled="!group?.activeTaskId" @click="viewTask(group?.activeTaskId)">
           {{ t("archiveGroupDetail.viewTask") }}
         </button>
       </div>
@@ -394,16 +381,17 @@ watch(
             <div class="archive-group-runtime archive-group-runtime--detail full-width" :class="{ 'archive-group-runtime--idle': !hasArchiveGroupActiveTask(group) }">
               <div class="archive-group-runtime__header">
                 <strong>{{ t("archiveGroup.columns.runtimeProgress") }}:</strong>
-                <span>{{ resolveRuntimeProgressLabel(group) }}</span>
+                <span>{{ resolveArchiveGroupRuntimeProgress(group) }}%</span>
               </div>
               <div class="archive-group-runtime__bar" aria-hidden="true">
                 <span
                   class="archive-group-runtime__bar-fill"
-                  :style="{ width: resolveRuntimeProgressLabel(group) }"
+                  :style="{ width: `${resolveArchiveGroupRuntimeProgress(group)}%` }"
                 />
               </div>
               <p class="archive-group-runtime__summary">
-                {{ t("archiveGroup.columns.migratedRecords") }}: {{ formatRuntimeProcessedRecords(group) }}
+                {{ t("archiveGroup.columns.migratedRecords") }}:
+                {{ hasArchiveGroupActiveTask(group) ? getArchiveGroupRuntimeProcessedRecords(group).toLocaleString() : "-" }}
               </p>
             </div>
             <p class="full-width"><strong>{{ t("common.remark") }}:</strong> {{ group.remark || "-" }}</p>
