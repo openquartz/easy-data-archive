@@ -214,6 +214,9 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
             view.setActiveTaskId(activeTask.getId());
             view.setActiveTaskStatus(activeTask.getExecuteStatus());
             view.setActiveTaskStartTime(activeTask.getStartTime());
+            view.setActiveTaskProcessedRecords(activeTask.getProcessedRecords());
+            view.setActiveTaskProcessedSpeed(activeTask.getProcessedSpeed());
+            view.setActiveTaskHeartbeatTime(activeTask.getHeartbeatTime());
         }
         boolean canTrigger = !hasActiveTask && EnableStatusEnum.isEnabled(group.getEnableStatus());
         view.setCanTrigger(canTrigger);
