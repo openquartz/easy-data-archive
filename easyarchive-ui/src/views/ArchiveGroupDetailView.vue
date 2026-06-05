@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { getArchiveGroupOverviewApi, type ArchiveGroup, type ArchiveGroupOverview } from "../api/archiveGroup";
+import {
+  getArchiveGroupOverviewApi,
+  triggerArchiveGroupApi,
+  type ArchiveGroup,
+  type ArchiveGroupOverview
+} from "../api/archiveGroup";
 import {
   createArchiveGroupItemByIdApi,
   createArchiveGroupItemByTimeApi,
@@ -27,12 +32,21 @@ import { useI18n } from "../i18n";
 import EntityLink from "../components/EntityLink.vue";
 import { getDatasourcesApi, type Datasource } from "../api/datasource";
 import { archiveEnableStatusDictionary, getStatusLabel, getStatusTagClass, taskStatusDictionary } from "../utils/dictionaries";
+import {
+  canTriggerArchiveGroup,
+  canViewArchiveGroupActiveTask,
+  getArchiveGroupRuntimeProcessedRecords,
+  hasArchiveGroupActiveTask,
+  resolveArchiveGroupRuntimeProgress
+} from "../utils/archiveGroupRuntime";
+import { createPolling } from "../utils/polling";
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 
 const loading = ref(false);
+const triggering = ref(false);
 const errorMessage = ref("");
 const actionErrorMessage = ref("");
 const successMessage = ref("");
@@ -53,6 +67,9 @@ const datasources = ref<Datasource[]>([]);
 
 const groupId = computed(() => Number(route.params.id));
 const formattedLastExecuteTime = computed(() => formatTimestamp(overview.value?.taskStats.lastExecuteTime));
+const hasActiveTask = computed(() => hasArchiveGroupActiveTask(group.value));
+const canTrigger = computed(() => canTriggerArchiveGroup(group.value));
+const canViewTask = computed(() => canViewArchiveGroupActiveTask(group.value));
 
 function formatTimestamp(value?: number): string {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
@@ -77,6 +94,17 @@ function formatSwitchFlag(value?: number): string {
 
 function datasourceName(id: number): string {
   return datasources.value.find((item) => item.id === id)?.datasourceName || String(id);
+}
+
+function formatRuntimeProcessedRecords(currentGroup?: ArchiveGroup | null): string {
+  if (!hasArchiveGroupActiveTask(currentGroup)) {
+    return "-";
+  }
+  return getArchiveGroupRuntimeProcessedRecords(currentGroup).toLocaleString();
+}
+
+function resolveRuntimeProgressLabel(currentGroup?: ArchiveGroup | null): string {
+  return `${resolveArchiveGroupRuntimeProgress(currentGroup)}%`;
 }
 
 async function syncTitle(title: string, token: number): Promise<void> {
@@ -165,6 +193,7 @@ async function loadDetail(): Promise<void> {
   } finally {
     if (isCurrentToken(token)) {
       loading.value = false;
+      syncPolling();
     }
   }
 }
@@ -175,6 +204,24 @@ function goBack(): void {
 
 function refresh(): void {
   void loadDetail();
+}
+
+async function triggerGroup(): Promise<void> {
+  if (!Number.isFinite(groupId.value) || groupId.value <= 0 || !canTrigger.value || triggering.value) {
+    return;
+  }
+  triggering.value = true;
+  successMessage.value = "";
+  actionErrorMessage.value = "";
+  try {
+    const task = await triggerArchiveGroupApi(groupId.value);
+    successMessage.value = t("archiveGroup.triggered").replace("{id}", String(task.id));
+    await loadDetail();
+  } catch (error) {
+    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.actionFailed");
+  } finally {
+    triggering.value = false;
+  }
 }
 
 function viewTask(taskId?: number): void {
@@ -326,6 +373,20 @@ watch(
   },
   { immediate: true }
 );
+
+const poller = createPolling(loadDetail, { intervalMs: 5000, immediate: false });
+
+function syncPolling(): void {
+  if (hasActiveTask.value) {
+    poller.start();
+    return;
+  }
+  poller.stop();
+}
+
+onBeforeUnmount(() => {
+  poller.stop();
+});
 </script>
 
 <template>
@@ -342,7 +403,10 @@ watch(
       <div class="actions">
         <button class="btn btn--subtle" @click="goBack">{{ t("common.back") }}</button>
         <button class="btn btn--subtle" :disabled="loading" @click="refresh">{{ t("common.refresh") }}</button>
-        <button class="btn btn--primary" :disabled="!group?.activeTaskId" @click="viewTask(group?.activeTaskId)">
+        <button v-if="canTrigger" class="btn btn--subtle" :disabled="loading || triggering" @click="triggerGroup">
+          {{ t("archiveGroup.trigger") }}
+        </button>
+        <button class="btn btn--primary" :disabled="!canViewTask" @click="viewTask(group?.activeTaskId)">
           {{ t("archiveGroupDetail.viewTask") }}
         </button>
       </div>
@@ -369,6 +433,21 @@ watch(
             <p><strong>{{ t("archiveGroup.columns.source") }}:</strong> <EntityLink type="datasource" :id="group.sourceDatasourceId">{{ datasourceName(group.sourceDatasourceId) }}</EntityLink></p>
             <p><strong>{{ t("archiveGroup.columns.target") }}:</strong> <EntityLink type="datasource" :id="group.targetDatasourceId">{{ datasourceName(group.targetDatasourceId) }}</EntityLink></p>
             <p><strong>{{ t("archiveGroup.columns.activeTaskStartTime") }}:</strong> {{ group.activeTaskStartTime || "-" }}</p>
+            <div class="archive-group-runtime archive-group-runtime--detail full-width" :class="{ 'archive-group-runtime--idle': !hasArchiveGroupActiveTask(group) }">
+              <div class="archive-group-runtime__header">
+                <strong>{{ t("archiveGroup.columns.runtimeProgress") }}:</strong>
+                <span>{{ resolveRuntimeProgressLabel(group) }}</span>
+              </div>
+              <div class="archive-group-runtime__bar" aria-hidden="true">
+                <span
+                  class="archive-group-runtime__bar-fill"
+                  :style="{ width: resolveRuntimeProgressLabel(group) }"
+                />
+              </div>
+              <p class="archive-group-runtime__summary">
+                {{ t("archiveGroup.columns.migratedRecords") }}: {{ formatRuntimeProcessedRecords(group) }}
+              </p>
+            </div>
             <p class="full-width"><strong>{{ t("common.remark") }}:</strong> {{ group.remark || "-" }}</p>
           </div>
         </article>
@@ -549,3 +628,45 @@ watch(
     />
   </section>
 </template>
+
+<style scoped>
+.archive-group-runtime {
+  display: grid;
+  gap: 8px;
+}
+
+.archive-group-runtime--detail {
+  margin-top: 4px;
+}
+
+.archive-group-runtime__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.archive-group-runtime__bar {
+  position: relative;
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: #e6ebf2;
+}
+
+.archive-group-runtime__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1d8f6a 0%, #49b38c 100%);
+}
+
+.archive-group-runtime__summary {
+  margin: 0;
+  color: #526172;
+}
+
+.archive-group-runtime--idle .archive-group-runtime__bar-fill {
+  background: #c8d2de;
+}
+</style>

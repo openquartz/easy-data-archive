@@ -74,6 +74,24 @@ test("running archive group with very large processed counts stays capped below 
   assert.ok(progress < 100);
 });
 
+test("running archive group progress grows monotonically with processed records and stays below 100", () => {
+  const processedRecordSamples = [1, 10, 100, 1000, 10000, 100000];
+  let previousProgress = -1;
+
+  for (const processedRecords of processedRecordSamples) {
+    const progress = resolveArchiveGroupRuntimeProgress({
+      id: 11,
+      activeTaskId: 106,
+      activeTaskStatus: 1,
+      activeTaskProcessedRecords: processedRecords
+    });
+
+    assert.ok(progress >= previousProgress);
+    assert.ok(progress < 100);
+    previousProgress = progress;
+  }
+});
+
 test("cancelling archive group is capped at 95 percent", () => {
   const group = {
     id: 4,
