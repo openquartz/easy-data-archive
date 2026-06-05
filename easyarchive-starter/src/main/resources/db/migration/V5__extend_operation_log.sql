@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 ALTER TABLE `sys_operation_log`
     ADD COLUMN `button_name` VARCHAR(128) NULL COMMENT '按钮名称' AFTER `action_code`,
     ADD COLUMN `biz_type` VARCHAR(64) NULL COMMENT '业务对象类型' AFTER `button_name`,

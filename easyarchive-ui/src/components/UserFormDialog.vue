@@ -2,6 +2,7 @@
 import type { User, UserPayload } from "../api/user";
 import { computed, reactive, ref, watch } from "vue";
 import { useI18n } from "../i18n";
+import { DEFAULT_ROLE_CODE, ROLE_CODES, normalizeRoleCode } from "../constants/roles";
 
 const props = defineProps<{
   visible: boolean;
@@ -21,7 +22,7 @@ const form = reactive<UserPayload>({
   realName: "",
   mobile: "",
   email: "",
-  roleCode: "USER",
+  roleCode: DEFAULT_ROLE_CODE,
   status: 0,
   remark: ""
 });
@@ -42,7 +43,7 @@ watch(
       form.realName = props.initialValue.realName || "";
       form.mobile = props.initialValue.mobile || "";
       form.email = props.initialValue.email || "";
-      form.roleCode = props.initialValue.roleCode || "USER";
+      form.roleCode = normalizeRoleCode(props.initialValue.roleCode);
       form.status = props.initialValue.status ?? 0;
       form.remark = props.initialValue.remark || "";
       return;
@@ -52,7 +53,7 @@ watch(
     form.realName = "";
     form.mobile = "";
     form.email = "";
-    form.roleCode = "USER";
+    form.roleCode = DEFAULT_ROLE_CODE;
     form.status = 0;
     form.remark = "";
   },
@@ -102,7 +103,7 @@ function handleSubmit(): void {
     realName: form.realName?.trim(),
     mobile: form.mobile?.trim(),
     email: form.email?.trim(),
-    roleCode: form.roleCode?.trim() || "USER",
+    roleCode: normalizeRoleCode(form.roleCode),
     remark: form.remark?.trim()
   });
 }
@@ -131,8 +132,9 @@ function handleSubmit(): void {
         <label>
           {{ t("user.form.roleCode") }}
           <select v-model="form.roleCode" :disabled="submitting">
-            <option value="USER">{{ t("user.roles.USER") }}</option>
-            <option value="ADMIN">{{ t("user.roles.ADMIN") }}</option>
+            <option v-for="roleCode in ROLE_CODES" :key="roleCode" :value="roleCode">
+              {{ t(`user.roles.${roleCode}`) }}
+            </option>
           </select>
         </label>
         <label>

@@ -40,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("用户名或密码错误");
         }
 
+        String roleCode = RoleConstants.normalizeRoleCode(user.getRoleCode());
         User principal = new User(user.getUsername(), user.getPassword(), Collections.emptyList());
         String token = jwtTokenUtil.generateToken(principal);
 
@@ -47,8 +48,8 @@ public class AuthServiceImpl implements AuthService {
         response.setToken(token);
         response.setUsername(user.getUsername());
         response.setRealName(user.getRealName());
-        response.setRoleCode(user.getRoleCode());
-        response.setPermissions(Collections.singletonList(user.getRoleCode() == null ? RoleConstants.USER : user.getRoleCode()));
+        response.setRoleCode(roleCode);
+        response.setPermissions(Collections.singletonList(roleCode));
         response.setExpiresIn(86400L);
         return response;
     }
@@ -90,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
         view.put("username", user.getUsername());
         view.put("realName", user.getRealName());
         view.put("status", user.getStatus());
-        view.put("roleCode", user.getRoleCode());
+        view.put("roleCode", RoleConstants.normalizeRoleCode(user.getRoleCode()));
         view.put("isAdmin", RoleConstants.isAdmin(user.getRoleCode()));
         return view;
     }

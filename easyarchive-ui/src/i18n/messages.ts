@@ -261,8 +261,10 @@ export const messages = {
       statusUpdateFailed: "Status update failed",
       noAccess: "Only administrators can manage users and archive connection permissions.",
       roles: {
-        ADMIN: "Administrator",
-        USER: "User"
+        platform_admin: "Platform Administrator",
+        archive_admin: "Archive Administrator",
+        auditor: "Auditor",
+        observer: "Observer"
       },
       permissions: {
         action: "Archive Connections",
@@ -663,8 +665,10 @@ export const messages = {
       statusUpdateFailed: "更新状态失败",
       noAccess: "仅系统管理员支持管理用户和归档连接权限。",
       roles: {
-        ADMIN: "系统管理员",
-        USER: "普通用户"
+        platform_admin: "平台管理员",
+        archive_admin: "归档管理员",
+        auditor: "审计员",
+        observer: "观察员"
       },
       permissions: {
         action: "归档连接权限",

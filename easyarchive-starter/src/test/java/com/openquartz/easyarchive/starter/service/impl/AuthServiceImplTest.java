@@ -54,7 +54,7 @@ class AuthServiceImplTest {
         user.setUsername("admin");
         user.setPassword(passwordEncoder.encode("password"));
         user.setRealName("Admin");
-        user.setRoleCode(RoleConstants.ADMIN);
+        user.setRoleCode(RoleConstants.PLATFORM_ADMIN);
         user.setStatus(0);
         user.setDeleted(0L);
 
@@ -71,7 +71,7 @@ class AuthServiceImplTest {
         assertEquals("token-value", response.getToken());
         assertEquals("admin", response.getUsername());
         assertEquals("Admin", response.getRealName());
-        assertEquals(RoleConstants.ADMIN, response.getRoleCode());
+        assertEquals(RoleConstants.PLATFORM_ADMIN, response.getRoleCode());
     }
 
     @Test

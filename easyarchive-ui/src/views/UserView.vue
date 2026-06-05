@@ -17,6 +17,7 @@ import { getStatusLabel, getStatusTagClass, userStatusDictionary } from "../util
 import { computed, ref } from "vue";
 import { useI18n } from "../i18n";
 import { useAuthStore } from "../stores/auth";
+import { isAdminRole, normalizeRoleCode } from "../constants/roles";
 
 const loading = ref(false);
 const list = ref<User[]>([]);
@@ -56,10 +57,6 @@ async function loadData(): Promise<void> {
   } finally {
     loading.value = false;
   }
-}
-
-function isAdminRole(user: User | null | undefined): boolean {
-  return user?.roleCode === "ADMIN";
 }
 
 function openCreate(): void {
@@ -197,7 +194,7 @@ void loadData();
             <td>{{ item.realName || "-" }}</td>
             <td>{{ item.email || "-" }}</td>
             <td>{{ item.mobile || "-" }}</td>
-            <td>{{ t(`user.roles.${item.roleCode || "USER"}`) }}</td>
+            <td>{{ t(`user.roles.${normalizeRoleCode(item.roleCode)}`) }}</td>
             <td><span :class="getStatusTagClass(userStatusDictionary, item.status)">{{ getStatusLabel(userStatusDictionary, item.status) }}</span></td>
             <td>{{ item.lastLoginTime || "-" }}</td>
             <td class="row-actions">
@@ -229,7 +226,7 @@ void loadData();
       :username="activeItem?.username"
       :datasources="datasources"
       :selected-ids="permissionSelectedIds"
-      :is-admin-user="isAdminRole(activeItem)"
+      :is-admin-user="isAdminRole(activeItem?.roleCode)"
       @close="permissionDialogVisible = false"
       @submit="submitPermissions"
     />

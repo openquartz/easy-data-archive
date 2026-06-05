@@ -53,7 +53,7 @@ public class DataPermissionServiceImpl implements DataPermissionService {
         CurrentUserInfo currentUser = new CurrentUserInfo();
         currentUser.setUserId(user.getId());
         currentUser.setUsername(user.getUsername());
-        currentUser.setRoleCode(user.getRoleCode());
+        currentUser.setRoleCode(com.openquartz.easyarchive.starter.security.RoleConstants.normalizeRoleCode(user.getRoleCode()));
         return currentUser;
     }
 

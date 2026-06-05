@@ -53,7 +53,8 @@ public enum StarterErrorCode implements EasyArchiveErrorCode {
     ARCHIVE_GROUP_CODE_DUPLICATED("45", "分组编码已存在"),
     DATASOURCE_ENABLE_STATUS_REQUIRED("46", "{0}归档连接必须为已启用状态", true),
     ARCHIVE_GROUP_ACTIVE_TASK_CONFLICT("47", "分组存在执行中的任务，无法执行当前操作"),
-    ARCHIVE_TASK_TERMINAL_CANNOT_CANCEL("48", "任务已结束，无法取消");
+    ARCHIVE_TASK_TERMINAL_CANNOT_CANCEL("48", "任务已结束，无法取消"),
+    USER_ROLE_INVALID("49", "用户角色不合法");
 
     private static final String BASE_CODE = "StarterError-";
 

@@ -95,8 +95,14 @@ public class UserOperationLogPresenter {
         if (RoleConstants.isAdmin(roleCode)) {
             return "管理员";
         }
-        if (RoleConstants.isUser(roleCode)) {
-            return "普通用户";
+        if (RoleConstants.isArchiveAdmin(roleCode)) {
+            return "归档管理员";
+        }
+        if (RoleConstants.isAuditor(roleCode)) {
+            return "审计员";
+        }
+        if (RoleConstants.isObserver(roleCode)) {
+            return "观察员";
         }
         return StringUtils.hasText(roleCode) ? roleCode : "";
     }

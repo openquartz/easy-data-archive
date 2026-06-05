@@ -1,5 +1,6 @@
 -- role_code is initialized by V1__init_archive_platform.sql.
 -- Keep V4 focused on the datasource permission table so it can be safely rerun.
+SET NAMES utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `ea_user_datasource_permission` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
