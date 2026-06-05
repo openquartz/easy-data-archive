@@ -60,6 +60,20 @@ test("running archive group with processed records exposes migrated count and si
   assert.equal(resolveArchiveGroupRuntimeProgress(group), 67);
 });
 
+test("running archive group with very large processed counts stays capped below 100", () => {
+  const group = {
+    id: 10,
+    activeTaskId: 105,
+    activeTaskStatus: 1,
+    activeTaskProcessedRecords: Number.MAX_SAFE_INTEGER
+  };
+
+  const progress = resolveArchiveGroupRuntimeProgress(group);
+
+  assert.equal(progress, 95);
+  assert.ok(progress < 100);
+});
+
 test("cancelling archive group is capped at 95 percent", () => {
   const group = {
     id: 4,
