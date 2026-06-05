@@ -3,6 +3,7 @@ package com.openquartz.easyarchive.starter.operationlog;
 import com.openquartz.easyarchive.common.enums.BinarySwitchEnum;
 import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
 import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
+import com.openquartz.easyarchive.starter.security.RoleConstants;
 
 public class OperationValueFormatter {
 
@@ -33,10 +34,10 @@ public class OperationValueFormatter {
         if (roleCode == null || roleCode.trim().isEmpty()) {
             return "";
         }
-        if ("ADMIN".equalsIgnoreCase(roleCode)) {
+        if (RoleConstants.isAdmin(roleCode)) {
             return "管理员";
         }
-        if ("USER".equalsIgnoreCase(roleCode)) {
+        if (RoleConstants.isUser(roleCode)) {
             return "普通用户";
         }
         return roleCode;

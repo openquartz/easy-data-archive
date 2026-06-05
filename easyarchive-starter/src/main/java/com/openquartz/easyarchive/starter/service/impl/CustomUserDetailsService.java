@@ -26,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("用户不存在");
         }
         boolean enabled = user.getStatus() == null || user.getStatus() == 0;
-        String authority = RoleConstants.ADMIN.equalsIgnoreCase(user.getRoleCode())
+        String authority = RoleConstants.isAdmin(user.getRoleCode())
                 ? "ROLE_ADMIN"
                 : "ROLE_USER";
         return new User(

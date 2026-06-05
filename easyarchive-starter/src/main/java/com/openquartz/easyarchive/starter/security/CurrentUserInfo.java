@@ -12,6 +12,6 @@ public class CurrentUserInfo {
     private String roleCode;
 
     public boolean isAdmin() {
-        return RoleConstants.ADMIN.equalsIgnoreCase(roleCode);
+        return RoleConstants.isAdmin(roleCode);
     }
 }

@@ -3,6 +3,7 @@ package com.openquartz.easyarchive.starter.operationlog.presenter;
 import com.openquartz.easyarchive.core.common.SysUser;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationValueFormatter;
+import com.openquartz.easyarchive.starter.security.RoleConstants;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -91,10 +92,13 @@ public class UserOperationLogPresenter {
     }
 
     private String roleName(String roleCode) {
-        if ("ADMIN".equalsIgnoreCase(roleCode)) {
+        if (RoleConstants.isAdmin(roleCode)) {
             return "管理员";
         }
-        return "普通用户";
+        if (RoleConstants.isUser(roleCode)) {
+            return "普通用户";
+        }
+        return StringUtils.hasText(roleCode) ? roleCode : "";
     }
 
     private String statusName(Integer status) {
