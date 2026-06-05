@@ -166,6 +166,8 @@ export const messages = {
         target: "Target",
         status: "Status",
         activeTask: "Active Task",
+        runtimeProgress: "Runtime Progress",
+        migratedRecords: "Migrated Records",
         activeTaskStartTime: "Task Start Time",
         actions: "Actions"
       },
@@ -570,6 +572,8 @@ export const messages = {
         target: "目标归档连接",
         status: "状态",
         activeTask: "当前任务",
+        runtimeProgress: "运行进度",
+        migratedRecords: "已迁移记录",
         activeTaskStartTime: "任务开始时间",
         actions: "操作"
       },

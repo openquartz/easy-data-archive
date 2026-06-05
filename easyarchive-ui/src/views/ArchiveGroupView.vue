@@ -19,6 +19,14 @@ import { computed, onBeforeUnmount, ref } from "vue";
 import { useI18n } from "../i18n";
 import { useRouter } from "vue-router";
 import { createPolling } from "../utils/polling";
+import {
+  canCancelArchiveGroupActiveTask,
+  canTriggerArchiveGroup,
+  canViewArchiveGroupActiveTask,
+  getArchiveGroupRuntimeProcessedRecords,
+  hasArchiveGroupActiveTask,
+  resolveArchiveGroupRuntimeProgress
+} from "../utils/archiveGroupRuntime";
 
 const loading = ref(false);
 const groups = ref<ArchiveGroup[]>([]);
@@ -37,13 +45,24 @@ const { t } = useI18n();
 const router = useRouter();
 
 const groupEmptyText = computed(() => (loading.value ? t("archiveGroup.emptyLoading") : t("archiveGroup.empty")));
-const hasActiveTasks = computed(() => groups.value.some((item) => typeof item.activeTaskId === "number"));
+const hasActiveTasks = computed(() => groups.value.some((item) => hasArchiveGroupActiveTask(item)));
 
 const getActionKey = (action: string, id: number): string => `${action}:${id}`;
 const isRowBusy = (id: number): boolean => busyRows.value.has(id);
 const isActionBusy = (action: string, id: number): boolean => busyActions.value.has(getActionKey(action, id));
 const datasourceName = (id: number): string => datasources.value.find((item) => item.id === id)?.datasourceName || String(id);
 const enabledDatasources = computed(() => datasources.value.filter((item) => item.status === 1));
+
+function formatRuntimeProcessedRecords(group: ArchiveGroup): string {
+  if (!hasArchiveGroupActiveTask(group)) {
+    return "-";
+  }
+  return getArchiveGroupRuntimeProcessedRecords(group).toLocaleString();
+}
+
+function resolveRuntimeProgressLabel(group: ArchiveGroup): string {
+  return `${resolveArchiveGroupRuntimeProgress(group)}%`;
+}
 
 async function loadData(): Promise<void> {
   loading.value = true;
@@ -132,10 +151,14 @@ async function triggerGroup(group: ArchiveGroup): Promise<void> {
 }
 
 async function cancelGroupTask(group: ArchiveGroup): Promise<void> {
-  if (!group.activeTaskId) {
+  if (!hasArchiveGroupActiveTask(group)) {
     return;
   }
-  const confirmed = window.confirm(t("task.cancelConfirm", { id: group.activeTaskId }));
+  const activeTaskId = group.activeTaskId;
+  if (typeof activeTaskId !== "number") {
+    return;
+  }
+  const confirmed = window.confirm(t("task.cancelConfirm", { id: activeTaskId }));
   if (!confirmed) {
     return;
   }
@@ -147,7 +170,7 @@ async function cancelGroupTask(group: ArchiveGroup): Promise<void> {
 }
 
 function viewTask(group: ArchiveGroup): void {
-  if (!group.activeTaskId) {
+  if (!canViewArchiveGroupActiveTask(group) || !group.activeTaskId) {
     return;
   }
   void router.push({ name: "task-detail", params: { taskId: group.activeTaskId } });
@@ -215,6 +238,7 @@ onBeforeUnmount(() => {
             <th>{{ t("archiveGroup.columns.target") }}</th>
             <th>{{ t("archiveGroup.columns.status") }}</th>
             <th>{{ t("archiveGroup.columns.activeTask") }}</th>
+            <th>{{ t("archiveGroup.columns.runtimeProgress") }}</th>
             <th>{{ t("archiveGroup.columns.activeTaskStartTime") }}</th>
             <th>{{ t("archiveGroup.columns.actions") }}</th>
           </tr>
@@ -231,8 +255,22 @@ onBeforeUnmount(() => {
               </span>
             </td>
             <td>
-              <TaskStatusTag v-if="group.activeTaskId" :status="group.activeTaskStatus" />
+              <TaskStatusTag v-if="hasArchiveGroupActiveTask(group)" :status="group.activeTaskStatus" />
               <span v-else>-</span>
+            </td>
+            <td>
+              <div class="archive-group-runtime" :class="{ 'archive-group-runtime--idle': !hasArchiveGroupActiveTask(group) }">
+                <div class="archive-group-runtime__bar" aria-hidden="true">
+                  <span
+                    class="archive-group-runtime__bar-fill"
+                    :style="{ width: resolveRuntimeProgressLabel(group) }"
+                  />
+                </div>
+                <div class="archive-group-runtime__meta">
+                  <span>{{ resolveRuntimeProgressLabel(group) }}</span>
+                  <span>{{ t("archiveGroup.columns.migratedRecords") }}: {{ formatRuntimeProcessedRecords(group) }}</span>
+                </div>
+              </div>
             </td>
             <td>{{ group.activeTaskStartTime || "-" }}</td>
             <td class="row-actions">
@@ -241,45 +279,45 @@ onBeforeUnmount(() => {
               </button>
               <button
                 class="btn btn--subtle"
-                :disabled="isRowBusy(group.id) || !!group.activeTaskId"
+                :disabled="isRowBusy(group.id) || hasArchiveGroupActiveTask(group)"
                 @click.stop="openEditGroup(group)"
               >
                 {{ t("common.edit") }}
               </button>
               <button
                 class="btn btn--subtle"
-                :disabled="isRowBusy(group.id) || !!group.activeTaskId"
+                :disabled="isRowBusy(group.id) || hasArchiveGroupActiveTask(group)"
                 @click.stop="toggleGroupStatus(group)"
               >
                 {{ group.enableStatus === 0 ? t("common.disable") : t("common.enable") }}
               </button>
               <button
-                v-if="group.canTrigger !== false"
+                v-if="canTriggerArchiveGroup(group)"
                 class="btn btn--subtle"
-                :disabled="isRowBusy(group.id) || !group.canTrigger"
+                :disabled="isRowBusy(group.id)"
                 @click.stop="triggerGroup(group)"
               >
                 {{ t("archiveGroup.trigger") }}
               </button>
               <button
-                v-if="group.activeTaskId"
+                v-if="hasArchiveGroupActiveTask(group)"
                 class="btn btn--subtle"
-                :disabled="isRowBusy(group.id) || !group.canCancelActiveTask || group.activeTaskStatus === 4"
+                :disabled="isRowBusy(group.id) || !canCancelArchiveGroupActiveTask(group) || group.activeTaskStatus === 4"
                 @click.stop="cancelGroupTask(group)"
               >
                 {{ group.activeTaskStatus === 4 ? t("task.cancelling") : t("task.cancelAction") }}
               </button>
               <button
-                v-if="group.activeTaskId"
+                v-if="canViewArchiveGroupActiveTask(group)"
                 class="btn btn--subtle"
-                :disabled="isRowBusy(group.id)"
+                :disabled="isRowBusy(group.id) || !hasArchiveGroupActiveTask(group)"
                 @click.stop="viewTask(group)"
               >
                 {{ t("archiveGroup.viewTask") }}
               </button>
               <button
                 class="btn btn--subtle"
-                :disabled="isRowBusy(group.id) || !!group.activeTaskId"
+                :disabled="isRowBusy(group.id) || hasArchiveGroupActiveTask(group)"
                 @click.stop="deleteGroup(group)"
               >
                 {{ t("common.delete") }}
@@ -301,3 +339,39 @@ onBeforeUnmount(() => {
     />
   </section>
 </template>
+
+<style scoped>
+.archive-group-runtime {
+  min-width: 150px;
+  display: grid;
+  gap: 6px;
+}
+
+.archive-group-runtime__bar {
+  position: relative;
+  overflow: hidden;
+  height: 6px;
+  border-radius: 999px;
+  background: #e6ebf2;
+}
+
+.archive-group-runtime__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1d8f6a 0%, #49b38c 100%);
+}
+
+.archive-group-runtime__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 8px;
+  font-size: 12px;
+  color: #526172;
+}
+
+.archive-group-runtime--idle .archive-group-runtime__bar-fill {
+  background: #c8d2de;
+}
+</style>
