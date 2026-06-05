@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   getArchiveGroupOverviewApi,
-  triggerArchiveGroupApi,
   type ArchiveGroup,
   type ArchiveGroupOverview
 } from "../api/archiveGroup";
@@ -33,20 +32,17 @@ import EntityLink from "../components/EntityLink.vue";
 import { getDatasourcesApi, type Datasource } from "../api/datasource";
 import { archiveEnableStatusDictionary, getStatusLabel, getStatusTagClass, taskStatusDictionary } from "../utils/dictionaries";
 import {
-  canTriggerArchiveGroup,
   canViewArchiveGroupActiveTask,
   getArchiveGroupRuntimeProcessedRecords,
   hasArchiveGroupActiveTask,
   resolveArchiveGroupRuntimeProgress
 } from "../utils/archiveGroupRuntime";
-import { createPolling } from "../utils/polling";
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 
 const loading = ref(false);
-const triggering = ref(false);
 const errorMessage = ref("");
 const actionErrorMessage = ref("");
 const successMessage = ref("");
@@ -67,8 +63,6 @@ const datasources = ref<Datasource[]>([]);
 
 const groupId = computed(() => Number(route.params.id));
 const formattedLastExecuteTime = computed(() => formatTimestamp(overview.value?.taskStats.lastExecuteTime));
-const hasActiveTask = computed(() => hasArchiveGroupActiveTask(group.value));
-const canTrigger = computed(() => canTriggerArchiveGroup(group.value));
 const canViewTask = computed(() => canViewArchiveGroupActiveTask(group.value));
 
 function formatTimestamp(value?: number): string {
@@ -193,7 +187,6 @@ async function loadDetail(): Promise<void> {
   } finally {
     if (isCurrentToken(token)) {
       loading.value = false;
-      syncPolling();
     }
   }
 }
@@ -204,24 +197,6 @@ function goBack(): void {
 
 function refresh(): void {
   void loadDetail();
-}
-
-async function triggerGroup(): Promise<void> {
-  if (!Number.isFinite(groupId.value) || groupId.value <= 0 || !canTrigger.value || triggering.value) {
-    return;
-  }
-  triggering.value = true;
-  successMessage.value = "";
-  actionErrorMessage.value = "";
-  try {
-    const task = await triggerArchiveGroupApi(groupId.value);
-    successMessage.value = t("archiveGroup.triggered").replace("{id}", String(task.id));
-    await loadDetail();
-  } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.actionFailed");
-  } finally {
-    triggering.value = false;
-  }
 }
 
 function viewTask(taskId?: number): void {
@@ -373,20 +348,6 @@ watch(
   },
   { immediate: true }
 );
-
-const poller = createPolling(loadDetail, { intervalMs: 5000, immediate: false });
-
-function syncPolling(): void {
-  if (hasActiveTask.value) {
-    poller.start();
-    return;
-  }
-  poller.stop();
-}
-
-onBeforeUnmount(() => {
-  poller.stop();
-});
 </script>
 
 <template>
@@ -403,9 +364,6 @@ onBeforeUnmount(() => {
       <div class="actions">
         <button class="btn btn--subtle" @click="goBack">{{ t("common.back") }}</button>
         <button class="btn btn--subtle" :disabled="loading" @click="refresh">{{ t("common.refresh") }}</button>
-        <button v-if="canTrigger" class="btn btn--subtle" :disabled="loading || triggering" @click="triggerGroup">
-          {{ t("archiveGroup.trigger") }}
-        </button>
         <button class="btn btn--primary" :disabled="!canViewTask" @click="viewTask(group?.activeTaskId)">
           {{ t("archiveGroupDetail.viewTask") }}
         </button>
