@@ -40,10 +40,13 @@ body {
   color: #eef8fb;
 }
 
-.brand {
-  margin-bottom: 20px;
-  font-size: 1.15rem;
-  letter-spacing: 0.02em;
+.app-shell__sidebar .app-brand {
+  margin-bottom: 22px;
+}
+
+.nav {
+  display: grid;
+  gap: 6px;
 }
 
 .nav__item {

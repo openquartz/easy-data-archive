@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppBrand from "../components/AppBrand.vue";
 import { reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import LanguageSwitcher from "../components/LanguageSwitcher.vue";
@@ -61,7 +62,7 @@ async function handleSubmit(): Promise<void> {
   <main class="login-page">
     <section class="login-card">
       <div class="login-card__header">
-        <h1>{{ t("login.title") }}</h1>
+        <AppBrand :title="t('login.title')" :subtitle="t('layout.topbar')" light compact />
         <LanguageSwitcher />
       </div>
       <form class="login-form" @submit.prevent="handleSubmit">
@@ -96,23 +97,20 @@ async function handleSubmit(): Promise<void> {
 }
 
 .login-card {
-  width: min(100%, 360px);
+  width: min(100%, 420px);
   border: 1px solid #d9dce3;
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 18px;
+  padding: 28px;
   background: #fff;
+  box-shadow: 0 18px 40px rgba(20, 35, 90, 0.1);
 }
 
 .login-card__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.login-card__header h1 {
-  margin: 0;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .login-form {
@@ -135,12 +133,13 @@ input {
 }
 
 button {
-  height: 36px;
+  height: 40px;
   border: 0;
-  border-radius: 6px;
-  background: #2563eb;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1f7a8c 0%, #165a73 100%);
   color: #fff;
   cursor: pointer;
+  font-weight: 600;
 }
 
 button:disabled {
