@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "test": "node --import tsx --test tests/*.test.ts",
     "test:auth-contract": "node ./scripts/auth-contract-check.mjs",
     "test:user-status-contract": "node ./scripts/user-status-contract-check.mjs",
     "preview": "vite preview",
@@ -22,6 +23,7 @@
     "@vitejs/plugin-vue": "^5.2.4",
     "typescript": "^5.8.3",
     "vite": "^5.4.19",
-    "vue-tsc": "^2.2.12"
+    "vue-tsc": "^2.2.12",
+    "tsx": "^4.22.4"
   }
 }

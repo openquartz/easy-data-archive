@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import AppBrand from "../components/AppBrand.vue";
 import LanguageSwitcher from "../components/LanguageSwitcher.vue";
 import { computed, ref, watch } from "vue";
+import { buildPrimaryNavItems } from "../content/navigation";
 import { useI18n } from "../i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
@@ -16,8 +18,7 @@ const workTabsStore = useWorkTabsStore();
 const accountLabel = computed(
   () => authStore.profile?.realName || authStore.username || authStore.profile?.username || ""
 );
-const showUserAdminEntry = computed(() => Boolean(authStore.profile?.isAdmin));
-const showOperationLogEntry = computed(() => Boolean(authStore.profile?.isAdmin));
+const primaryNavItems = computed(() => buildPrimaryNavItems(Boolean(authStore.profile?.isAdmin)));
 
 watch(
   () => route.fullPath,
@@ -101,17 +102,11 @@ function openWorkTab(tab: { type: string; id?: string; taskId?: string; title?: 
 <template>
   <div class="app-shell">
     <aside class="app-shell__sidebar">
-      <div class="brand">{{ t("layout.brand") }}</div>
+      <AppBrand :title="t('layout.brand')" :subtitle="t('layout.topbar')" />
       <nav class="nav">
-        <RouterLink class="nav__item" :to="{ name: 'dashboard' }">{{ t("layout.nav.dashboard") }}</RouterLink>
-        <RouterLink class="nav__item" :to="{ name: 'datasources' }">{{ t("layout.nav.datasources") }}</RouterLink>
-        <RouterLink class="nav__item" :to="{ name: 'archive-groups' }">{{ t("layout.nav.archiveGroups") }}</RouterLink>
-        <RouterLink class="nav__item" :to="{ name: 'tasks' }">{{ t("layout.nav.tasks") }}</RouterLink>
-        <RouterLink class="nav__item" :to="{ name: 'guide' }">{{ t("layout.nav.guide") }}</RouterLink>
-        <RouterLink v-if="showOperationLogEntry" class="nav__item" :to="{ name: 'operation-logs' }">
-          {{ t("layout.nav.operationLogs") }}
+        <RouterLink v-for="item in primaryNavItems" :key="item.routeName" class="nav__item" :to="{ name: item.routeName }">
+          {{ t(item.labelKey) }}
         </RouterLink>
-        <RouterLink v-if="showUserAdminEntry" class="nav__item" :to="{ name: 'users' }">{{ t("layout.nav.users") }}</RouterLink>
       </nav>
     </aside>
     <div class="app-shell__main">

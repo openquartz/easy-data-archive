@@ -6,7 +6,7 @@ export const messages = {
       switch: "Language"
     },
     layout: {
-      brand: "EasyArchive",
+      brand: "Data Archive Platform",
       nav: {
         dashboard: "Dashboard",
         datasources: "Archive Connections",
@@ -49,7 +49,7 @@ export const messages = {
       loading: "Loading..."
     },
     login: {
-      title: "EasyArchive Login",
+      title: "Data Archive Platform",
       username: "Username",
       password: "Password",
       submit: "Sign in",
@@ -407,7 +407,7 @@ export const messages = {
       switch: "语言"
     },
     layout: {
-      brand: "EasyArchive",
+      brand: "数据归档平台",
       nav: {
         dashboard: "仪表盘",
         datasources: "归档连接",
@@ -450,7 +450,7 @@ export const messages = {
       loading: "加载中..."
     },
     login: {
-      title: "EasyArchive 登录",
+      title: "数据归档平台",
       username: "用户名",
       password: "密码",
       submit: "登录",
