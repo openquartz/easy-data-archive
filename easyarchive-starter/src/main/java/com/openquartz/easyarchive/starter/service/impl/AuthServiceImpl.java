@@ -91,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
         view.put("realName", user.getRealName());
         view.put("status", user.getStatus());
         view.put("roleCode", user.getRoleCode());
-        view.put("isAdmin", RoleConstants.ADMIN.equalsIgnoreCase(user.getRoleCode()));
+        view.put("isAdmin", RoleConstants.isAdmin(user.getRoleCode()));
         return view;
     }
 }

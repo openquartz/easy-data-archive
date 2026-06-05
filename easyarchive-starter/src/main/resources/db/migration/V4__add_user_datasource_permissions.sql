@@ -1,5 +1,5 @@
-ALTER TABLE `sys_user`
-    ADD COLUMN `role_code` VARCHAR(32) NOT NULL DEFAULT 'USER' COMMENT '角色编码: ADMIN/USER' AFTER `email`;
+-- role_code is initialized by V1__init_archive_platform.sql.
+-- Keep V4 focused on the datasource permission table so it can be safely rerun.
 
 CREATE TABLE IF NOT EXISTS `ea_user_datasource_permission` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
