@@ -18,8 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
-import java.util.Date;
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -63,9 +61,6 @@ class ArchiveGroupControllerContractTest {
         group.setNotifyWebhookUrl("https://open.feishu.cn/open-apis/bot/hook/test");
         group.setActiveTaskId(88L);
         group.setActiveTaskStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
-        group.setActiveTaskProcessedRecords(1234L);
-        group.setActiveTaskProcessedSpeed(new BigDecimal("56.78"));
-        group.setActiveTaskHeartbeatTime(new Date(1704067200000L));
         group.setCanTrigger(false);
         group.setCanCancelActiveTask(true);
         when(groupService.findAll(null)).thenReturn(Collections.singletonList(group));
@@ -81,9 +76,6 @@ class ArchiveGroupControllerContractTest {
                 .andExpect(jsonPath("$.data[0].notifyWebhookUrl").value("https://open.feishu.cn/open-apis/bot/hook/test"))
                 .andExpect(jsonPath("$.data[0].activeTaskId").value(88))
                 .andExpect(jsonPath("$.data[0].activeTaskStatus").value(ArchiveGroupExecuteTask.STATUS_RUNNING))
-                .andExpect(jsonPath("$.data[0].activeTaskProcessedRecords").value(1234))
-                .andExpect(jsonPath("$.data[0].activeTaskProcessedSpeed").value(56.78))
-                .andExpect(jsonPath("$.data[0].activeTaskHeartbeatTime").value("2024-01-01T00:00:00.000+00:00"))
                 .andExpect(jsonPath("$.data[0].canTrigger").value(false))
                 .andExpect(jsonPath("$.data[0].canCancelActiveTask").value(true));
     }
@@ -110,9 +102,6 @@ class ArchiveGroupControllerContractTest {
         group.setId(10L);
         group.setGroupCode("ORDER_ARCHIVE");
         group.setGroupName("Order Archive");
-        group.setActiveTaskProcessedRecords(1234L);
-        group.setActiveTaskProcessedSpeed(new BigDecimal("56.78"));
-        group.setActiveTaskHeartbeatTime(new Date(1704067200000L));
 
         ArchiveGroupItemStatsView itemStats = new ArchiveGroupItemStatsView();
         itemStats.setTotalCount(6L);
@@ -147,9 +136,6 @@ class ArchiveGroupControllerContractTest {
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.data.group.id").value(10))
                 .andExpect(jsonPath("$.data.group.groupCode").value("ORDER_ARCHIVE"))
-                .andExpect(jsonPath("$.data.group.activeTaskProcessedRecords").value(1234))
-                .andExpect(jsonPath("$.data.group.activeTaskProcessedSpeed").value(56.78))
-                .andExpect(jsonPath("$.data.group.activeTaskHeartbeatTime").value("2024-01-01T00:00:00.000+00:00"))
                 .andExpect(jsonPath("$.data.itemStats.totalCount").value(6))
                 .andExpect(jsonPath("$.data.itemStats.idTypeCount").value(3))
                 .andExpect(jsonPath("$.data.taskStats.totalCount").value(20))
