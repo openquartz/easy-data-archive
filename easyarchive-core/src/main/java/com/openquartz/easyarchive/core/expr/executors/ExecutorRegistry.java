@@ -51,5 +51,9 @@ public class ExecutorRegistry {
         register("rand_n", RandomDigitExecutor.class);
         register("rand_c", RandomAlphaNumExecutor.class);
         register("func", FunctionExecutor.class);
+        register("mod", ModExecutor.class);
+        register("sql", SqlExecutor.class);
+        register("spel", SpelExecutor.class);
+        register("hash_mod", HashModExecutor.class);
     }
 }
