@@ -480,6 +480,39 @@ class ArchiveGroupServiceImplTest {
     }
 
     @Test
+    void shouldExposeActiveTaskRuntimeSnapshotInOverviewGroup() {
+        ArchiveGroup group = enabledGroup();
+        ArchiveGroupExecuteTask activeTask = new ArchiveGroupExecuteTask();
+        activeTask.setId(101L);
+        activeTask.setGroupId(10L);
+        activeTask.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
+        activeTask.setStartTime(new Date(1704067200000L));
+        activeTask.setProcessedRecords(1234L);
+        activeTask.setProcessedSpeed(new BigDecimal("56.78"));
+        Date heartbeatTime = new Date(1704067260000L);
+        activeTask.setHeartbeatTime(heartbeatTime);
+
+        when(groupMapper.selectById(10L)).thenReturn(group);
+        when(idItemMapper.countByGroupId(10L)).thenReturn(0);
+        when(idItemMapper.countByGroupIdAndStatus(10L, 0)).thenReturn(0);
+        when(timeItemMapper.countByGroupId(10L)).thenReturn(0);
+        when(timeItemMapper.countByGroupIdAndStatus(10L, 0)).thenReturn(0);
+        when(taskMapper.countByGroupId(10L)).thenReturn(1);
+        when(taskMapper.countByGroupIdAndStatus(10L, ArchiveGroupExecuteTask.STATUS_SUCCESS)).thenReturn(0);
+        when(taskMapper.countByGroupIdAndStatus(10L, ArchiveGroupExecuteTask.STATUS_FAILED)).thenReturn(0);
+        when(taskMapper.countActiveByGroupId(10L)).thenReturn(1);
+        when(taskMapper.selectLatestByGroupId(10L)).thenReturn(activeTask);
+        when(taskMapper.selectRecentByGroupId(10L, 10)).thenReturn(Arrays.asList(activeTask));
+
+        ArchiveGroupOverviewView overview = service.findOverview(10L);
+
+        assertEquals(1234L, overview.getGroup().getActiveTaskProcessedRecords());
+        assertEquals(new BigDecimal("56.78"), overview.getGroup().getActiveTaskProcessedSpeed());
+        assertEquals(heartbeatTime, overview.getGroup().getActiveTaskHeartbeatTime());
+        verify(taskMapper, never()).selectLatestActiveByGroupId(10L);
+    }
+
+    @Test
     void shouldExposeActiveTaskStateInGroupViewWithBatchLookup() {
         ArchiveGroup group = enabledGroup();
         ArchiveGroup secondGroup = enabledGroup();
