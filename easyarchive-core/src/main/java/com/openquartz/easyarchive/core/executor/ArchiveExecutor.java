@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.core.executor;
 
 import com.google.common.base.Stopwatch;
 import com.openquartz.easyarchive.common.api.model.TableInfo;
+import com.openquartz.easyarchive.common.enums.ArchiveRuleTypeEnum;
 import com.openquartz.easyarchive.common.util.DateUtils;
 import com.openquartz.easyarchive.common.util.ExceptionUtils;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
@@ -81,10 +82,10 @@ public class ArchiveExecutor implements Runnable {
             // 校验是否被取消和中断
             checkCancellation();
 
-            String ruleType = (rule instanceof ArchiveGroupItemByTime) ? "TIME" : "ID";
+            String ruleType = (rule instanceof ArchiveGroupItemByTime) ? ArchiveRuleTypeEnum.TIME.getCode() : ArchiveRuleTypeEnum.ID.getCode();
 
             this.currentRuleId = rule.getId();
-            this.currentSourceTable = ExpressionService.getInstance().parse(rule.getSourceTable());
+            this.currentSourceTable = ExpressionService.getInstance().parse(rule.getSourceTable()).trim();
 
             publisher.publish(new RuleStartEvent(
                 taskId, rule.getGroupId(),

@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 /**
  * 表达式服务
+ * 使用 ""
  */
 @Slf4j
 public class ExpressionService {
@@ -32,6 +33,12 @@ public class ExpressionService {
         return parseExpression(expr, param);
     }
 
+    /**
+     * 解析表达式
+     * @param expr 表达式
+     * @param param param
+     * @return 解析结果
+     */
     private String parseExpression(String expr, AssignExtParam param) {
         if (expr == null||expr.isEmpty()){
             return expr;
