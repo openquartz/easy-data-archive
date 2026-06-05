@@ -77,6 +77,11 @@
 
         <dependency>
             <groupId>com.openquartz</groupId>
+            <artifactId>easyarchive-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.openquartz</groupId>
             <artifactId>easyarchive-core</artifactId>
         </dependency>
 
