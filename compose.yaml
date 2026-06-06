@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:8.0
+    image: ${MYSQL_IMAGE:-mysql:8.0}
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-easy_archive}
@@ -22,6 +22,7 @@ services:
       start_period: 30s
 
   backend:
+    image: ${BACKEND_IMAGE:-easyarchive-backend:local}
     build:
       context: .
       dockerfile: easyarchive-starter/Dockerfile
@@ -31,13 +32,14 @@ services:
         condition: service_healthy
     environment:
       MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-easy_archive}
       MYSQL_USER: ${MYSQL_USER:-easyarchive}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-easyarchive123}
       MYSQL_TIMEZONE: ${MYSQL_TIMEZONE:-Asia/Shanghai}
 
   frontend:
+    image: ${FRONTEND_IMAGE:-easyarchive-frontend:local}
     build:
       context: ./easyarchive-ui
       dockerfile: Dockerfile
@@ -45,7 +47,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-80}:80"
 
 volumes:
   mysql_data:
