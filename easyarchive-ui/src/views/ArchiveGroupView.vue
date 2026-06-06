@@ -11,6 +11,7 @@ import {
   updateArchiveGroupStatusApi
 } from "../api/archiveGroup";
 import { getDatasourcesApi, type Datasource } from "../api/datasource";
+import { getUsersApi, type User } from "../api/user";
 import ArchiveGroupFormDialog from "../components/ArchiveGroupFormDialog.vue";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
 import EntityLink from "../components/EntityLink.vue";
@@ -27,6 +28,7 @@ import {
 const loading = ref(false);
 const groups = ref<ArchiveGroup[]>([]);
 const datasources = ref<Datasource[]>([]);
+const users = ref<User[]>([]);
 const errorMessage = ref("");
 const successMessage = ref("");
 const actionErrorMessage = ref("");
@@ -53,9 +55,14 @@ async function loadData(): Promise<void> {
   loading.value = true;
   errorMessage.value = "";
   try {
-    const [groupResult, datasourceResult] = await Promise.all([getArchiveGroupsApi(), getDatasourcesApi()]);
+    const [groupResult, datasourceResult, userResult] = await Promise.all([
+      getArchiveGroupsApi(),
+      getDatasourcesApi(),
+      getUsersApi()
+    ]);
     groups.value = groupResult;
     datasources.value = datasourceResult;
+    users.value = userResult;
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : t("archiveGroup.loadFailed");
   } finally {
@@ -78,10 +85,19 @@ function openCreateGroup(): void {
   groupDialogVisible.value = true;
 }
 
-function openEditGroup(group: ArchiveGroup): void {
+async function openEditGroup(group: ArchiveGroup): Promise<void> {
+  if (isRowBusy(group.id)) {
+    return;
+  }
   groupDialogMode.value = "edit";
-  activeGroup.value = group;
-  groupDialogVisible.value = true;
+  actionErrorMessage.value = "";
+  successMessage.value = "";
+  await runGroupAction("edit", group.id, async () => {
+    activeGroup.value = {
+      ...group
+    };
+    groupDialogVisible.value = true;
+  });
 }
 
 async function submitGroup(payload: ArchiveGroupPayload): Promise<void> {
@@ -98,8 +114,11 @@ async function submitGroup(payload: ArchiveGroupPayload): Promise<void> {
     } else if (activeGroup.value) {
       await updateArchiveGroupApi(activeGroup.value.id, payload);
       successMessage.value = t("archiveGroup.updated");
+    } else {
+      return;
     }
     groupDialogVisible.value = false;
+    activeGroup.value = null;
     await loadData();
   } catch (error) {
     actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.saveFailed");
@@ -215,6 +234,7 @@ onBeforeUnmount(() => {
           <tr>
             <th>{{ t("archiveGroup.columns.code") }}</th>
             <th>{{ t("archiveGroup.columns.name") }}</th>
+            <th>{{ t("archiveGroup.columns.owner") }}</th>
             <th>{{ t("archiveGroup.columns.source") }}</th>
             <th>{{ t("archiveGroup.columns.target") }}</th>
             <th>{{ t("archiveGroup.columns.status") }}</th>
@@ -228,6 +248,7 @@ onBeforeUnmount(() => {
           <tr v-for="group in groups" :key="group.id">
             <td><EntityLink type="group" :id="group.id" :title="group.groupName || group.groupCode">{{ group.groupCode }}</EntityLink></td>
             <td>{{ group.groupName }}</td>
+            <td>{{ group.ownerDisplayName || "-" }}</td>
             <td><EntityLink type="datasource" :id="group.sourceDatasourceId">{{ datasourceName(group.sourceDatasourceId) }}</EntityLink></td>
             <td><EntityLink type="datasource" :id="group.targetDatasourceId">{{ datasourceName(group.targetDatasourceId) }}</EntityLink></td>
             <td>
@@ -317,6 +338,7 @@ onBeforeUnmount(() => {
       :mode="groupDialogMode"
       :initial-value="activeGroup"
       :datasources="enabledDatasources"
+      :users="users"
       :submitting="groupDialogSubmitting"
       @close="groupDialogVisible = false"
       @submit="submitGroup"

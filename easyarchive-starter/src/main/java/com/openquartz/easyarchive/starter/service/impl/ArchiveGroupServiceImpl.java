@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
+import com.openquartz.easyarchive.core.common.SysUser;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.common.enums.ArchiveTaskStatusEnum;
@@ -13,11 +14,13 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
+import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupItemStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupTaskStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
 import com.openquartz.easyarchive.starter.model.enums.NotificationChannelEnum;
+import com.openquartz.easyarchive.starter.notification.inapp.ArchiveInAppNotificationService;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupOperationLogPresenter;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupService;
@@ -40,12 +43,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ArchiveGroupServiceImpl implements ArchiveGroupService {
 
+    private static final int ROOT_GROUP_LEVEL = 1;
+    private static final String ROOT_GROUP_PATH = "/";
+
     private final ArchiveGroupMapper groupMapper;
     private final ArchiveConnectionMapper archiveConnectionMapper;
     private final ArchiveGroupExecuteTaskMapper taskMapper;
     private final ArchiveGroupItemByIdMapper idItemMapper;
     private final ArchiveGroupItemByTimeMapper timeItemMapper;
+    private final SysUserMapper sysUserMapper;
     private final DataPermissionService dataPermissionService;
+    private final ArchiveInAppNotificationService inAppNotificationService;
     private final ArchiveGroupOperationLogPresenter archiveGroupOperationLogPresenter;
     private final OperationLogRecorder operationLogRecorder;
 
@@ -151,6 +159,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     public ArchiveGroup create(ArchiveGroup group) {
         dataPermissionService.assertAdmin();
         validateForSave(group, true);
+        populateHierarchyFields(group);
         if (group.getEnableStatus() == null) {
             group.setEnableStatus(EnableStatusEnum.ENABLED.getCode());
         } else {
@@ -171,11 +180,14 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         ArchiveGroup before = ensureExists(group.getId());
         ensureNoActiveTask(group.getId(), "分组存在执行中的任务，无法编辑");
         validateForSave(group, false);
+        populateHierarchyFields(group);
         if (group.getEnableStatus() != null) {
             validateEnableStatus(group.getEnableStatus());
         }
         groupMapper.update(group);
-        operationLogRecorder.record(archiveGroupOperationLogPresenter.buildUpdate(before, group));
+        ArchiveGroup after = ensureExists(group.getId());
+        inAppNotificationService.notifyOwnerChanged(before, after);
+        operationLogRecorder.record(archiveGroupOperationLogPresenter.buildUpdate(before, after));
         return group;
     }
 
@@ -209,17 +221,40 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     private ArchiveGroupView toView(ArchiveGroup group, ArchiveGroupExecuteTask activeTask) {
         ArchiveGroupView view = new ArchiveGroupView();
         BeanUtils.copyProperties(group, view);
+        view.setOwnerDisplayName(resolveOwnerDisplayName(group.getOwnerUserId()));
         boolean hasActiveTask = activeTask != null;
         if (hasActiveTask) {
             view.setActiveTaskId(activeTask.getId());
             view.setActiveTaskStatus(activeTask.getExecuteStatus());
             view.setActiveTaskStartTime(activeTask.getStartTime());
+            view.setActiveTaskProcessedRecords(activeTask.getProcessedRecords());
+            view.setActiveTaskProcessedSpeed(activeTask.getProcessedSpeed());
+            view.setActiveTaskHeartbeatTime(activeTask.getHeartbeatTime());
         }
         boolean canTrigger = !hasActiveTask && EnableStatusEnum.isEnabled(group.getEnableStatus());
         view.setCanTrigger(canTrigger);
         view.setCanCancelActiveTask(hasActiveTask);
         view.setCanViewActiveTask(hasActiveTask);
         return view;
+    }
+
+    private String resolveOwnerDisplayName(Long ownerUserId) {
+        if (ownerUserId == null) {
+            return null;
+        }
+        SysUser owner = sysUserMapper.selectById(ownerUserId);
+        if (owner == null) {
+            return null;
+        }
+        String username = owner.getUsername() == null ? "" : owner.getUsername().trim();
+        String realName = owner.getRealName() == null ? "" : owner.getRealName().trim();
+        if (!realName.isEmpty() && !username.isEmpty()) {
+            return realName + " (" + username + ")";
+        }
+        if (!realName.isEmpty()) {
+            return realName;
+        }
+        return username.isEmpty() ? null : username;
     }
 
     private boolean isActiveTask(ArchiveGroupExecuteTask task) {
@@ -259,6 +294,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         if (group.getNotifyWebhookUrl() != null) {
             group.setNotifyWebhookUrl(group.getNotifyWebhookUrl().trim());
         }
+        validateOwner(group.getOwnerUserId());
         if (group.getGroupCode() == null || group.getGroupCode().isEmpty()) {
             throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_CODE_REQUIRED);
         }
@@ -294,6 +330,29 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         }
     }
 
+    private void populateHierarchyFields(ArchiveGroup group) {
+        if (group.getParentId() == null) {
+            group.setGroupLevel(ROOT_GROUP_LEVEL);
+            if (group.getGroupPath() == null || group.getGroupPath().trim().isEmpty()) {
+                group.setGroupPath(ROOT_GROUP_PATH);
+            }
+            return;
+        }
+
+        ArchiveGroup parent = ensureExists(group.getParentId());
+        int parentLevel = parent.getGroupLevel() == null ? ROOT_GROUP_LEVEL : parent.getGroupLevel();
+        group.setGroupLevel(parentLevel + 1);
+
+        String parentPath = parent.getGroupPath();
+        if (parentPath == null || parentPath.trim().isEmpty()) {
+            parentPath = ROOT_GROUP_PATH;
+        }
+        if (!parentPath.endsWith(ROOT_GROUP_PATH)) {
+            parentPath = parentPath + ROOT_GROUP_PATH;
+        }
+        group.setGroupPath(parentPath + parent.getId() + ROOT_GROUP_PATH);
+    }
+
     private void validateNotificationConfig(ArchiveGroup group) {
         Integer notifyEnabled = group.getNotifyEnabled();
         if (notifyEnabled == null) {
@@ -307,10 +366,26 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
             return;
         }
         if (!NotificationChannelEnum.supports(group.getNotifyChannel())) {
-            throw new IllegalArgumentException("通知渠道不能为空或不合法");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOTIFY_CHANNEL_REQUIRED);
+        }
+        NotificationChannelEnum channel = NotificationChannelEnum.valueOf(group.getNotifyChannel().trim().toUpperCase());
+        if (channel == NotificationChannelEnum.IN_APP) {
+            if (group.getOwnerUserId() == null) {
+                throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOTIFY_OWNER_REQUIRED);
+            }
+            return;
         }
         if (group.getNotifyWebhookUrl() == null || group.getNotifyWebhookUrl().isEmpty()) {
-            throw new IllegalArgumentException("通知地址不能为空");
+            throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOTIFY_WEBHOOK_REQUIRED);
+        }
+    }
+
+    private void validateOwner(Long ownerUserId) {
+        if (ownerUserId == null) {
+            return;
+        }
+        if (sysUserMapper.selectById(ownerUserId) == null) {
+            throw new StarterManageException(StarterErrorCode.USER_NOT_FOUND);
         }
     }
 }

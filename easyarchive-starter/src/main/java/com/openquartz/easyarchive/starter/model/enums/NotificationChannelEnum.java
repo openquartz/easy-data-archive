@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.starter.model.enums;
 
 public enum NotificationChannelEnum {
+    IN_APP,
     FEISHU,
     WECOM;
 

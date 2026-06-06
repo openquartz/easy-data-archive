@@ -17,6 +17,14 @@ export const messages = {
         users: "Users"
       },
       topbar: "Operations Console",
+      notifications: {
+        title: "Notifications",
+        empty: "No notifications yet.",
+        markAllRead: "Mark all read",
+        viewGroup: "View Group",
+        viewTask: "View Task",
+        loadFailed: "Failed to load notifications"
+      },
       actions: {
         logout: "Sign out",
         loggingOut: "Signing out..."
@@ -162,6 +170,7 @@ export const messages = {
       columns: {
         code: "Code",
         name: "Name",
+        owner: "Owner",
         source: "Source",
         target: "Target",
         status: "Status",
@@ -176,6 +185,8 @@ export const messages = {
         editTitle: "Edit Archive Group",
         code: "Code",
         name: "Name",
+        owner: "Owner",
+        selectOwner: "Select owner",
         sourceDatasource: "Source Archive Connection",
         targetDatasource: "Target Archive Connection",
         selectDatasource: "Select archive connection",
@@ -185,6 +196,7 @@ export const messages = {
         selectNotifyChannel: "Select notification channel",
         notifyWebhookUrl: "Notification Webhook URL",
         notifyChannels: {
+          inApp: "In-App",
           feishu: "Feishu",
           wecom: "WeCom"
         },
@@ -194,6 +206,7 @@ export const messages = {
           codeRequired: "Group code is required",
           codeInvalid: "Group code must be 2-64 chars, start with a letter, and use letters, numbers, _ or -",
           nameRequired: "Group name is required",
+          ownerRequired: "Owner is required",
           sourceRequired: "Source archive connection is required",
           targetRequired: "Target archive connection is required",
           notifyChannelRequired: "Notification channel is required when completion notification is enabled",
@@ -422,6 +435,14 @@ export const messages = {
         users: "用户"
       },
       topbar: "运维控制台",
+      notifications: {
+        title: "通知",
+        empty: "暂时没有通知。",
+        markAllRead: "全部标记已读",
+        viewGroup: "查看分组",
+        viewTask: "查看任务",
+        loadFailed: "加载通知失败"
+      },
       actions: {
         logout: "退出登录",
         loggingOut: "退出中..."
@@ -568,6 +589,7 @@ export const messages = {
       columns: {
         code: "编码",
         name: "名称",
+        owner: "负责人",
         source: "源归档连接",
         target: "目标归档连接",
         status: "状态",
@@ -582,6 +604,8 @@ export const messages = {
         editTitle: "编辑归档分组",
         code: "编码",
         name: "名称",
+        owner: "负责人",
+        selectOwner: "请选择负责人",
         sourceDatasource: "源归档连接",
         targetDatasource: "目标归档连接",
         selectDatasource: "选择归档连接",
@@ -591,6 +615,7 @@ export const messages = {
         selectNotifyChannel: "请选择通知方式",
         notifyWebhookUrl: "通知地址",
         notifyChannels: {
+          inApp: "站内通知",
           feishu: "飞书",
           wecom: "企业微信"
         },
@@ -600,6 +625,7 @@ export const messages = {
           codeRequired: "请输入分组编码",
           codeInvalid: "分组编码长度需为 2-64 位，必须以字母开头，并且只能包含字母、数字、_ 或 -",
           nameRequired: "请输入分组名称",
+          ownerRequired: "请选择负责人",
           sourceRequired: "请选择源归档连接",
           targetRequired: "请选择目标归档连接",
           notifyChannelRequired: "启用执行完成通知时必须选择通知方式",
