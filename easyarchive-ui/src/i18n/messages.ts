@@ -573,7 +573,7 @@ export const messages = {
         status: "状态",
         activeTask: "当前任务",
         runtimeProgress: "运行进度",
-        migratedRecords: "已迁移记录",
+        migratedRecords: "已迁移成功总数",
         activeTaskStartTime: "任务开始时间",
         actions: "操作"
       },
