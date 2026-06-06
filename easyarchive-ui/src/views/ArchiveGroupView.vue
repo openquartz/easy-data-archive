@@ -50,6 +50,18 @@ const isRowBusy = (id: number): boolean => busyRows.value.has(id);
 const isActionBusy = (action: string, id: number): boolean => busyActions.value.has(getActionKey(action, id));
 const datasourceName = (id: number): string => datasources.value.find((item) => item.id === id)?.datasourceName || String(id);
 const enabledDatasources = computed(() => datasources.value.filter((item) => item.status === 1));
+const formatNotifyChannel = (channel?: ArchiveGroup["notifyChannel"]): string => {
+  if (channel === "IN_APP") {
+    return t("archiveGroup.form.notifyChannels.inApp");
+  }
+  if (channel === "FEISHU") {
+    return t("archiveGroup.form.notifyChannels.feishu");
+  }
+  if (channel === "WECOM") {
+    return t("archiveGroup.form.notifyChannels.wecom");
+  }
+  return "-";
+};
 
 async function loadData(): Promise<void> {
   loading.value = true;
@@ -235,6 +247,8 @@ onBeforeUnmount(() => {
             <th>{{ t("archiveGroup.columns.code") }}</th>
             <th>{{ t("archiveGroup.columns.name") }}</th>
             <th>{{ t("archiveGroup.columns.owner") }}</th>
+            <th>{{ t("archiveGroup.columns.notifyEnabled") }}</th>
+            <th>{{ t("archiveGroup.columns.notifyChannel") }}</th>
             <th>{{ t("archiveGroup.columns.source") }}</th>
             <th>{{ t("archiveGroup.columns.target") }}</th>
             <th>{{ t("archiveGroup.columns.status") }}</th>
@@ -249,6 +263,8 @@ onBeforeUnmount(() => {
             <td><EntityLink type="group" :id="group.id" :title="group.groupName || group.groupCode">{{ group.groupCode }}</EntityLink></td>
             <td>{{ group.groupName }}</td>
             <td>{{ group.ownerDisplayName || "-" }}</td>
+            <td>{{ group.notifyEnabled === 1 ? t("common.yes") : t("common.no") }}</td>
+            <td>{{ group.notifyEnabled === 1 ? formatNotifyChannel(group.notifyChannel) : "-" }}</td>
             <td><EntityLink type="datasource" :id="group.sourceDatasourceId">{{ datasourceName(group.sourceDatasourceId) }}</EntityLink></td>
             <td><EntityLink type="datasource" :id="group.targetDatasourceId">{{ datasourceName(group.targetDatasourceId) }}</EntityLink></td>
             <td>
