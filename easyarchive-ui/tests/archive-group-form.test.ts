@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 
 import {
   createArchiveGroupFormValue,
-  isInAppNotificationConfigEditable,
-  isNotificationConfigEditable
+  isNotificationConfigEditable,
+  requiresWebhook
 } from "../src/utils/archiveGroupForm";
 
 test("createArchiveGroupFormValue preserves enabled notification config when notifyEnabled is a string", () => {
@@ -44,7 +44,7 @@ test("createArchiveGroupFormValue enables editing for legacy notification config
   assert.equal(isNotificationConfigEditable(form), true);
 });
 
-test("createArchiveGroupFormValue normalizes in-app notification members", () => {
+test("createArchiveGroupFormValue keeps in-app channel without requiring webhook", () => {
   const form = createArchiveGroupFormValue({
     id: 3,
     groupCode: "IN_APP_ARCHIVE",
@@ -52,11 +52,12 @@ test("createArchiveGroupFormValue normalizes in-app notification members", () =>
     sourceDatasourceId: 30,
     targetDatasourceId: 31,
     enableStatus: 0,
-    inAppNotifyEnabled: "1" as unknown as number,
-    inAppNotificationRecipientUserIds: [9, "9", 12, 0, -1] as unknown as number[]
+    notifyEnabled: 1,
+    notifyChannel: "IN_APP",
+    notifyWebhookUrl: ""
   });
 
-  assert.equal(form.inAppNotifyEnabled, 1);
-  assert.deepEqual(form.inAppNotificationRecipientUserIds, [9, 12]);
-  assert.equal(isInAppNotificationConfigEditable(form), true);
+  assert.equal(form.notifyEnabled, 1);
+  assert.equal(form.notifyChannel, "IN_APP");
+  assert.equal(requiresWebhook(form), false);
 });

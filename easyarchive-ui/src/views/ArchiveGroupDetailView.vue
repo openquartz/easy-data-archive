@@ -2,9 +2,13 @@
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
+  deleteArchiveGroupApi,
   getArchiveGroupOverviewApi,
   type ArchiveGroup,
-  type ArchiveGroupOverview
+  type ArchiveGroupOverview,
+  type ArchiveGroupPayload,
+  updateArchiveGroupApi,
+  updateArchiveGroupStatusApi
 } from "../api/archiveGroup";
 import {
   createArchiveGroupItemByIdApi,
@@ -26,10 +30,12 @@ import {
 } from "../api/archiveGroupItem";
 import ArchiveGroupItemByIdFormDialog from "../components/ArchiveGroupItemByIdFormDialog.vue";
 import ArchiveGroupItemByTimeFormDialog from "../components/ArchiveGroupItemByTimeFormDialog.vue";
+import ArchiveGroupFormDialog from "../components/ArchiveGroupFormDialog.vue";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
 import { useI18n } from "../i18n";
 import EntityLink from "../components/EntityLink.vue";
 import { getDatasourcesApi, type Datasource } from "../api/datasource";
+import { getUsersApi, type User } from "../api/user";
 import { archiveEnableStatusDictionary, getStatusLabel, getStatusTagClass, taskStatusDictionary } from "../utils/dictionaries";
 import {
   getArchiveGroupRuntimeProcessedRecords,
@@ -57,11 +63,16 @@ const timeDialogMode = ref<"create" | "edit">("create");
 const itemDialogSubmitting = ref(false);
 const activeIdItem = ref<ArchiveGroupItemById | null>(null);
 const activeTimeItem = ref<ArchiveGroupItemByTime | null>(null);
+const groupDialogVisible = ref(false);
+const groupDialogSubmitting = ref(false);
 let loadToken = 0;
 const datasources = ref<Datasource[]>([]);
+const users = ref<User[]>([]);
+const busyGroupAction = ref(false);
 
 const groupId = computed(() => Number(route.params.id));
 const formattedLastExecuteTime = computed(() => formatTimestamp(overview.value?.taskStats.lastExecuteTime));
+const enabledDatasources = computed(() => datasources.value.filter((item) => item.status === 1));
 
 function formatTimestamp(value?: number): string {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
@@ -86,6 +97,19 @@ function formatSwitchFlag(value?: number): string {
 
 function datasourceName(id: number): string {
   return datasources.value.find((item) => item.id === id)?.datasourceName || String(id);
+}
+
+function formatNotifyChannel(channel?: ArchiveGroup["notifyChannel"]): string {
+  if (channel === "IN_APP") {
+    return t("archiveGroup.form.notifyChannels.inApp");
+  }
+  if (channel === "FEISHU") {
+    return t("archiveGroup.form.notifyChannels.feishu");
+  }
+  if (channel === "WECOM") {
+    return t("archiveGroup.form.notifyChannels.wecom");
+  }
+  return "-";
 }
 
 async function syncTitle(title: string, token: number): Promise<void> {
@@ -141,10 +165,11 @@ async function loadDetail(): Promise<void> {
   errorMessage.value = "";
 
   try {
-    const [itemsResult, overviewResult, datasourceResult] = await Promise.all([
+    const [itemsResult, overviewResult, datasourceResult, userResult] = await Promise.all([
       getArchiveGroupItemsApi(groupId.value),
       getArchiveGroupOverviewApi(groupId.value),
-      getDatasourcesApi()
+      getDatasourcesApi(),
+      getUsersApi()
     ]);
 
     if (!isCurrentToken(token)) {
@@ -155,6 +180,7 @@ async function loadDetail(): Promise<void> {
     items.value = itemsResult;
     overview.value = overviewResult;
     datasources.value = datasourceResult;
+    users.value = userResult;
 
     const groupName = overviewResult.group?.groupName;
     if (groupName) {
@@ -191,6 +217,73 @@ function viewTask(taskId?: number): void {
     return;
   }
   void router.push({ name: "task-detail", params: { taskId } });
+}
+
+function openEditGroup(): void {
+  if (!group.value || busyGroupAction.value) {
+    return;
+  }
+  actionErrorMessage.value = "";
+  groupDialogVisible.value = true;
+}
+
+async function submitGroup(payload: ArchiveGroupPayload): Promise<void> {
+  if (!group.value || groupDialogSubmitting.value) {
+    return;
+  }
+  groupDialogSubmitting.value = true;
+  successMessage.value = "";
+  actionErrorMessage.value = "";
+  try {
+    await updateArchiveGroupApi(group.value.id, payload);
+    successMessage.value = t("archiveGroup.updated");
+    groupDialogVisible.value = false;
+    await loadDetail();
+  } catch (error) {
+    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.saveFailed");
+  } finally {
+    groupDialogSubmitting.value = false;
+  }
+}
+
+async function toggleGroupStatus(): Promise<void> {
+  if (!group.value || busyGroupAction.value || group.value.activeTaskId) {
+    return;
+  }
+  busyGroupAction.value = true;
+  successMessage.value = "";
+  actionErrorMessage.value = "";
+  try {
+    await updateArchiveGroupStatusApi(group.value.id, group.value.enableStatus === 0 ? 1 : 0);
+    successMessage.value = t("archiveGroup.statusUpdated");
+    await loadDetail();
+  } catch (error) {
+    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.actionFailed");
+  } finally {
+    busyGroupAction.value = false;
+  }
+}
+
+async function deleteGroup(): Promise<void> {
+  if (!group.value || busyGroupAction.value || group.value.activeTaskId) {
+    return;
+  }
+  const confirmed = window.confirm(t("archiveGroup.deleteConfirm"));
+  if (!confirmed) {
+    return;
+  }
+  busyGroupAction.value = true;
+  successMessage.value = "";
+  actionErrorMessage.value = "";
+  try {
+    await deleteArchiveGroupApi(group.value.id);
+    successMessage.value = t("archiveGroup.deleted");
+    void router.push({ name: "archive-groups" });
+  } catch (error) {
+    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.actionFailed");
+  } finally {
+    busyGroupAction.value = false;
+  }
 }
 
 function openCreateIdItem(): void {
@@ -351,6 +444,15 @@ watch(
       <div class="actions">
         <button class="btn btn--subtle" @click="goBack">{{ t("common.back") }}</button>
         <button class="btn btn--subtle" :disabled="loading" @click="refresh">{{ t("common.refresh") }}</button>
+        <button class="btn btn--subtle" :disabled="loading || !group || !!group.activeTaskId || busyGroupAction" @click="openEditGroup">
+          {{ t("common.edit") }}
+        </button>
+        <button class="btn btn--subtle" :disabled="loading || !group || !!group.activeTaskId || busyGroupAction" @click="toggleGroupStatus">
+          {{ group?.enableStatus === 0 ? t("common.disable") : t("common.enable") }}
+        </button>
+        <button class="btn btn--subtle" :disabled="loading || !group || !!group.activeTaskId || busyGroupAction" @click="deleteGroup">
+          {{ t("common.delete") }}
+        </button>
         <button class="btn btn--primary" :disabled="!group?.activeTaskId" @click="viewTask(group?.activeTaskId)">
           {{ t("archiveGroupDetail.viewTask") }}
         </button>
@@ -370,6 +472,8 @@ watch(
             <p><strong>{{ t("archiveGroup.columns.code") }}:</strong> {{ group.groupCode }}</p>
             <p><strong>{{ t("archiveGroup.columns.name") }}:</strong> {{ group.groupName }}</p>
             <p><strong>{{ t("archiveGroup.columns.owner") }}:</strong> {{ group.ownerDisplayName || "-" }}</p>
+            <p><strong>{{ t("archiveGroup.columns.notifyEnabled") }}:</strong> {{ group.notifyEnabled === 1 ? t("common.yes") : t("common.no") }}</p>
+            <p><strong>{{ t("archiveGroup.columns.notifyChannel") }}:</strong> {{ group.notifyEnabled === 1 ? formatNotifyChannel(group.notifyChannel) : "-" }}</p>
             <p>
               <strong>{{ t("archiveGroup.columns.status") }}:</strong>
               <span :class="getStatusTagClass(archiveEnableStatusDictionary, group.enableStatus)">
@@ -572,6 +676,16 @@ watch(
       :submitting="itemDialogSubmitting"
       @close="resetItemDialogs"
       @submit="submitTimeItem"
+    />
+    <ArchiveGroupFormDialog
+      :visible="groupDialogVisible"
+      mode="edit"
+      :initial-value="group"
+      :datasources="enabledDatasources"
+      :users="users"
+      :submitting="groupDialogSubmitting"
+      @close="groupDialogVisible = false"
+      @submit="submitGroup"
     />
   </section>
 </template>
