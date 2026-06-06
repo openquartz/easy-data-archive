@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import type { ArchiveGroup, ArchiveGroupPayload } from "../api/archiveGroup";
 import type { Datasource } from "../api/datasource";
+import type { User } from "../api/user";
 import { computed, reactive, ref, watch } from "vue";
 import { useI18n } from "../i18n";
+import {
+  createArchiveGroupFormValue,
+  isNotificationConfigEditable,
+  requiresWebhook
+} from "../utils/archiveGroupForm";
 
 const props = defineProps<{
   visible: boolean;
   mode: "create" | "edit";
   initialValue?: ArchiveGroup | null;
   datasources: Datasource[];
+  users: User[];
   submitting?: boolean;
 }>();
 
@@ -17,21 +24,11 @@ const emit = defineEmits<{
   (event: "submit", payload: ArchiveGroupPayload): void;
 }>();
 
-const form = reactive<ArchiveGroupPayload>({
-  parentId: undefined,
-  groupCode: "",
-  groupName: "",
-  sourceDatasourceId: 0,
-  targetDatasourceId: 0,
-  enableStatus: 0,
-  notifyEnabled: 0,
-  notifyChannel: undefined,
-  notifyWebhookUrl: "",
-  remark: ""
-});
+const form = reactive<ArchiveGroupPayload>(createArchiveGroupFormValue());
 const errorMessage = ref("");
 const groupCodePattern = /^[A-Za-z][A-Za-z0-9_-]{1,63}$/;
 const { t } = useI18n();
+const enabledUsers = computed(() => props.users.filter((item) => item.status === 0));
 
 const title = computed(() =>
   props.mode === "create" ? t("archiveGroup.form.createTitle") : t("archiveGroup.form.editTitle")
@@ -41,35 +38,10 @@ watch(
   () => [props.visible, props.initialValue, props.mode],
   () => {
     errorMessage.value = "";
-    if (props.mode === "edit" && props.initialValue) {
-      form.parentId = props.initialValue.parentId;
-      form.groupCode = props.initialValue.groupCode || "";
-      form.groupName = props.initialValue.groupName || "";
-      form.groupPath = props.initialValue.groupPath;
-      form.groupLevel = props.initialValue.groupLevel;
-      form.sourceDatasourceId = props.initialValue.sourceDatasourceId;
-      form.targetDatasourceId = props.initialValue.targetDatasourceId;
-      form.ownerUserId = props.initialValue.ownerUserId;
-      form.enableStatus = props.initialValue.enableStatus ?? 0;
-      form.notifyEnabled = props.initialValue.notifyEnabled ?? 0;
-      form.notifyChannel = props.initialValue.notifyChannel;
-      form.notifyWebhookUrl = props.initialValue.notifyWebhookUrl || "";
-      form.remark = props.initialValue.remark || "";
-      return;
-    }
-    form.parentId = undefined;
-    form.groupCode = "";
-    form.groupName = "";
-    form.groupPath = undefined;
-    form.groupLevel = undefined;
-    form.sourceDatasourceId = 0;
-    form.targetDatasourceId = 0;
-    form.ownerUserId = undefined;
-    form.enableStatus = 0;
-    form.notifyEnabled = 0;
-    form.notifyChannel = undefined;
-    form.notifyWebhookUrl = "";
-    form.remark = "";
+    const nextValue = props.mode === "edit" && props.initialValue
+      ? createArchiveGroupFormValue(props.initialValue)
+      : createArchiveGroupFormValue();
+    Object.assign(form, nextValue);
   },
   { immediate: true }
 );
@@ -95,11 +67,15 @@ function validate(): boolean {
     errorMessage.value = t("archiveGroup.form.validation.targetRequired");
     return false;
   }
-  if (form.notifyEnabled === 1 && !form.notifyChannel) {
+  if (!form.ownerUserId) {
+    errorMessage.value = t("archiveGroup.form.validation.ownerRequired");
+    return false;
+  }
+  if (isNotificationConfigEditable(form) && !form.notifyChannel) {
     errorMessage.value = t("archiveGroup.form.validation.notifyChannelRequired");
     return false;
   }
-  if (form.notifyEnabled === 1 && !form.notifyWebhookUrl?.trim()) {
+  if (requiresWebhook(form) && !form.notifyWebhookUrl?.trim()) {
     errorMessage.value = t("archiveGroup.form.validation.notifyWebhookRequired");
     return false;
   }
@@ -155,6 +131,15 @@ function handleSubmit(): void {
           </select>
         </label>
         <label>
+          {{ t("archiveGroup.form.owner") }}
+          <select v-model.number="form.ownerUserId" :disabled="submitting">
+            <option :value="undefined">{{ t("archiveGroup.form.selectOwner") }}</option>
+            <option v-for="user in enabledUsers" :key="user.id" :value="user.id">
+              {{ user.realName || user.username }} ({{ user.username }})
+            </option>
+          </select>
+        </label>
+        <label>
           {{ t("archiveGroup.form.notifyEnabled") }}
           <select v-model.number="form.notifyEnabled" :disabled="submitting">
             <option :value="0">{{ t("common.no") }}</option>
@@ -163,15 +148,16 @@ function handleSubmit(): void {
         </label>
         <label>
           {{ t("archiveGroup.form.notifyChannel") }}
-          <select v-model="form.notifyChannel" :disabled="submitting || form.notifyEnabled !== 1">
+          <select v-model="form.notifyChannel" :disabled="submitting || !isNotificationConfigEditable(form)">
             <option :value="undefined">{{ t("archiveGroup.form.selectNotifyChannel") }}</option>
+            <option value="IN_APP">{{ t("archiveGroup.form.notifyChannels.inApp") }}</option>
             <option value="FEISHU">{{ t("archiveGroup.form.notifyChannels.feishu") }}</option>
             <option value="WECOM">{{ t("archiveGroup.form.notifyChannels.wecom") }}</option>
           </select>
         </label>
-        <label class="full-width">
+        <label v-if="requiresWebhook(form)" class="full-width">
           {{ t("archiveGroup.form.notifyWebhookUrl") }}
-          <input v-model="form.notifyWebhookUrl" :disabled="submitting || form.notifyEnabled !== 1" />
+          <input v-model="form.notifyWebhookUrl" :disabled="submitting || !requiresWebhook(form)" />
         </label>
         <label class="full-width">{{ t("archiveGroup.form.remark") }}<textarea v-model="form.remark" :disabled="submitting" /></label>
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>

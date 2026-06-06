@@ -10,15 +10,19 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByIdMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
+import com.openquartz.easyarchive.starter.notification.inapp.ArchiveInAppNotificationService;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupOperationLogPresenter;
+import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -44,12 +48,14 @@ class ArchiveGroupServiceImplTest {
     private final ArchiveGroupExecuteTaskMapper taskMapper = mock(ArchiveGroupExecuteTaskMapper.class);
     private final ArchiveGroupItemByIdMapper idItemMapper = mock(ArchiveGroupItemByIdMapper.class);
     private final ArchiveGroupItemByTimeMapper timeItemMapper = mock(ArchiveGroupItemByTimeMapper.class);
+    private final SysUserMapper sysUserMapper = mock(SysUserMapper.class);
     private final DataPermissionService dataPermissionService = adminPermissionService();
+    private final ArchiveInAppNotificationService inAppNotificationService = mock(ArchiveInAppNotificationService.class);
     private final ArchiveGroupOperationLogPresenter archiveGroupOperationLogPresenter = mock(ArchiveGroupOperationLogPresenter.class);
     private final OperationLogRecorder operationLogRecorder = mock(OperationLogRecorder.class);
     private final ArchiveGroupServiceImpl service =
-            new ArchiveGroupServiceImpl(groupMapper, archiveConnectionMapper, taskMapper, idItemMapper, timeItemMapper, dataPermissionService,
-                    archiveGroupOperationLogPresenter, operationLogRecorder);
+            new ArchiveGroupServiceImpl(groupMapper, archiveConnectionMapper, taskMapper, idItemMapper, timeItemMapper,
+                    sysUserMapper, dataPermissionService, inAppNotificationService, archiveGroupOperationLogPresenter, operationLogRecorder);
 
     @Test
     void shouldRejectDuplicateGroupCodeOnCreate() {
@@ -138,36 +144,38 @@ class ArchiveGroupServiceImplTest {
         input.setNotifyEnabled(1);
         input.setNotifyWebhookUrl("https://open.feishu.cn/open-apis/bot/hook/test");
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(input));
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(input));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_NOTIFY_CHANNEL_REQUIRED, error.getErrorCode());
         verify(groupMapper, never()).insert(any());
     }
 
     @Test
-    void shouldRejectEnabledNotificationWithoutWebhookOnCreate() {
+    void shouldAllowInAppNotificationWithoutWebhookOnCreate() {
         stubEnabledDatasources();
         ArchiveGroup input = enabledGroup();
         input.setId(null);
         input.setNotifyEnabled(1);
-        input.setNotifyChannel("FEISHU");
-
-        assertThrows(IllegalArgumentException.class, () -> service.create(input));
-        verify(groupMapper, never()).insert(any());
-    }
-
-    @Test
-    void shouldAllowValidNotificationConfigOnCreate() {
-        stubEnabledDatasources();
-        ArchiveGroup input = enabledGroup();
-        input.setId(null);
-        input.setNotifyEnabled(1);
-        input.setNotifyChannel("FEISHU");
-        input.setNotifyWebhookUrl(" https://open.feishu.cn/open-apis/bot/hook/test ");
+        input.setNotifyChannel("IN_APP");
+        input.setOwnerUserId(9L);
+        when(sysUserMapper.selectById(9L)).thenReturn(new com.openquartz.easyarchive.core.common.SysUser());
 
         ArchiveGroup created = service.create(input);
 
         assertSame(input, created);
-        assertEquals("https://open.feishu.cn/open-apis/bot/hook/test", input.getNotifyWebhookUrl());
         verify(groupMapper).insert(input);
+    }
+
+    @Test
+    void shouldRejectInAppNotificationWithoutOwnerOnCreate() {
+        stubEnabledDatasources();
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setNotifyEnabled(1);
+        input.setNotifyChannel("IN_APP");
+
+        StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(input));
+        assertEquals(StarterErrorCode.ARCHIVE_GROUP_NOTIFY_OWNER_REQUIRED, error.getErrorCode());
+        verify(groupMapper, never()).insert(any());
     }
 
     @Test
@@ -181,6 +189,22 @@ class ArchiveGroupServiceImplTest {
 
         assertSame(input, created);
         assertEquals(0, input.getEnableStatus());
+        verify(groupMapper).insert(input);
+    }
+
+    @Test
+    void shouldPopulateRootHierarchyFieldsOnCreate() {
+        stubEnabledDatasources();
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setGroupLevel(null);
+        input.setGroupPath(null);
+
+        ArchiveGroup created = service.create(input);
+
+        assertSame(input, created);
+        assertEquals(1, input.getGroupLevel());
+        assertEquals("/", input.getGroupPath());
         verify(groupMapper).insert(input);
     }
 
@@ -300,6 +324,22 @@ class ArchiveGroupServiceImplTest {
         assertEquals("ORDER_ARCHIVE_NEW", input.getGroupCode());
         verify(groupMapper).selectByCode("ORDER_ARCHIVE_NEW");
         verify(groupMapper).update(input);
+    }
+
+    @Test
+    void shouldAllowValidWebhookNotificationConfigOnCreate() {
+        stubEnabledDatasources();
+        ArchiveGroup input = enabledGroup();
+        input.setId(null);
+        input.setNotifyEnabled(1);
+        input.setNotifyChannel("FEISHU");
+        input.setNotifyWebhookUrl(" https://open.feishu.cn/open-apis/bot/hook/test ");
+
+        ArchiveGroup created = service.create(input);
+
+        assertSame(input, created);
+        assertEquals("https://open.feishu.cn/open-apis/bot/hook/test", input.getNotifyWebhookUrl());
+        verify(groupMapper).insert(input);
     }
 
     @Test
@@ -479,6 +519,39 @@ class ArchiveGroupServiceImplTest {
     }
 
     @Test
+    void shouldExposeActiveTaskRuntimeSnapshotInOverviewGroup() {
+        ArchiveGroup group = enabledGroup();
+        ArchiveGroupExecuteTask activeTask = new ArchiveGroupExecuteTask();
+        activeTask.setId(101L);
+        activeTask.setGroupId(10L);
+        activeTask.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
+        activeTask.setStartTime(new Date(1704067200000L));
+        activeTask.setProcessedRecords(1234L);
+        activeTask.setProcessedSpeed(new BigDecimal("56.78"));
+        Date heartbeatTime = new Date(1704067260000L);
+        activeTask.setHeartbeatTime(heartbeatTime);
+
+        when(groupMapper.selectById(10L)).thenReturn(group);
+        when(idItemMapper.countByGroupId(10L)).thenReturn(0);
+        when(idItemMapper.countByGroupIdAndStatus(10L, 0)).thenReturn(0);
+        when(timeItemMapper.countByGroupId(10L)).thenReturn(0);
+        when(timeItemMapper.countByGroupIdAndStatus(10L, 0)).thenReturn(0);
+        when(taskMapper.countByGroupId(10L)).thenReturn(1);
+        when(taskMapper.countByGroupIdAndStatus(10L, ArchiveGroupExecuteTask.STATUS_SUCCESS)).thenReturn(0);
+        when(taskMapper.countByGroupIdAndStatus(10L, ArchiveGroupExecuteTask.STATUS_FAILED)).thenReturn(0);
+        when(taskMapper.countActiveByGroupId(10L)).thenReturn(1);
+        when(taskMapper.selectLatestByGroupId(10L)).thenReturn(activeTask);
+        when(taskMapper.selectRecentByGroupId(10L, 10)).thenReturn(Arrays.asList(activeTask));
+
+        ArchiveGroupOverviewView overview = service.findOverview(10L);
+
+        assertEquals(1234L, overview.getGroup().getActiveTaskProcessedRecords());
+        assertEquals(new BigDecimal("56.78"), overview.getGroup().getActiveTaskProcessedSpeed());
+        assertEquals(heartbeatTime, overview.getGroup().getActiveTaskHeartbeatTime());
+        verify(taskMapper, never()).selectLatestActiveByGroupId(10L);
+    }
+
+    @Test
     void shouldExposeActiveTaskStateInGroupViewWithBatchLookup() {
         ArchiveGroup group = enabledGroup();
         ArchiveGroup secondGroup = enabledGroup();
@@ -503,6 +576,28 @@ class ArchiveGroupServiceImplTest {
         assertNull(result.get(1).getActiveTaskId());
         verify(taskMapper).selectLatestActiveByGroupIds(anyList());
         verify(taskMapper, never()).selectLatestActiveByGroupId(any());
+    }
+
+    @Test
+    void shouldExposeActiveTaskRuntimeSnapshotInGroupView() {
+        ArchiveGroup group = enabledGroup();
+        ArchiveGroupExecuteTask activeTask = new ArchiveGroupExecuteTask();
+        activeTask.setId(88L);
+        activeTask.setGroupId(10L);
+        activeTask.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
+        activeTask.setProcessedRecords(1234L);
+        activeTask.setProcessedSpeed(new BigDecimal("56.78"));
+        Date heartbeatTime = new Date(1704067200000L);
+        activeTask.setHeartbeatTime(heartbeatTime);
+        when(groupMapper.selectList(null)).thenReturn(Arrays.asList(group));
+        when(taskMapper.selectLatestActiveByGroupIds(anyList())).thenReturn(Arrays.asList(activeTask));
+
+        List<ArchiveGroupView> result = service.findAll(null);
+
+        assertEquals(1, result.size());
+        assertEquals(1234L, result.get(0).getActiveTaskProcessedRecords());
+        assertEquals(new BigDecimal("56.78"), result.get(0).getActiveTaskProcessedSpeed());
+        assertEquals(heartbeatTime, result.get(0).getActiveTaskHeartbeatTime());
     }
 
     @Test

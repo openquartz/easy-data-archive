@@ -33,6 +33,9 @@ public class ArchiveNotificationService {
         if (group == null || group.getNotifyEnabled() == null || group.getNotifyEnabled() != 1) {
             return;
         }
+        if (NotificationChannelEnum.IN_APP.name().equalsIgnoreCase(group.getNotifyChannel())) {
+            return;
+        }
         if (!NotificationChannelEnum.supports(group.getNotifyChannel())
                 || group.getNotifyWebhookUrl() == null
                 || group.getNotifyWebhookUrl().trim().isEmpty()) {

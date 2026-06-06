@@ -369,6 +369,7 @@ watch(
           <div class="detail-grid">
             <p><strong>{{ t("archiveGroup.columns.code") }}:</strong> {{ group.groupCode }}</p>
             <p><strong>{{ t("archiveGroup.columns.name") }}:</strong> {{ group.groupName }}</p>
+            <p><strong>{{ t("archiveGroup.columns.owner") }}:</strong> {{ group.ownerDisplayName || "-" }}</p>
             <p>
               <strong>{{ t("archiveGroup.columns.status") }}:</strong>
               <span :class="getStatusTagClass(archiveEnableStatusDictionary, group.enableStatus)">

@@ -11,9 +11,10 @@ export interface ArchiveGroup {
   sourceDatasourceId: number;
   targetDatasourceId: number;
   ownerUserId?: number;
+  ownerDisplayName?: string;
   enableStatus: number;
   notifyEnabled?: number;
-  notifyChannel?: "FEISHU" | "WECOM";
+  notifyChannel?: "IN_APP" | "FEISHU" | "WECOM";
   notifyWebhookUrl?: string;
   remark?: string;
   activeTaskId?: number;
@@ -67,6 +68,7 @@ export type ArchiveGroupPayload = Omit<
   | "canViewActiveTask"
   | "createdTime"
   | "updatedTime"
+  | "ownerDisplayName"
 >;
 
 export function getArchiveGroupsApi(enableStatus?: number): Promise<ArchiveGroup[]> {

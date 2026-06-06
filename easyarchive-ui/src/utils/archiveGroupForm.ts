@@ -27,7 +27,7 @@ function normalizeNotifyChannel(
     return undefined;
   }
   const normalized = notifyChannel.trim().toUpperCase();
-  if (normalized === "FEISHU" || normalized === "WECOM") {
+  if (normalized === "IN_APP" || normalized === "FEISHU" || normalized === "WECOM") {
     return normalized;
   }
   return undefined;
@@ -57,4 +57,10 @@ export function createArchiveGroupFormValue(seed?: ArchiveGroupSeed | null): Arc
 
 export function isNotificationConfigEditable(form: Pick<ArchiveGroupPayload, "notifyEnabled">): boolean {
   return form.notifyEnabled === 1;
+}
+
+export function requiresWebhook(
+  form: Pick<ArchiveGroupPayload, "notifyEnabled" | "notifyChannel">
+): boolean {
+  return form.notifyEnabled === 1 && form.notifyChannel !== "IN_APP";
 }
