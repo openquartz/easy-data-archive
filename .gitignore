@@ -46,6 +46,7 @@ Thumbs.db
 
 ### Tool directories ###
 .omc/
+.claude/
 .codegraph/
 .codex/
 .superpowers/
