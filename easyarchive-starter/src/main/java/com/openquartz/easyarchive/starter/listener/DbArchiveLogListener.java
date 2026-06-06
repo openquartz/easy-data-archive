@@ -136,10 +136,10 @@ public class DbArchiveLogListener implements ArchiveEventListener {
         task.setHeartbeatTime(new Date());
         repository.updateTaskExecution(task);
 
-        String content = String.format("进度: 已处理 %d 行, 速度 %s 行/秒, 当前表: %s",
-                event.getProcessedRecords(), speed, event.getSourceTable());
-        saveLog(event.getTaskId(), ArchiveTaskLogTypeEnum.PROGRESS, ArchiveTaskLogLevelEnum.INFO, content,
-                ArchiveTaskExecutePhaseEnum.TASK_PROGRESS, event.getProcessedRecords(), speed, new Date(event.getTimestamp()));
+//        String content = String.format("进度: 已处理 %d 行, 速度 %s 行/秒, 当前表: %s",
+//                event.getProcessedRecords(), speed, event.getSourceTable());
+//        saveLog(event.getTaskId(), ArchiveTaskLogTypeEnum.PROGRESS, ArchiveTaskLogLevelEnum.INFO, content,
+//                ArchiveTaskExecutePhaseEnum.TASK_PROGRESS, event.getProcessedRecords(), speed, new Date(event.getTimestamp()));
     }
 
     private void saveLog(Long taskId, ArchiveTaskLogTypeEnum logType, ArchiveTaskLogLevelEnum logLevel,

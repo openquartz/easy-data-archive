@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppBrand from "../components/AppBrand.vue";
+import InAppNotificationBell from "../components/InAppNotificationBell.vue";
 import LanguageSwitcher from "../components/LanguageSwitcher.vue";
 import { computed, ref, watch } from "vue";
 import { buildPrimaryNavItems } from "../content/navigation";
@@ -114,6 +115,7 @@ function openWorkTab(tab: { type: string; id?: string; taskId?: string; title?: 
         <strong>{{ t("layout.topbar") }}</strong>
         <div class="app-shell__topbar-actions">
           <span v-if="accountLabel" class="account-pill">{{ accountLabel }}</span>
+          <InAppNotificationBell />
           <button class="btn btn--subtle" :disabled="loggingOut" @click="handleLogout">
             {{ loggingOut ? t("layout.actions.loggingOut") : t("layout.actions.logout") }}
           </button>

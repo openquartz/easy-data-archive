@@ -13,6 +13,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,9 +49,48 @@ class OperationLogAspectTest {
         }
     }
 
+    @Test
+    void shouldTruncateOversizedErrorMessageBeforePersistingFailureLog() {
+        SysOperationLogMapper mapper = mock(SysOperationLogMapper.class);
+        DataPermissionService permissionService = mock(DataPermissionService.class);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/archive/groups");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        try {
+            OperationLogAspect aspect = new OperationLogAspect(mapper, permissionService);
+            AspectJProxyFactory factory = new AspectJProxyFactory(new FailingControllerTarget());
+            factory.addAspect(aspect);
+            FailingControllerTarget proxy = factory.getProxy();
+
+            try {
+                proxy.create();
+            } catch (IllegalStateException expected) {
+                assertEquals(longMessage().length(), expected.getMessage().length());
+            }
+
+            ArgumentCaptor<SysOperationLog> captor = ArgumentCaptor.forClass(SysOperationLog.class);
+            verify(mapper).insert(captor.capture());
+            assertEquals(500, captor.getValue().getErrorMessage().length());
+            assertTrue(longMessage().startsWith(captor.getValue().getErrorMessage()));
+        } finally {
+            RequestContextHolder.resetRequestAttributes();
+        }
+    }
+
     static class TestControllerTarget {
         @OperationLog(value = "保存分组", module = "ARCHIVE_GROUP", action = "UPDATE")
         public void update() {
         }
+    }
+
+    static class FailingControllerTarget {
+        @OperationLog(value = "新增分组", module = "ARCHIVE_GROUP", action = "CREATE")
+        public void create() {
+            throw new IllegalStateException(longMessage());
+        }
+    }
+
+    private static String longMessage() {
+        return "x".repeat(700);
     }
 }

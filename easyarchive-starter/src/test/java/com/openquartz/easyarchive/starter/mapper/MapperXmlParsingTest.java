@@ -39,6 +39,22 @@ class MapperXmlParsingTest {
     }
 
     @Test
+    void inAppNotificationMappers_shouldParseSuccessfully() {
+        SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        DataSource dataSource = mock(DataSource.class);
+
+        factoryBean.setDataSource(dataSource);
+        factoryBean.setMapperLocations(
+                resolver.getResource("classpath:mapper/InAppNotificationMapper.xml"),
+                resolver.getResource("classpath:mapper/InAppNotificationRecipientMapper.xml"),
+                resolver.getResource("classpath:mapper/ArchiveGroupNotificationUserMapper.xml")
+        );
+
+        assertDoesNotThrow(factoryBean::getObject);
+    }
+
+    @Test
     void archiveGroupExecuteTaskDailyTrend_shouldUseSameDateExpressionForSelectGroupAndOrder() throws IOException {
         String xml = Files.readString(ARCHIVE_GROUP_EXECUTE_TASK_MAPPER, StandardCharsets.UTF_8);
         String statement = extractSelectStatement(xml, "selectDailyTrend");

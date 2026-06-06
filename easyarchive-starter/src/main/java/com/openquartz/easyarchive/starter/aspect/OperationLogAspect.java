@@ -31,6 +31,8 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class OperationLogAspect {
 
+    private static final int ERROR_MESSAGE_MAX_LENGTH = 500;
+
     private final SysOperationLogMapper sysOperationLogMapper;
     private final DataPermissionService dataPermissionService;
 
@@ -55,7 +57,7 @@ public class OperationLogAspect {
             return result;
         } catch (Throwable ex) {
             context.setResultStatus(1);
-            context.setErrorMessage(ex.getMessage());
+            context.setErrorMessage(truncateErrorMessage(ex.getMessage()));
             throw ex;
         } finally {
             persistLog(operationLog, context, System.currentTimeMillis() - startTime);
@@ -117,5 +119,12 @@ public class OperationLogAspect {
 
     private String defaultIfBlank(String value, String defaultValue) {
         return StringUtils.hasText(value) ? value : defaultValue;
+    }
+
+    private String truncateErrorMessage(String errorMessage) {
+        if (!StringUtils.hasText(errorMessage) || errorMessage.length() <= ERROR_MESSAGE_MAX_LENGTH) {
+            return errorMessage;
+        }
+        return errorMessage.substring(0, ERROR_MESSAGE_MAX_LENGTH);
     }
 }

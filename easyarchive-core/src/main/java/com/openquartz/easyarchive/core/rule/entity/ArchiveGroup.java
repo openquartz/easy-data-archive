@@ -79,6 +79,12 @@ public class ArchiveGroup extends BaseEntity {
     private String notifyWebhookUrl;
 
     /**
+     * 是否启用站内通知
+     * 0-关闭，1-开启
+     */
+    private Integer inAppNotifyEnabled;
+
+    /**
      * 备注
      */
     private String remark;

@@ -6,6 +6,7 @@ import TaskStatusTag from "../components/TaskStatusTag.vue";
 import { useI18n } from "../i18n";
 import EntityLink from "../components/EntityLink.vue";
 import { createPolling } from "../utils/polling";
+import { formatTaskLogConsoleMeta, getTaskLogConsoleLevelTone } from "../utils/taskLogConsole";
 
 const route = useRoute();
 const router = useRouter();
@@ -108,6 +109,14 @@ function nextLogPage(): void {
   void loadLogs();
 }
 
+function resolveLogTone(level?: string): string {
+  return `task-log-console__level--${getTaskLogConsoleLevelTone(level)}`;
+}
+
+function resolveLogMeta(item: TaskLogItem): string {
+  return formatTaskLogConsoleMeta(item.logType, item.executePhase);
+}
+
 const poller = createPolling(loadAll, { intervalMs: 5000, immediate: false });
 const stopPolling = (): void => poller.stop();
 
@@ -162,31 +171,21 @@ onBeforeUnmount(() => {
     <h2 class="section-title">{{ t("task.logs") }}</h2>
     <div v-if="loadingLogs" class="empty">{{ emptyLogText }}</div>
     <div v-else-if="!logs.length" class="empty">{{ emptyLogText }}</div>
-    <div v-else class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>{{ t("task.columns.time") }}</th>
-            <th>{{ t("task.columns.level") }}</th>
-            <th>{{ t("task.columns.type") }}</th>
-            <th>{{ t("task.columns.phase") }}</th>
-            <th>{{ t("task.columns.processed") }}</th>
-            <th>{{ t("task.columns.speed") }}</th>
-            <th>{{ t("task.columns.content") }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in logs" :key="item.id">
-            <td>{{ item.logTime || "-" }}</td>
-            <td>{{ item.logLevel || "-" }}</td>
-            <td>{{ item.logType || "-" }}</td>
-            <td>{{ item.executePhase || "-" }}</td>
-            <td>{{ item.processedCount ?? "-" }}</td>
-            <td>{{ item.processSpeed ?? "-" }}</td>
-            <td>{{ item.logContent || "-" }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-else class="task-log-console">
+      <div v-for="item in logs" :key="item.id" class="task-log-console__row">
+        <div class="task-log-console__main">
+          <span class="task-log-console__time">{{ item.logTime || "-" }}</span>
+          <span class="task-log-console__level" :class="resolveLogTone(item.logLevel)">
+            {{ item.logLevel || "-" }}
+          </span>
+          <span class="task-log-console__meta">{{ resolveLogMeta(item) }}</span>
+        </div>
+        <div class="task-log-console__content">{{ item.logContent || "-" }}</div>
+        <div class="task-log-console__stats">
+          <span>{{ t("task.columns.processed") }} {{ item.processedCount ?? "-" }}</span>
+          <span>{{ t("task.columns.speed") }} {{ item.processSpeed ?? "-" }}</span>
+        </div>
+      </div>
     </div>
     <footer class="pager">
       <span>{{ logPagerText }}</span>
@@ -197,3 +196,91 @@ onBeforeUnmount(() => {
     </footer>
   </section>
 </template>
+
+<style scoped>
+.task-log-console {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid #1f2937;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), transparent 28%),
+    linear-gradient(180deg, #05080f 0%, #0a0f18 100%);
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08), inset 0 0 0 1px rgba(15, 23, 42, 0.45);
+}
+
+.task-log-console__row {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid rgba(71, 85, 105, 0.45);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.72);
+  font-family: "IBM Plex Mono", "SFMono-Regular", "Consolas", monospace;
+}
+
+.task-log-console__main,
+.task-log-console__stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.task-log-console__time,
+.task-log-console__meta,
+.task-log-console__stats {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.task-log-console__level {
+  display: inline-flex;
+  align-items: center;
+  min-width: 58px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.task-log-console__level--success {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.task-log-console__level--warning {
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.14);
+}
+
+.task-log-console__level--danger {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.14);
+}
+
+.task-log-console__level--neutral {
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.task-log-console__content {
+  color: #e2e8f0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 720px) {
+  .task-log-console {
+    padding: 12px;
+  }
+
+  .task-log-console__row {
+    padding: 10px 12px;
+  }
+}
+</style>

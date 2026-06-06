@@ -13,6 +13,7 @@ import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.ArchiveRuleLoader;
 import com.openquartz.easyarchive.core.rule.DbArchiveRuleLoader;
 import com.openquartz.easyarchive.starter.listener.DbArchiveLogListener;
+import com.openquartz.easyarchive.starter.notification.inapp.ArchiveInAppNotificationListener;
 import com.openquartz.easyarchive.starter.notification.ArchiveNotificationListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
@@ -60,7 +61,8 @@ public class EasyArchiveAutoConfiguration {
 
     @Bean
     public ArchiveEventPublisher archiveEventPublisher(ArchiveLogRepository archiveLogRepository,
-                                                       ObjectProvider<ArchiveNotificationListener> archiveNotificationListenerProvider) {
+                                                       ObjectProvider<ArchiveNotificationListener> archiveNotificationListenerProvider,
+                                                       ObjectProvider<ArchiveInAppNotificationListener> archiveInAppNotificationListenerProvider) {
         if (!archiveConfig.isLogEnabled()) {
             return NoOpArchiveEventPublisher.INSTANCE;
         }
@@ -69,6 +71,10 @@ public class EasyArchiveAutoConfiguration {
         ArchiveNotificationListener archiveNotificationListener = archiveNotificationListenerProvider.getIfAvailable();
         if (archiveNotificationListener != null) {
             publisher.registerListener(archiveNotificationListener);
+        }
+        ArchiveInAppNotificationListener archiveInAppNotificationListener = archiveInAppNotificationListenerProvider.getIfAvailable();
+        if (archiveInAppNotificationListener != null) {
+            publisher.registerListener(archiveInAppNotificationListener);
         }
         return publisher;
     }
