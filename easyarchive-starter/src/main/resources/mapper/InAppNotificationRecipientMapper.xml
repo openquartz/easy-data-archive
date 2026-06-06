@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.openquartz.easyarchive.starter.mapper.InAppNotificationRecipientMapper">
+
+    <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.starter.model.entity.InAppNotificationRecipient">
+        <id column="id" property="id"/>
+        <result column="notification_id" property="notificationId"/>
+        <result column="recipient_user_id" property="recipientUserId"/>
+        <result column="read_status" property="readStatus"/>
+        <result column="read_time" property="readTime"/>
+        <result column="delivery_status" property="deliveryStatus"/>
+        <result column="created_time" property="createdTime"/>
+    </resultMap>
+
+    <insert id="insertBatch">
+        INSERT INTO ea_in_app_notification_recipient (
+            notification_id, recipient_user_id, read_status, read_time, delivery_status
+        ) VALUES
+        <foreach collection="items" item="item" separator=",">
+            (#{item.notificationId}, #{item.recipientUserId}, #{item.readStatus}, #{item.readTime}, #{item.deliveryStatus})
+        </foreach>
+    </insert>
+
+    <select id="countUnreadByUserId" resultType="int">
+        SELECT COUNT(1)
+        FROM ea_in_app_notification_recipient
+        WHERE recipient_user_id = #{userId}
+          AND read_status = 0
+    </select>
+
+    <select id="selectLatestByUserId" resultType="com.openquartz.easyarchive.starter.model.dto.InAppNotificationRecipientView">
+        SELECT notification_id AS notificationId,
+               read_status AS readStatus,
+               created_time AS createdTime
+        FROM ea_in_app_notification_recipient
+        WHERE recipient_user_id = #{userId}
+        ORDER BY created_time DESC, notification_id DESC
+        LIMIT #{limit}
+    </select>
+
+    <update id="markRead">
+        UPDATE ea_in_app_notification_recipient
+        SET read_status = 1,
+            read_time = NOW()
+        WHERE notification_id = #{notificationId}
+          AND recipient_user_id = #{userId}
+          AND read_status = 0
+    </update>
+
+    <update id="markAllRead">
+        UPDATE ea_in_app_notification_recipient
+        SET read_status = 1,
+            read_time = NOW()
+        WHERE recipient_user_id = #{userId}
+          AND read_status = 0
+    </update>
+
+    <delete id="deleteReadModelOlderThan">
+        DELETE
+        FROM ea_in_app_notification_recipient
+        WHERE created_time &lt; DATE_SUB(NOW(), INTERVAL #{retentionDays} DAY)
+    </delete>
+
+</mapper>
