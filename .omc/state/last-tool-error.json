@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"mvn compile -pl easyarchive-core -q 2>&1 && mvn compile -pl easyarchive-starter -q 2>&1\",\"timeout\":120000,\"description\":\"Compile core module first, then starter\"}",
-  "error": "Exit code 1\n[ERROR] COMPILATION ERROR : \n[ERROR] /Users/jackxu/Documents/Code/local/easy-archive-master/easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/config/EasyArchiveAutoConfiguration.java:[6,50] 找不到符号\n  符号:   类 ConnectionPoolConfig\n  位置: 程序包 com.openquartz.easyarchive.core.connection\n[ERROR] /Users/jackxu/Documents/Code/local/easy-archive-master/easyarchive-starter/src/main/java/com/openquartz/easyarchive/starter/config/EasyArchiveAutoConfiguration.java:[40,13] 找不到符号\n  ...",
-  "timestamp": "2026-05-31T14:10:00.480Z",
-  "retry_count": 2
-}
