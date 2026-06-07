@@ -1,4 +1,5 @@
 import { API_SUCCESS_CODE, type ApiError, type ApiResponse } from "../types/api";
+import { showErrorToast } from "../stores/toast";
 import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
@@ -22,6 +23,12 @@ function clearAuthAndSignal(): void {
   window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
 }
 
+function emitHttpErrorToast(message: string): void {
+  if (message.trim()) {
+    showErrorToast(message, 5000);
+  }
+}
+
 const client = axios.create({
   baseURL
 });
@@ -40,7 +47,9 @@ client.interceptors.response.use(
     if (payload && typeof payload === "object" && "code" in payload) {
       const envelope = payload as ApiResponse<T>;
       if (envelope.code !== API_SUCCESS_CODE) {
-        throw createApiError(envelope.message || "Request failed", {
+        const message = envelope.message || "Request failed";
+        emitHttpErrorToast(message);
+        throw createApiError(message, {
           status: response.status,
           code: envelope.code,
           requestId: envelope.requestId
@@ -56,10 +65,14 @@ client.interceptors.response.use(
 
     if (status === 401) {
       clearAuthAndSignal();
-      throw createApiError("Unauthorized", { status: 401 });
+      const message = payload?.message || "Unauthorized";
+      emitHttpErrorToast(message);
+      throw createApiError(message, { status: 401 });
     }
 
-    throw createApiError(payload?.message || error.message || "Request failed", {
+    const message = payload?.message || error.message || "Request failed";
+    emitHttpErrorToast(message);
+    throw createApiError(message, {
       status,
       code: payload?.code,
       requestId: payload?.requestId

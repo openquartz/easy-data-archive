@@ -8,6 +8,8 @@ export interface ArchiveGroupItemSummary {
   groupId: number;
   sourceTable: string;
   targetTable: string;
+  rangeStart?: string;
+  rangeEnd?: string;
   priority: number;
   stepCount?: number;
   enableWrite?: number;

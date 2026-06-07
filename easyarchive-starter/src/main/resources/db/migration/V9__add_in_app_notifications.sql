@@ -5,18 +5,6 @@ DROP PROCEDURE IF EXISTS `ea_archive_v9_add_in_app_notifications`//
 
 CREATE PROCEDURE `ea_archive_v9_add_in_app_notifications`()
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM information_schema.columns
-        WHERE table_schema = DATABASE()
-          AND table_name = 'ea_archive_group'
-          AND column_name = 'in_app_notify_enabled'
-    ) THEN
-        ALTER TABLE `ea_archive_group`
-            ADD COLUMN `in_app_notify_enabled` TINYINT NOT NULL DEFAULT 0 COMMENT '0-关闭站内通知 1-开启站内通知'
-            AFTER `notify_webhook_url`;
-    END IF;
-
     CREATE TABLE IF NOT EXISTS `ea_archive_group_notification_user` (
         `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
         `group_id` BIGINT NOT NULL COMMENT '归档分组ID',

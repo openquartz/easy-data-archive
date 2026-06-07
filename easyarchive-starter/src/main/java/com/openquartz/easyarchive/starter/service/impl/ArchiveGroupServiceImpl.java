@@ -357,7 +357,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         Integer notifyEnabled = group.getNotifyEnabled();
         if (notifyEnabled == null) {
             group.setNotifyEnabled(0);
-            return;
+            notifyEnabled = 0;
         }
         if (notifyEnabled != 0 && notifyEnabled != 1) {
             throw new IllegalArgumentException("通知状态不合法");

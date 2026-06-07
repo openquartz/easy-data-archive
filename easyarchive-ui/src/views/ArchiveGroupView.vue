@@ -10,11 +10,14 @@ import {
   updateArchiveGroupApi,
   updateArchiveGroupStatusApi
 } from "../api/archiveGroup";
+import { getArchiveGroupItemsApi, type ArchiveGroupItemSummary } from "../api/archiveGroupItem";
 import { getDatasourcesApi, type Datasource } from "../api/datasource";
 import { getUsersApi, type User } from "../api/user";
 import ArchiveGroupFormDialog from "../components/ArchiveGroupFormDialog.vue";
+import ArchiveGroupItemsPreviewDialog from "../components/ArchiveGroupItemsPreviewDialog.vue";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
 import EntityLink from "../components/EntityLink.vue";
+import { showSuccessToast } from "../stores/toast";
 import { archiveEnableStatusDictionary, getStatusLabel, getStatusTagClass } from "../utils/dictionaries";
 import { computed, onBeforeUnmount, ref } from "vue";
 import { useI18n } from "../i18n";
@@ -29,9 +32,6 @@ const loading = ref(false);
 const groups = ref<ArchiveGroup[]>([]);
 const datasources = ref<Datasource[]>([]);
 const users = ref<User[]>([]);
-const errorMessage = ref("");
-const successMessage = ref("");
-const actionErrorMessage = ref("");
 const busyRows = ref(new Set<number>());
 const busyActions = ref(new Set<string>());
 
@@ -39,6 +39,10 @@ const groupDialogVisible = ref(false);
 const groupDialogMode = ref<"create" | "edit">("create");
 const groupDialogSubmitting = ref(false);
 const activeGroup = ref<ArchiveGroup | null>(null);
+const previewDialogVisible = ref(false);
+const previewDialogLoading = ref(false);
+const previewDialogItems = ref<ArchiveGroupItemSummary[]>([]);
+const previewDialogGroupName = ref("");
 const { t } = useI18n();
 const router = useRouter();
 
@@ -65,7 +69,6 @@ const formatNotifyChannel = (channel?: ArchiveGroup["notifyChannel"]): string =>
 
 async function loadData(): Promise<void> {
   loading.value = true;
-  errorMessage.value = "";
   try {
     const [groupResult, datasourceResult, userResult] = await Promise.all([
       getArchiveGroupsApi(),
@@ -75,8 +78,6 @@ async function loadData(): Promise<void> {
     groups.value = groupResult;
     datasources.value = datasourceResult;
     users.value = userResult;
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : t("archiveGroup.loadFailed");
   } finally {
     loading.value = false;
     syncPolling();
@@ -102,8 +103,6 @@ async function openEditGroup(group: ArchiveGroup): Promise<void> {
     return;
   }
   groupDialogMode.value = "edit";
-  actionErrorMessage.value = "";
-  successMessage.value = "";
   await runGroupAction("edit", group.id, async () => {
     activeGroup.value = {
       ...group
@@ -117,23 +116,19 @@ async function submitGroup(payload: ArchiveGroupPayload): Promise<void> {
     return;
   }
   groupDialogSubmitting.value = true;
-  successMessage.value = "";
-  actionErrorMessage.value = "";
   try {
     if (groupDialogMode.value === "create") {
       await createArchiveGroupApi(payload);
-      successMessage.value = t("archiveGroup.created");
+      showSuccessToast(t("archiveGroup.created"));
     } else if (activeGroup.value) {
       await updateArchiveGroupApi(activeGroup.value.id, payload);
-      successMessage.value = t("archiveGroup.updated");
+      showSuccessToast(t("archiveGroup.updated"));
     } else {
       return;
     }
     groupDialogVisible.value = false;
     activeGroup.value = null;
     await loadData();
-  } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.saveFailed");
   } finally {
     groupDialogSubmitting.value = false;
   }
@@ -142,7 +137,7 @@ async function submitGroup(payload: ArchiveGroupPayload): Promise<void> {
 async function toggleGroupStatus(group: ArchiveGroup): Promise<void> {
   await runGroupAction("toggleStatus", group.id, async () => {
     await updateArchiveGroupStatusApi(group.id, group.enableStatus === 0 ? 1 : 0);
-    successMessage.value = t("archiveGroup.statusUpdated");
+    showSuccessToast(t("archiveGroup.statusUpdated"));
     await loadData();
   });
 }
@@ -153,7 +148,7 @@ async function deleteGroup(group: ArchiveGroup): Promise<void> {
   }
   await runGroupAction("delete", group.id, async () => {
     await deleteArchiveGroupApi(group.id);
-    successMessage.value = t("archiveGroup.deleted");
+    showSuccessToast(t("archiveGroup.deleted"));
     await loadData();
   });
 }
@@ -161,7 +156,7 @@ async function deleteGroup(group: ArchiveGroup): Promise<void> {
 async function triggerGroup(group: ArchiveGroup): Promise<void> {
   await runGroupAction("trigger", group.id, async () => {
     const task = await triggerArchiveGroupApi(group.id);
-    successMessage.value = t("archiveGroup.triggered").replace("{id}", String(task.id));
+    showSuccessToast(t("archiveGroup.triggered").replace("{id}", String(task.id)));
     await loadData();
   });
 }
@@ -176,9 +171,31 @@ async function cancelGroupTask(group: ArchiveGroup): Promise<void> {
   }
   await runGroupAction("cancelTask", group.id, async () => {
     const task = await cancelArchiveGroupActiveTaskApi(group.id);
-    successMessage.value = t("archiveGroup.cancelSubmitted").replace("{id}", String(task.id));
+    showSuccessToast(t("archiveGroup.cancelSubmitted").replace("{id}", String(task.id)));
     await loadData();
   });
+}
+
+async function openItemsPreview(group: ArchiveGroup): Promise<void> {
+  if (isRowBusy(group.id)) {
+    return;
+  }
+  previewDialogVisible.value = true;
+  previewDialogLoading.value = true;
+  previewDialogItems.value = [];
+  previewDialogGroupName.value = group.groupName;
+  try {
+    previewDialogItems.value = await getArchiveGroupItemsApi(group.id);
+  } finally {
+    previewDialogLoading.value = false;
+  }
+}
+
+function closeItemsPreview(): void {
+  previewDialogVisible.value = false;
+  previewDialogLoading.value = false;
+  previewDialogItems.value = [];
+  previewDialogGroupName.value = "";
 }
 
 function viewTask(group: ArchiveGroup): void {
@@ -195,12 +212,8 @@ async function runGroupAction(action: string, id: number, handler: () => Promise
   const actionKey = getActionKey(action, id);
   busyRows.value.add(id);
   busyActions.value.add(actionKey);
-  successMessage.value = "";
-  actionErrorMessage.value = "";
   try {
     await handler();
-  } catch (error) {
-    actionErrorMessage.value = error instanceof Error ? error.message : t("archiveGroup.actionFailed");
   } finally {
     busyActions.value.delete(actionKey);
     busyRows.value.delete(id);
@@ -233,11 +246,6 @@ onBeforeUnmount(() => {
         <button class="btn btn--primary" :disabled="loading" @click="openCreateGroup">{{ t("archiveGroup.new") }}</button>
       </div>
     </header>
-
-    <p v-if="successMessage" class="feedback">{{ successMessage }}</p>
-    <p v-if="actionErrorMessage" class="error">{{ actionErrorMessage }}</p>
-    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-
     <div v-if="loading" class="empty">{{ groupEmptyText }}</div>
     <div v-else-if="!groups.length" class="empty">{{ groupEmptyText }}</div>
     <div v-else class="table-wrap">
@@ -297,6 +305,9 @@ onBeforeUnmount(() => {
             <td class="row-actions">
               <button class="btn btn--subtle" :disabled="isRowBusy(group.id)" @click.stop="openDetail(group)">
                 {{ t("archiveGroupDetail.openDetail") }}
+              </button>
+              <button class="btn btn--subtle" :disabled="isRowBusy(group.id)" @click.stop="openItemsPreview(group)">
+                {{ t("common.detail") }}
               </button>
               <button
                 class="btn btn--subtle"
@@ -358,6 +369,13 @@ onBeforeUnmount(() => {
       :submitting="groupDialogSubmitting"
       @close="groupDialogVisible = false"
       @submit="submitGroup"
+    />
+    <ArchiveGroupItemsPreviewDialog
+      :visible="previewDialogVisible"
+      :loading="previewDialogLoading"
+      :group-name="previewDialogGroupName"
+      :items="previewDialogItems"
+      @close="closeItemsPreview"
     />
   </section>
 </template>

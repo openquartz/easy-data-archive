@@ -9,8 +9,6 @@ import java.util.List;
 @Data
 public class ArchiveGroupNotificationMemberConfig {
 
-    private Integer inAppNotifyEnabled;
-
     private List<Long> recipientUserIds = new ArrayList<>();
 
     private List<SysUser> recipientUsers = new ArrayList<>();

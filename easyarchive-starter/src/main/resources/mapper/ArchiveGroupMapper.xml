@@ -17,7 +17,6 @@
         <result column="notify_enabled" property="notifyEnabled"/>
         <result column="notify_channel" property="notifyChannel"/>
         <result column="notify_webhook_url" property="notifyWebhookUrl"/>
-        <result column="in_app_notify_enabled" property="inAppNotifyEnabled"/>
         <result column="remark" property="remark"/>
         <result column="created_time" property="createdTime"/>
         <result column="updated_time" property="updatedTime"/>
@@ -29,7 +28,7 @@
     <sql id="Base_Column_List">
         id, parent_id, group_code, group_name, group_path, group_level,
         source_datasource_id, target_datasource_id, owner_user_id, enable_status,
-        notify_enabled, notify_channel, notify_webhook_url, in_app_notify_enabled, remark,
+        notify_enabled, notify_channel, notify_webhook_url, remark,
         created_time, updated_time, creator_id, updater_id, deleted
     </sql>
 
@@ -46,12 +45,12 @@
         INSERT INTO ea_archive_group (
             parent_id, group_code, group_name, group_path, group_level,
             source_datasource_id, target_datasource_id, owner_user_id, enable_status,
-            notify_enabled, notify_channel, notify_webhook_url, in_app_notify_enabled,
+            notify_enabled, notify_channel, notify_webhook_url,
             remark, creator_id, updater_id
         ) VALUES (
             #{parentId}, #{groupCode}, #{groupName}, #{groupPath}, #{groupLevel},
             #{sourceDatasourceId}, #{targetDatasourceId}, #{ownerUserId}, #{enableStatus},
-            #{notifyEnabled}, #{notifyChannel}, #{notifyWebhookUrl}, #{inAppNotifyEnabled},
+            #{notifyEnabled}, #{notifyChannel}, #{notifyWebhookUrl},
             #{remark}, #{creatorId}, #{updaterId}
         )
     </insert>
@@ -71,7 +70,6 @@
             <if test="notifyEnabled != null">notify_enabled = #{notifyEnabled},</if>
             <if test="notifyChannel != null">notify_channel = #{notifyChannel},</if>
             <if test="notifyWebhookUrl != null">notify_webhook_url = #{notifyWebhookUrl},</if>
-            <if test="inAppNotifyEnabled != null">in_app_notify_enabled = #{inAppNotifyEnabled},</if>
             <if test="remark != null">remark = #{remark},</if>
             <if test="updaterId != null">updater_id = #{updaterId},</if>
             updated_time = CURRENT_TIMESTAMP

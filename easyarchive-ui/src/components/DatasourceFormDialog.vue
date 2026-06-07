@@ -119,7 +119,7 @@ function handleSubmit(): void {
 
 <template>
   <div v-if="visible" class="modal-backdrop" @click.self="emit('close')">
-    <section class="modal-card">
+    <section class="modal-card modal-card--resizable">
       <header class="modal-card__header">
         <h3>{{ title }}</h3>
       </header>
@@ -154,3 +154,33 @@ function handleSubmit(): void {
     </section>
   </div>
 </template>
+
+<style scoped>
+.modal-card--resizable {
+  width: min(880px, calc(100vw - 3rem));
+  min-width: 560px;
+  min-height: 360px;
+  max-width: 96vw;
+  max-height: 90vh;
+  overflow: auto;
+  resize: both;
+}
+
+.modal-card--resizable .form-grid {
+  align-content: start;
+}
+
+.modal-card--resizable textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+@media (max-width: 640px) {
+  .modal-card--resizable {
+    min-width: 0;
+    width: calc(100vw - 1.5rem);
+    max-height: 92vh;
+    resize: none;
+  }
+}
+</style>

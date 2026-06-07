@@ -15,10 +15,16 @@ import com.openquartz.easyarchive.core.property.ArchiveConfig;
 import com.openquartz.easyarchive.core.exception.TaskCancelledException;
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskExecutePhaseEnum;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogLevelEnum;
+import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogTypeEnum;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItem;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemById;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
@@ -37,6 +43,7 @@ import com.openquartz.easyarchive.core.source.mysql.MysqlSource;
 @Slf4j
 public class ArchiveExecutor implements Runnable {
     private static final int NO_CUSTOM_PAUSE_MS = 0;
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final ArchiveConnection sourceConnection;
     private final ArchiveConnection sinkConnection;
@@ -110,6 +117,7 @@ public class ArchiveExecutor implements Runnable {
                         ArchiveGroupItemByTime byTimeRule = (ArchiveGroupItemByTime) rule;
                         Date endDate = DateUtils.floorDay(DateUtils.addDays(new Date(), -byTimeRule.getKeepDay()));
                         Date startDate = DateUtils.floorDay(byTimeRule.getStartTime());
+                        logTimeRuleRange(this.currentSourceTable, startDate, endDate);
 
                         for (Date curDate = startDate; Objects.requireNonNull(curDate).compareTo(endDate) < 0; ) {
                             // 校验是否被取消和中断
@@ -130,6 +138,7 @@ public class ArchiveExecutor implements Runnable {
                         Long startId = Long.valueOf(startIdStr.trim());
                         String endIdStr = ExpressionService.getInstance().parse(byIdRule.getEndId());
                         Long endId = Long.valueOf(endIdStr.trim());
+                        logIdRuleRange(this.currentSourceTable, startId, endId);
 
                         while (Objects.requireNonNull(startId).compareTo(endId) < 0) {
                             // 校验是否被取消和中断
@@ -215,5 +224,33 @@ public class ArchiveExecutor implements Runnable {
             log.warn("[ArchiveExecutor] Failed to check cancellation status for task {}: {}",
                     taskId, e.getMessage());
         }
+    }
+
+    void logTimeRuleRange(String actualSourceTable, Date startDate, Date endDate) {
+        String content = String.format("规则范围:%s, 时间范围:%s -> %s",
+            actualSourceTable, formatDateTime(startDate), formatDateTime(endDate));
+        saveRuleStartLog(content);
+    }
+
+    void logIdRuleRange(String actualSourceTable, Long startId, Long endId) {
+        String content = String.format("规则范围:%s, ID范围:%s -> %s",
+            actualSourceTable, startId, endId);
+        saveRuleStartLog(content);
+    }
+
+    private void saveRuleStartLog(String content) {
+        ArchiveTaskLog logRecord = new ArchiveTaskLog();
+        logRecord.setTaskId(taskId);
+        logRecord.setLogType(ArchiveTaskLogTypeEnum.START);
+        logRecord.setLogLevel(ArchiveTaskLogLevelEnum.INFO);
+        logRecord.setLogContent(content);
+        logRecord.setLogTime(new Date());
+        logRecord.setProcessedCount(0L);
+        logRecord.setExecutePhase(ArchiveTaskExecutePhaseEnum.RULE_START);
+        archiveLogRepository.saveTaskLog(logRecord);
+    }
+
+    private String formatDateTime(Date date) {
+        return DATE_TIME_FORMATTER.format(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
     }
 }

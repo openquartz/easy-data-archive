@@ -1,5 +1,6 @@
 package com.openquartz.easyarchive.starter.config;
 
+import com.openquartz.easyarchive.common.util.ApplicationContextUtils;
 import com.openquartz.easyarchive.connection.factory.ArchiveConnectionFactory;
 import com.openquartz.easyarchive.connection.property.ConnectionProperties;
 import com.openquartz.easyarchive.core.connection.ConnectionFactory;
@@ -52,6 +53,11 @@ public class EasyArchiveAutoConfiguration {
     public ArchiveConnection configConnection() {
         ConnectionFactory.init(toPoolConfig(connectionProperties.getPool()));
         return ArchiveConnectionFactory.createConfigConnection(connectionProperties);
+    }
+
+    @Bean
+    public ApplicationContextUtils applicationContextUtils() {
+        return new ApplicationContextUtils();
     }
 
     @Bean

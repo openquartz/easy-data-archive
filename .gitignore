@@ -51,6 +51,7 @@ Thumbs.db
 .codex/
 .superpowers/
 .worktrees/
+.understand-anything/
 
 ### Env / Secrets ###
 .env

@@ -44,6 +44,8 @@ class MigrationVersioningTest {
         assertFalse(migrationFiles.isEmpty(), "expected migration directory to contain files");
         assertTrue(migrationFiles.contains("V9__add_in_app_notifications.sql"),
                 "expected V9 in-app notification migration to exist");
+        assertTrue(migrationFiles.contains("V10__drop_archive_group_in_app_notify_enabled.sql"),
+                "expected V10 archive group in-app notify cleanup migration to exist");
     }
 
     private static String extractVersion(String fileName) {

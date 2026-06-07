@@ -32,6 +32,10 @@ export function canTriggerArchiveGroup(group?: ArchiveGroupRuntimeState | null):
   return group?.canTrigger === true && !hasArchiveGroupActiveTask(group);
 }
 
+export function shouldShowArchiveGroupTriggerAction(group?: ArchiveGroupRuntimeState | null): boolean {
+  return canTriggerArchiveGroup(group);
+}
+
 export function canViewArchiveGroupActiveTask(group?: ArchiveGroupRuntimeState | null): boolean {
   if (!hasArchiveGroupActiveTask(group)) {
     return false;

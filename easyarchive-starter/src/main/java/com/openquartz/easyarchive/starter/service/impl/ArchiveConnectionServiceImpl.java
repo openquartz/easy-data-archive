@@ -57,6 +57,11 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     }
 
     @Override
+    public ArchiveConnection getByConnectionCode(String connectionCode) {
+        return datasourceMapper.selectByCode(connectionCode);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public ArchiveConnection create(ArchiveConnection datasource) {
         dataPermissionService.assertAdmin();
