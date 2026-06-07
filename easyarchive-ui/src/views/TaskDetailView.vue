@@ -7,6 +7,7 @@ import { useI18n } from "../i18n";
 import EntityLink from "../components/EntityLink.vue";
 import { createPolling } from "../utils/polling";
 import { formatTaskLogConsoleMeta, getTaskLogConsoleLevelTone } from "../utils/taskLogConsole";
+import { isTaskTerminalStatus } from "../utils/taskStatus";
 
 const route = useRoute();
 const router = useRouter();
@@ -36,6 +37,7 @@ const emptyLogText = computed(() => (loadingLogs.value ? t("task.logEmptyLoading
 const logPagerText = computed(() =>
   t("task.pager", { page: logPage.value, totalPages: logTotalPages.value, total: logTotal.value })
 );
+const shouldAutoRefresh = computed(() => !isTaskTerminalStatus(task.value?.executeStatus));
 
 async function loadTask(): Promise<void> {
   loading.value = true;
@@ -65,6 +67,7 @@ async function loadLogs(): Promise<void> {
 
 async function loadAll(): Promise<void> {
   await Promise.all([loadTask(), loadLogs()]);
+  syncPollingState();
 }
 
 async function cancelTask(): Promise<void> {
@@ -120,13 +123,22 @@ function resolveLogMeta(item: TaskLogItem): string {
 const poller = createPolling(loadAll, { intervalMs: 5000, immediate: false });
 const stopPolling = (): void => poller.stop();
 
+function syncPollingState(): void {
+  if (shouldAutoRefresh.value) {
+    if (!poller.isRunning()) {
+      poller.start();
+    }
+    return;
+  }
+  stopPolling();
+}
+
 onMounted(async () => {
   if (!Number.isFinite(taskId.value)) {
     errorMessage.value = t("task.invalidId");
     return;
   }
   await loadAll();
-  poller.start();
 });
 
 onBeforeRouteLeave(() => {
@@ -199,9 +211,10 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .task-log-console {
-  display: grid;
-  gap: 10px;
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
   border: 1px solid #1f2937;
   border-radius: 14px;
   background:
@@ -212,11 +225,8 @@ onBeforeUnmount(() => {
 
 .task-log-console__row {
   display: grid;
-  gap: 8px;
-  padding: 12px 14px;
-  border: 1px solid rgba(71, 85, 105, 0.45);
-  border-radius: 10px;
-  background: rgba(15, 23, 42, 0.72);
+  gap: 6px;
+  padding: 2px 0;
   font-family: "IBM Plex Mono", "SFMono-Regular", "Consolas", monospace;
 }
 
@@ -231,15 +241,15 @@ onBeforeUnmount(() => {
 .task-log-console__time,
 .task-log-console__meta,
 .task-log-console__stats {
-  color: #94a3b8;
-  font-size: 13px;
+  color: #8ca0b8;
+  font-size: 12px;
 }
 
 .task-log-console__level {
   display: inline-flex;
   align-items: center;
-  min-width: 58px;
-  padding: 2px 8px;
+  min-width: 52px;
+  padding: 1px 8px;
   border-radius: 999px;
   border: 1px solid currentColor;
   font-size: 12px;
@@ -269,18 +279,14 @@ onBeforeUnmount(() => {
 
 .task-log-console__content {
   color: #e2e8f0;
-  line-height: 1.6;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 @media (max-width: 720px) {
   .task-log-console {
-    padding: 12px;
-  }
-
-  .task-log-console__row {
-    padding: 10px 12px;
+    padding: 14px;
   }
 }
 </style>
