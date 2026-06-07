@@ -42,14 +42,6 @@ source docs/database/schema.sql
 ```yaml
 sync:
   connection:
-    source: jdbc:mysql://localhost:3306/source_db?useUnicode=true&characterEncoding=utf8&useSSL=false
-    source-username: root
-    source-password: password
-
-    target: jdbc:mysql://localhost:3306/target_db?useUnicode=true&characterEncoding=utf8&useSSL=false
-    target-username: root
-    target-password: password
-
     config: jdbc:mysql://localhost:3306/config_db?useUnicode=true&characterEncoding=utf8&useSSL=false
     config-username: root
     config-password: password
