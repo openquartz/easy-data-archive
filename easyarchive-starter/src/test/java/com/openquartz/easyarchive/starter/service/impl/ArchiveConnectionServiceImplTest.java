@@ -33,6 +33,27 @@ class ArchiveConnectionServiceImplTest {
     private static final int STATUS_DISABLED = 2;
 
     @Test
+    void shouldFindDatasourceByConnectionCode() {
+        ArchiveConnectionMapper mapper = mock(ArchiveConnectionMapper.class);
+        DataPermissionService permissionService = mock(DataPermissionService.class);
+        DatasourceOperationLogPresenter presenter = mock(DatasourceOperationLogPresenter.class);
+        OperationLogRecorder recorder = mock(OperationLogRecorder.class);
+
+        ArchiveConnection datasource = new ArchiveConnection();
+        datasource.setId(1L);
+        datasource.setDatasourceCode("mysql_archive");
+        when(mapper.selectByCode("mysql_archive")).thenReturn(datasource);
+
+        ArchiveConnectionServiceImpl service =
+                new ArchiveConnectionServiceImpl(mapper, null, permissionService, presenter, recorder);
+
+        ArchiveConnection result = service.getByConnectionCode("mysql_archive");
+
+        assertSame(datasource, result);
+        verify(mapper).selectByCode("mysql_archive");
+    }
+
+    @Test
     void shouldResetStatusToUntestedWhenJdbcConfigChanges() {
         ArchiveConnectionMapper mapper = mock(ArchiveConnectionMapper.class);
         DataPermissionService permissionService = mock(DataPermissionService.class);

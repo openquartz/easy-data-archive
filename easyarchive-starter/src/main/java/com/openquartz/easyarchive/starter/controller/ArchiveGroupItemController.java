@@ -19,7 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Comparator;
 import java.util.List;
 
@@ -30,6 +34,8 @@ public class ArchiveGroupItemController {
 
     private static final String TYPE_ID = "ID";
     private static final String TYPE_TIME = "TIME";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final ArchiveGroupItemByIdService idService;
     private final ArchiveGroupItemByTimeService timeService;
@@ -41,12 +47,13 @@ public class ArchiveGroupItemController {
         for (ArchiveGroupItemById item : idService.findByGroupId(groupId, enableStatus)) {
             summaries.add(summary(TYPE_ID, item.getId(), item.getGroupId(), item.getSourceTable(),
                     item.getTargetTable(), item.getPriority(), item.getStepCount(), item.getEnableWrite(),
-                    item.getEnableClean(), item.getEnableStatus()));
+                    item.getEnableClean(), item.getEnableStatus(), item.getStartId(), item.getEndId()));
         }
         for (ArchiveGroupItemByTime item : timeService.findByGroupId(groupId, enableStatus)) {
             summaries.add(summary(TYPE_TIME, item.getId(), item.getGroupId(), item.getSourceTable(),
                     item.getTargetTable(), item.getPriority(), item.getStepCount(), item.getEnableWrite(),
-                    item.getEnableClean(), item.getEnableStatus()));
+                    item.getEnableClean(), item.getEnableStatus(),
+                    formatDateTime(item.getStartTime()), resolveTimeRangeEnd(item.getKeepDay())));
         }
         summaries.sort(Comparator.comparing(ArchiveGroupItemSummary::getPriority,
                 Comparator.nullsLast(Integer::compareTo)));
@@ -127,7 +134,8 @@ public class ArchiveGroupItemController {
 
     private ArchiveGroupItemSummary summary(String itemType, Long id, Long groupId, String sourceTable,
                                             String targetTable, Integer priority, Integer stepCount,
-                                            Integer enableWrite, Integer enableClean, Integer enableStatus) {
+                                            Integer enableWrite, Integer enableClean, Integer enableStatus,
+                                            String rangeStart, String rangeEnd) {
         ArchiveGroupItemSummary summary = new ArchiveGroupItemSummary();
         summary.setItemType(itemType);
         summary.setId(id);
@@ -139,6 +147,23 @@ public class ArchiveGroupItemController {
         summary.setEnableWrite(enableWrite);
         summary.setEnableClean(enableClean);
         summary.setEnableStatus(enableStatus);
+        summary.setRangeStart(rangeStart);
+        summary.setRangeEnd(rangeEnd);
         return summary;
+    }
+
+    private String resolveTimeRangeEnd(Integer keepDay) {
+        if (keepDay == null) {
+            return null;
+        }
+        Instant endTime = Instant.now().minusSeconds(keepDay.longValue() * 24 * 60 * 60);
+        return DATE_TIME_FORMATTER.format(endTime.atZone(ZoneId.systemDefault()).toLocalDateTime());
+    }
+
+    private String formatDateTime(Date value) {
+        if (value == null) {
+            return null;
+        }
+        return DATE_TIME_FORMATTER.format(value.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
     }
 }

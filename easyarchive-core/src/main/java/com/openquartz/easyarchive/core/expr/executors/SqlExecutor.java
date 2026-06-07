@@ -31,7 +31,7 @@ public class SqlExecutor implements CommandExecutor {
         // 连接码
         String connectCode = command.getFirstParam();
         List<String> sqlParamsList = command.getParams();
-        String sql = String.join(",", sqlParamsList.subList(1, sqlParamsList.size()));
+        String sql = String.join(" ", sqlParamsList.subList(1, sqlParamsList.size()));
 
         ArchiveConnectionService connectionService = ApplicationContextUtils.getContext().getBean(ArchiveConnectionService.class);
         ArchiveConnection archiveConnection = connectionService.getByConnectionCode(connectCode);

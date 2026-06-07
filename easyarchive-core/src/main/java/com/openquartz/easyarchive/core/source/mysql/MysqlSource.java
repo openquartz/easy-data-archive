@@ -144,6 +144,8 @@ public class MysqlSource implements PageSource, Closeable {
 
     @Override
     public void close() {
-        runner.closeConnection();
+        if (runner != null) {
+            runner.closeConnection();
+        }
     }
 }

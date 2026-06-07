@@ -54,7 +54,8 @@ export const messages = {
       page: "Page",
       prev: "Prev",
       next: "Next",
-      loading: "Loading..."
+      loading: "Loading...",
+      dismiss: "Dismiss"
     },
     login: {
       title: "Data Archive Platform",
@@ -167,6 +168,13 @@ export const messages = {
       items: "Items",
       trigger: "Trigger",
       viewTask: "View Archive Task",
+      preview: {
+        title: "Archive Group Items - {name}",
+        timeSection: "Time Items",
+        idSection: "ID Items",
+        emptyTime: "No time-based items",
+        emptyId: "No ID-based items"
+      },
       columns: {
         code: "Code",
         name: "Name",
@@ -229,11 +237,14 @@ export const messages = {
         newTime: "New Time Item",
         idCreateTitle: "Create ID Archive Item",
         idEditTitle: "Edit ID Archive Item",
+        idDetailTitle: "ID Archive Item Detail",
         timeCreateTitle: "Create Time Archive Item",
         timeEditTitle: "Edit Time Archive Item",
+        timeDetailTitle: "Time Archive Item Detail",
         type: "Type",
         sourceTable: "Source Table",
         targetTable: "Target Table",
+        range: "Range",
         priority: "Priority",
         stepCount: "Step Count",
         status: "Status",
@@ -474,7 +485,8 @@ export const messages = {
       page: "第",
       prev: "上一页",
       next: "下一页",
-      loading: "加载中..."
+      loading: "加载中...",
+      dismiss: "关闭"
     },
     login: {
       title: "数据归档平台",
@@ -588,6 +600,13 @@ export const messages = {
       items: "明细",
       trigger: "触发",
       viewTask: "查看归档任务",
+      preview: {
+        title: "归档分组明细 - {name}",
+        timeSection: "按时间明细",
+        idSection: "按 ID 明细",
+        emptyTime: "暂无按时间明细",
+        emptyId: "暂无按 ID 明细"
+      },
       columns: {
         code: "编码",
         name: "名称",
@@ -650,11 +669,14 @@ export const messages = {
         newTime: "新建时间明细",
         idCreateTitle: "新建 ID 归档明细",
         idEditTitle: "编辑 ID 归档明细",
+        idDetailTitle: "ID 归档明细详情",
         timeCreateTitle: "新建时间归档明细",
         timeEditTitle: "编辑时间归档明细",
+        timeDetailTitle: "时间归档明细详情",
         type: "类型",
         sourceTable: "源表",
         targetTable: "目标表",
+        range: "范围",
         priority: "优先级",
         stepCount: "批大小",
         status: "状态",

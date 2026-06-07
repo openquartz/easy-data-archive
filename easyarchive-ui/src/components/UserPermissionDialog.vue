@@ -63,7 +63,7 @@ function handleSubmit(): void {
 
 <template>
   <div v-if="visible" class="modal-backdrop" @click.self="emit('close')">
-    <section class="modal-card modal-card--wide">
+    <section class="modal-card modal-card--wide modal-card--resizable">
       <header class="modal-card__header">
         <h3>{{ t("user.permissions.title", { username: username || "-" }) }}</h3>
       </header>
@@ -115,6 +115,15 @@ function handleSubmit(): void {
   width: min(860px, calc(100vw - 3rem));
 }
 
+.modal-card--resizable {
+  min-width: 560px;
+  min-height: 360px;
+  max-width: 96vw;
+  max-height: 90vh;
+  overflow: auto;
+  resize: both;
+}
+
 .permission-grid {
   display: grid;
   gap: 0.85rem;
@@ -140,5 +149,14 @@ function handleSubmit(): void {
 .permission-tile p,
 .permission-tile small {
   margin: 0.15rem 0 0;
+}
+
+@media (max-width: 640px) {
+  .modal-card--resizable {
+    min-width: 0;
+    width: calc(100vw - 1.5rem);
+    max-height: 92vh;
+    resize: none;
+  }
 }
 </style>

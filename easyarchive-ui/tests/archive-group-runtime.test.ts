@@ -7,7 +7,8 @@ import {
   canViewArchiveGroupActiveTask,
   getArchiveGroupRuntimeProcessedRecords,
   hasArchiveGroupActiveTask,
-  resolveArchiveGroupRuntimeProgress
+  resolveArchiveGroupRuntimeProgress,
+  shouldShowArchiveGroupTriggerAction
 } from "../src/utils/archiveGroupRuntime.ts";
 
 test("archive group without active task can be triggered when backend allows it", () => {
@@ -18,6 +19,7 @@ test("archive group without active task can be triggered when backend allows it"
 
   assert.equal(hasArchiveGroupActiveTask(group), false);
   assert.equal(canTriggerArchiveGroup(group), true);
+  assert.equal(shouldShowArchiveGroupTriggerAction(group), true);
   assert.equal(canViewArchiveGroupActiveTask(group), false);
   assert.equal(canCancelArchiveGroupActiveTask(group), false);
 });
@@ -44,6 +46,7 @@ test("archive group with active task suppresses trigger and enables task actions
 
   assert.equal(hasArchiveGroupActiveTask(group), true);
   assert.equal(canTriggerArchiveGroup(group), false);
+  assert.equal(shouldShowArchiveGroupTriggerAction(group), false);
   assert.equal(canViewArchiveGroupActiveTask(group), true);
   assert.equal(canCancelArchiveGroupActiveTask(group), true);
 });

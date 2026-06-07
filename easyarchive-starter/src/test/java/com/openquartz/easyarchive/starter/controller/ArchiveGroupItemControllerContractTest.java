@@ -51,6 +51,8 @@ class ArchiveGroupItemControllerContractTest {
         idItem.setSourceTable("t_order");
         idItem.setTargetTable("t_order_archive");
         idItem.setPriority(20);
+        idItem.setStartId("1000");
+        idItem.setEndId("2000");
 
         ArchiveGroupItemByTime timeItem = new ArchiveGroupItemByTime();
         timeItem.setId(2L);
@@ -58,6 +60,8 @@ class ArchiveGroupItemControllerContractTest {
         timeItem.setSourceTable("t_log");
         timeItem.setTargetTable("t_log_archive");
         timeItem.setPriority(10);
+        timeItem.setStartTime(new java.util.Date(1704067200000L));
+        timeItem.setKeepDay(30);
 
         when(idService.findByGroupId(10L, null)).thenReturn(Collections.singletonList(idItem));
         when(timeService.findByGroupId(10L, null)).thenReturn(Collections.singletonList(timeItem));
@@ -67,6 +71,10 @@ class ArchiveGroupItemControllerContractTest {
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].itemType").value("TIME"))
-                .andExpect(jsonPath("$.data[1].itemType").value("ID"));
+                .andExpect(jsonPath("$.data[0].rangeStart").value("2024-01-01 08:00:00"))
+                .andExpect(jsonPath("$.data[0].rangeEnd").isString())
+                .andExpect(jsonPath("$.data[1].itemType").value("ID"))
+                .andExpect(jsonPath("$.data[1].rangeStart").value("1000"))
+                .andExpect(jsonPath("$.data[1].rangeEnd").value("2000"));
     }
 }

@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS `ea_archive_group` (
     `owner_user_id` BIGINT NULL COMMENT '负责人',
     `enable_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
     `notify_enabled` TINYINT NOT NULL DEFAULT 0 COMMENT '0-关闭通知 1-开启通知',
-    `notify_channel` VARCHAR(16) NULL COMMENT '通知渠道：FEISHU/WECOM',
+    `notify_channel` VARCHAR(16) NULL COMMENT '通知渠道：FEISHU/WECOM/IN_APP',
     `notify_webhook_url` VARCHAR(500) NULL COMMENT '通知 webhook 地址',
     `remark` VARCHAR(255) NULL COMMENT '备注',
     `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

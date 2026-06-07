@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 数据源服务
  */
-public interface ArchiveConnectionService {
+public interface ArchiveConnectionService extends com.openquartz.easyarchive.core.connection.ArchiveConnectionService {
 
     List<DatasourceTypeOption> listDatasourceTypes();
 

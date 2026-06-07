@@ -18,4 +18,6 @@ public class ArchiveGroupItemSummary {
     private Integer enableWrite;
     private Integer enableClean;
     private Integer enableStatus;
+    private String rangeStart;
+    private String rangeEnd;
 }
