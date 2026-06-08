@@ -14,7 +14,7 @@ class UserOperationLogPresenterTest {
         before.setId(1L);
         before.setUsername("alice");
         before.setRealName("张三");
-        before.setRoleCode("observer");
+        before.setRoleCode("normal_user");
         before.setStatus(0);
 
         SysUser after = new SysUser();
@@ -28,7 +28,7 @@ class UserOperationLogPresenterTest {
         String content = presenter.buildUpdate(before, after, true).getContent();
 
         assertTrue(content.contains("\"姓名\" 从 \"张三\" 修改为：\"李四\""));
-        assertTrue(content.contains("\"角色\" 从 \"观察员\" 修改为：\"管理员\""));
+        assertTrue(content.contains("\"角色\" 从 \"普通用户\" 修改为：\"管理员\""));
         assertTrue(content.contains("\"状态\" 从 \"启用\" 修改为：\"停用\""));
         assertTrue(content.contains("\"密码\" 已更新"));
     }

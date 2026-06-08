@@ -9,15 +9,13 @@ public final class RoleConstants {
 
     public static final String PLATFORM_ADMIN = "platform_admin";
     public static final String ARCHIVE_ADMIN = "archive_admin";
-    public static final String AUDITOR = "auditor";
-    public static final String OBSERVER = "observer";
+    public static final String NORMAL_USER = "normal_user";
     private static final String LEGACY_ADMIN = "ADMIN";
     private static final String LEGACY_USER = "USER";
     private static final Set<String> SUPPORTED_ROLE_CODES = new LinkedHashSet<>(Arrays.asList(
             PLATFORM_ADMIN,
             ARCHIVE_ADMIN,
-            AUDITOR,
-            OBSERVER
+            NORMAL_USER
     ));
 
     private RoleConstants() {
@@ -31,12 +29,8 @@ public final class RoleConstants {
         return ARCHIVE_ADMIN.equals(normalizeRoleCode(roleCode));
     }
 
-    public static boolean isAuditor(String roleCode) {
-        return AUDITOR.equals(normalizeRoleCode(roleCode));
-    }
-
-    public static boolean isObserver(String roleCode) {
-        return OBSERVER.equals(normalizeRoleCode(roleCode));
+    public static boolean isNormalUser(String roleCode) {
+        return NORMAL_USER.equals(normalizeRoleCode(roleCode));
     }
 
     public static boolean isSupported(String roleCode) {
@@ -44,7 +38,7 @@ public final class RoleConstants {
     }
 
     public static String defaultRoleCode() {
-        return OBSERVER;
+        return NORMAL_USER;
     }
 
     public static String normalizeRoleCode(String roleCode) {

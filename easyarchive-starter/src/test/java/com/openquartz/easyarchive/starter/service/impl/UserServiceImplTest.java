@@ -6,13 +6,16 @@ import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.UserOperationLogPresenter;
 import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
+import com.openquartz.easyarchive.starter.security.model.PlatformCapabilityEnum;
 import com.openquartz.easyarchive.starter.service.CurrentUserService;
+import com.openquartz.easyarchive.starter.service.RoleCapabilityService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -27,10 +30,11 @@ class UserServiceImplTest {
     private final SysUserMapper userMapper = mock(SysUserMapper.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
     private final CurrentUserService currentUserService = mock(CurrentUserService.class);
+    private final RoleCapabilityService roleCapabilityService = mock(RoleCapabilityService.class);
     private final UserOperationLogPresenter presenter = mock(UserOperationLogPresenter.class);
     private final OperationLogRecorder recorder = mock(OperationLogRecorder.class);
     private final UserServiceImpl service = new UserServiceImpl(
-            userMapper, passwordEncoder, currentUserService, presenter, recorder);
+            userMapper, passwordEncoder, currentUserService, roleCapabilityService, presenter, recorder);
 
     @Test
     void shouldEncodePasswordAndRecordCreateOperation() {
@@ -98,7 +102,8 @@ class UserServiceImplTest {
         SysUser user = user(2L, "user", 0);
         user.setRoleCode("USER");
         when(userMapper.selectList(null)).thenReturn(Arrays.asList(admin, user));
-        doNothing().when(currentUserService).assertAdmin();
+        when(currentUserService.getCurrentUser()).thenReturn(platformAdmin());
+        when(roleCapabilityService.hasCapability(eq("platform_admin"), eq(PlatformCapabilityEnum.USER_VIEW))).thenReturn(true);
 
         List<SysUser> result = service.findAll();
 

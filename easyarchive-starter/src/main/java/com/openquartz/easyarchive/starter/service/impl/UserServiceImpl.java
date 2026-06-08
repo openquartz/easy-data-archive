@@ -9,7 +9,9 @@ import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.UserOperationLogPresenter;
 import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
 import com.openquartz.easyarchive.starter.security.RoleConstants;
+import com.openquartz.easyarchive.starter.security.model.PlatformCapabilityEnum;
 import com.openquartz.easyarchive.starter.service.CurrentUserService;
+import com.openquartz.easyarchive.starter.service.RoleCapabilityService;
 import com.openquartz.easyarchive.starter.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,18 +31,19 @@ public class UserServiceImpl implements UserService {
     private final SysUserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final CurrentUserService currentUserService;
+    private final RoleCapabilityService roleCapabilityService;
     private final UserOperationLogPresenter userOperationLogPresenter;
     private final OperationLogRecorder operationLogRecorder;
 
     @Override
     public List<SysUser> findAll() {
-        currentUserService.assertAdmin();
+        assertUserViewCapability();
         return normalizeUsers(userMapper.selectList(null));
     }
 
     @Override
     public SysUser findById(Long id) {
-        currentUserService.assertAdmin();
+        assertUserViewCapability();
         return normalizeUser(userMapper.selectById(id));
     }
 
@@ -97,6 +100,13 @@ public class UserServiceImpl implements UserService {
         SysUser after = userMapper.selectById(id);
         if (before != null && after != null) {
             operationLogRecorder.record(userOperationLogPresenter.buildStatusUpdate(before, after));
+        }
+    }
+
+    private void assertUserViewCapability() {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        if (!roleCapabilityService.hasCapability(currentUser.getRoleCode(), PlatformCapabilityEnum.USER_VIEW)) {
+            throw new StarterManageException(StarterErrorCode.ADMIN_PERMISSION_REQUIRED);
         }
     }
 

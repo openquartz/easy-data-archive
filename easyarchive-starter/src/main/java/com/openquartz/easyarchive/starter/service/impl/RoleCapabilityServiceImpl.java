@@ -18,6 +18,7 @@ public class RoleCapabilityServiceImpl implements RoleCapabilityService {
             RoleConstants.ARCHIVE_ADMIN, EnumSet.of(
                     PlatformCapabilityEnum.USER_CREATE_NORMAL_USER,
                     PlatformCapabilityEnum.USER_VIEW,
+                    PlatformCapabilityEnum.DATASOURCE_VIEW_AUTHORIZED,
                     PlatformCapabilityEnum.DATASOURCE_EDIT_AUTHORIZED,
                     PlatformCapabilityEnum.DATASOURCE_DISABLE_AUTHORIZED,
                     PlatformCapabilityEnum.DATASOURCE_TEST_AUTHORIZED,

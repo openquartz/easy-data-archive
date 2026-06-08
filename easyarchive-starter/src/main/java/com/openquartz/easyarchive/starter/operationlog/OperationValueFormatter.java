@@ -40,11 +40,8 @@ public class OperationValueFormatter {
         if (RoleConstants.isArchiveAdmin(roleCode)) {
             return "归档管理员";
         }
-        if (RoleConstants.isAuditor(roleCode)) {
-            return "审计员";
-        }
-        if (RoleConstants.isObserver(roleCode)) {
-            return "观察员";
+        if (RoleConstants.isNormalUser(roleCode)) {
+            return "普通用户";
         }
         return roleCode;
     }

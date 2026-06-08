@@ -39,6 +39,8 @@ const permissionSelectedIds = ref<number[]>([]);
 const { t } = useI18n();
 const authStore = useAuthStore();
 const isAdmin = computed(() => authStore.isAdmin);
+const isArchiveAdmin = computed(() => authStore.isArchiveAdmin);
+const operatorRole = computed(() => authStore.profile?.roleCode ?? "normal_user");
 
 const emptyText = computed(() => (loading.value ? t("user.emptyLoading") : t("user.empty")));
 const getActionKey = (action: string, id: number): string => `${action}:${id}`;
@@ -160,7 +162,7 @@ void loadData();
 
 <template>
   <section class="page-card">
-    <div v-if="!isAdmin" class="empty">{{ t("user.noAccess") }}</div>
+    <div v-if="!isAdmin && !isArchiveAdmin" class="empty">{{ t("user.noAccess") }}</div>
     <template v-else>
     <header class="page-toolbar">
       <h1>{{ t("user.title") }}</h1>
@@ -216,6 +218,7 @@ void loadData();
       :mode="dialogMode"
       :initial-value="activeItem"
       :submitting="dialogSubmitting"
+      :operator-role="operatorRole"
       @close="dialogVisible = false"
       @submit="submitForm"
     />
