@@ -19,6 +19,7 @@ import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupItemStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupTaskStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
+import com.openquartz.easyarchive.starter.model.dto.PageResult;
 import com.openquartz.easyarchive.starter.model.enums.NotificationChannelEnum;
 import com.openquartz.easyarchive.starter.notification.inapp.ArchiveInAppNotificationService;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
@@ -28,6 +29,7 @@ import com.openquartz.easyarchive.starter.security.RoleConstants;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupService;
 import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
 import com.openquartz.easyarchive.starter.service.CurrentUserService;
+import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.BeanUtils;
@@ -57,6 +59,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     private final SysUserMapper sysUserMapper;
     private final CurrentUserService currentUserService;
     private final ArchiveResourceAccessService archiveResourceAccessService;
+    private final DataPermissionService dataPermissionService;
     private final ArchiveInAppNotificationService inAppNotificationService;
     private final ArchiveGroupOperationLogPresenter archiveGroupOperationLogPresenter;
     private final OperationLogRecorder operationLogRecorder;
@@ -90,6 +93,53 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
             result.add(toView(group, activeTaskByGroupId.get(group.getId())));
         }
         return result;
+    }
+
+    @Override
+    public PageResult<ArchiveGroupView> findPage(Integer enableStatus, int page, int size) {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        int start = (page - 1) * size;
+
+        List<ArchiveGroup> groups;
+        long total;
+
+        if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
+            // 系统管理员 - 查看所有分组
+            total = groupMapper.count(enableStatus);
+            groups = groupMapper.selectPage(enableStatus, start, size);
+        } else if (RoleConstants.isArchiveAdmin(currentUser.getRoleCode())) {
+            // 归档管理员 - 查看有权限的数据源分组
+            Long userId = currentUser.getUserId();
+            total = groupMapper.countAuthorized(userId, enableStatus);
+            groups = groupMapper.selectAuthorizedPage(userId, enableStatus, start, size);
+        } else {
+            // 普通用户 - 查看自己负责的分组
+            Long userId = currentUser.getUserId();
+            total = groupMapper.countByOwner(userId, enableStatus);
+            groups = groupMapper.selectPageByOwner(userId, enableStatus, start, size);
+        }
+
+        List<ArchiveGroupView> result = new ArrayList<>(groups.size());
+        if (groups.isEmpty()) {
+            return PageResult.of(result, total, page, size);
+        }
+
+        List<Long> groupIds = new ArrayList<>(groups.size());
+        for (ArchiveGroup group : groups) {
+            groupIds.add(group.getId());
+        }
+        Map<Long, ArchiveGroupExecuteTask> activeTaskByGroupId = new HashMap<>();
+        List<ArchiveGroupExecuteTask> activeTasks = taskMapper.selectLatestActiveByGroupIds(groupIds);
+        if (activeTasks != null) {
+            for (ArchiveGroupExecuteTask activeTask : activeTasks) {
+                activeTaskByGroupId.put(activeTask.getGroupId(), activeTask);
+            }
+        }
+        for (ArchiveGroup group : groups) {
+            result.add(toView(group, activeTaskByGroupId.get(group.getId())));
+        }
+
+        return PageResult.of(result, total, page, size);
     }
 
     @Override
@@ -165,6 +215,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     @Transactional(rollbackFor = Exception.class)
     public ArchiveGroup create(ArchiveGroup group) {
         validateForSave(group, true);
+        validateOwnerOnCreate(group);
         populateHierarchyFields(group);
         if (group.getEnableStatus() == null) {
             group.setEnableStatus(EnableStatusEnum.ENABLED.getCode());
@@ -212,13 +263,12 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArchiveGroup updateOwner(Long groupId, Long newOwnerUserId) {
+        CurrentUserInfo operator = currentUserService.getCurrentUser();
+        assertCanUpdateOwner(operator);
+        validateOwnerUser(newOwnerUserId);
         archiveResourceAccessService.assertGroupManageable(groupId);
         ArchiveGroup before = ensureExists(groupId);
-        validateOwner(newOwnerUserId);
         ensureNoActiveTask(groupId, "分组存在执行中的任务，无法变更负责人");
-        ArchiveGroup update = new ArchiveGroup();
-        update.setId(groupId);
-        update.setOwnerUserId(newOwnerUserId);
         groupMapper.updateOwner(groupId, newOwnerUserId);
         ArchiveGroup after = ensureExists(groupId);
         inAppNotificationService.notifyOwnerChanged(before, after);
@@ -410,5 +460,59 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         if (sysUserMapper.selectById(ownerUserId) == null) {
             throw new StarterManageException(StarterErrorCode.USER_NOT_FOUND);
         }
+    }
+
+    private void validateOwnerUser(Long ownerUserId) {
+        if (ownerUserId == null) {
+            return;
+        }
+        SysUser user = sysUserMapper.selectById(ownerUserId);
+        if (user == null) {
+            throw new StarterManageException(StarterErrorCode.OWNER_USER_INVALID);
+        }
+        if (!EnableStatusEnum.ENABLED.getCode().equals(user.getStatus())) {
+            throw new StarterManageException(StarterErrorCode.OWNER_USER_DISABLED);
+        }
+    }
+
+    private void validateOwnerOnCreate(ArchiveGroup group) {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+
+        if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
+            // 系统管理员 - 可指定任意用户
+            validateOwnerUser(group.getOwnerUserId());
+            return;
+        }
+
+        if (RoleConstants.isArchiveAdmin(currentUser.getRoleCode())) {
+            // 归档管理员 - 默认自己，可指定自己创建的普通用户
+            if (group.getOwnerUserId() == null) {
+                group.setOwnerUserId(currentUser.getUserId());
+            } else {
+                validateOwnerUser(group.getOwnerUserId());
+                assertUserCreatedBy(group.getOwnerUserId(), String.valueOf(currentUser.getUserId()));
+            }
+            return;
+        }
+
+        // 普通用户 - 负责人只能是自己
+        group.setOwnerUserId(currentUser.getUserId());
+    }
+
+    private void assertUserCreatedBy(Long targetUserId, String creatorId) {
+        SysUser targetUser = sysUserMapper.selectById(targetUserId);
+        if (targetUser == null) {
+            throw new StarterManageException(StarterErrorCode.OWNER_USER_INVALID);
+        }
+        if (!creatorId.equals(targetUser.getCreatorId())) {
+            throw new StarterManageException(StarterErrorCode.OWNER_USER_NOT_CREATED_BY_YOU);
+        }
+    }
+
+    private void assertCanUpdateOwner(CurrentUserInfo operator) {
+        if (RoleConstants.isNormalUser(operator.getRoleCode())) {
+            throw new StarterManageException(StarterErrorCode.OWNER_UPDATE_NOT_ALLOWED);
+        }
+        // 系统管理员和归档管理员允许
     }
 }
