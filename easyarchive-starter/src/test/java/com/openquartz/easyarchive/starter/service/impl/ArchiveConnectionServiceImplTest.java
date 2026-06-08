@@ -7,7 +7,8 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.DatasourceOperationLogPresenter;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.service.CurrentUserService;
+import com.openquartz.easyarchive.starter.service.DatasourceAuthorizationService;
 import com.openquartz.easyarchive.starter.support.DatasourceConnectionTester;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +36,8 @@ class ArchiveConnectionServiceImplTest {
     @Test
     void shouldFindDatasourceByConnectionCode() {
         ArchiveConnectionMapper mapper = mock(ArchiveConnectionMapper.class);
-        DataPermissionService permissionService = mock(DataPermissionService.class);
+        CurrentUserService currentUserService = mock(CurrentUserService.class);
+        DatasourceAuthorizationService datasourceAuthorizationService = mock(DatasourceAuthorizationService.class);
         DatasourceOperationLogPresenter presenter = mock(DatasourceOperationLogPresenter.class);
         OperationLogRecorder recorder = mock(OperationLogRecorder.class);
 
@@ -45,7 +47,7 @@ class ArchiveConnectionServiceImplTest {
         when(mapper.selectByCode("mysql_archive")).thenReturn(datasource);
 
         ArchiveConnectionServiceImpl service =
-                new ArchiveConnectionServiceImpl(mapper, null, permissionService, presenter, recorder);
+                new ArchiveConnectionServiceImpl(mapper, null, currentUserService, datasourceAuthorizationService, presenter, recorder);
 
         ArchiveConnection result = service.getByConnectionCode("mysql_archive");
 
@@ -56,7 +58,8 @@ class ArchiveConnectionServiceImplTest {
     @Test
     void shouldResetStatusToUntestedWhenJdbcConfigChanges() {
         ArchiveConnectionMapper mapper = mock(ArchiveConnectionMapper.class);
-        DataPermissionService permissionService = mock(DataPermissionService.class);
+        CurrentUserService currentUserService = mock(CurrentUserService.class);
+        DatasourceAuthorizationService datasourceAuthorizationService = mock(DatasourceAuthorizationService.class);
         DatasourceOperationLogPresenter presenter = mock(DatasourceOperationLogPresenter.class);
         OperationLogRecorder recorder = mock(OperationLogRecorder.class);
 
@@ -85,7 +88,7 @@ class ArchiveConnectionServiceImplTest {
                         1L, "mysql_archive", "content", null));
 
         ArchiveConnectionServiceImpl service =
-                new ArchiveConnectionServiceImpl(mapper, null, permissionService, presenter, recorder);
+                new ArchiveConnectionServiceImpl(mapper, null, currentUserService, datasourceAuthorizationService, presenter, recorder);
         ArchiveConnection updated = service.update(input);
 
         assertSame(after, updated);
@@ -97,7 +100,8 @@ class ArchiveConnectionServiceImplTest {
     @Test
     void shouldKeepStatusWhenOnlyDisplayFieldsChange() {
         ArchiveConnectionMapper mapper = mock(ArchiveConnectionMapper.class);
-        DataPermissionService permissionService = mock(DataPermissionService.class);
+        CurrentUserService currentUserService = mock(CurrentUserService.class);
+        DatasourceAuthorizationService datasourceAuthorizationService = mock(DatasourceAuthorizationService.class);
         DatasourceOperationLogPresenter presenter = mock(DatasourceOperationLogPresenter.class);
         OperationLogRecorder recorder = mock(OperationLogRecorder.class);
 
@@ -128,7 +132,7 @@ class ArchiveConnectionServiceImplTest {
                         1L, "mysql_archive", "content", null));
 
         ArchiveConnectionServiceImpl service =
-                new ArchiveConnectionServiceImpl(mapper, null, permissionService, presenter, recorder);
+                new ArchiveConnectionServiceImpl(mapper, null, currentUserService, datasourceAuthorizationService, presenter, recorder);
         service.update(input);
 
         assertEquals(STATUS_ENABLED, input.getStatus());
@@ -139,7 +143,8 @@ class ArchiveConnectionServiceImplTest {
     void shouldEnableDatasourceAfterSuccessfulConnectionTest() {
         ArchiveConnectionMapper mapper = mock(ArchiveConnectionMapper.class);
         DatasourceConnectionTester tester = mock(DatasourceConnectionTester.class);
-        DataPermissionService permissionService = mock(DataPermissionService.class);
+        CurrentUserService currentUserService = mock(CurrentUserService.class);
+        DatasourceAuthorizationService datasourceAuthorizationService = mock(DatasourceAuthorizationService.class);
         DatasourceOperationLogPresenter presenter = mock(DatasourceOperationLogPresenter.class);
         OperationLogRecorder recorder = mock(OperationLogRecorder.class);
 
@@ -158,7 +163,7 @@ class ArchiveConnectionServiceImplTest {
                         1L, "mysql_archive", "content", null));
 
         ArchiveConnectionServiceImpl service =
-                new ArchiveConnectionServiceImpl(mapper, tester, permissionService, presenter, recorder);
+                new ArchiveConnectionServiceImpl(mapper, tester, currentUserService, datasourceAuthorizationService, presenter, recorder);
 
         ArchiveConnection input = new ArchiveConnection();
         input.setId(1L);
@@ -175,7 +180,8 @@ class ArchiveConnectionServiceImplTest {
     void shouldKeepDatasourceDisabledAfterFailedConnectionTest() {
         ArchiveConnectionMapper mapper = mock(ArchiveConnectionMapper.class);
         DatasourceConnectionTester tester = mock(DatasourceConnectionTester.class);
-        DataPermissionService permissionService = mock(DataPermissionService.class);
+        CurrentUserService currentUserService = mock(CurrentUserService.class);
+        DatasourceAuthorizationService datasourceAuthorizationService = mock(DatasourceAuthorizationService.class);
         DatasourceOperationLogPresenter presenter = mock(DatasourceOperationLogPresenter.class);
         OperationLogRecorder recorder = mock(OperationLogRecorder.class);
 
@@ -194,7 +200,7 @@ class ArchiveConnectionServiceImplTest {
                         1L, "mysql_archive", "content", null));
 
         ArchiveConnectionServiceImpl service =
-                new ArchiveConnectionServiceImpl(mapper, tester, permissionService, presenter, recorder);
+                new ArchiveConnectionServiceImpl(mapper, tester, currentUserService, datasourceAuthorizationService, presenter, recorder);
 
         ArchiveConnection input = new ArchiveConnection();
         input.setId(1L);
@@ -210,7 +216,8 @@ class ArchiveConnectionServiceImplTest {
     @Test
     void shouldRejectManualEnableBeforeSuccessfulTest() {
         ArchiveConnectionMapper mapper = mock(ArchiveConnectionMapper.class);
-        DataPermissionService permissionService = mock(DataPermissionService.class);
+        CurrentUserService currentUserService = mock(CurrentUserService.class);
+        DatasourceAuthorizationService datasourceAuthorizationService = mock(DatasourceAuthorizationService.class);
         DatasourceOperationLogPresenter presenter = mock(DatasourceOperationLogPresenter.class);
         OperationLogRecorder recorder = mock(OperationLogRecorder.class);
 
@@ -220,7 +227,7 @@ class ArchiveConnectionServiceImplTest {
         when(mapper.selectById(1L)).thenReturn(persisted);
 
         ArchiveConnectionServiceImpl service =
-                new ArchiveConnectionServiceImpl(mapper, null, permissionService, presenter, recorder);
+                new ArchiveConnectionServiceImpl(mapper, null, currentUserService, datasourceAuthorizationService, presenter, recorder);
 
         StarterManageException error = assertThrows(StarterManageException.class,
                 () -> service.updateStatus(1L, STATUS_ENABLED));
@@ -231,7 +238,8 @@ class ArchiveConnectionServiceImplTest {
     @Test
     void shouldRecordUpdateOperationAfterLoadingBeforeState() {
         ArchiveConnectionMapper mapper = mock(ArchiveConnectionMapper.class);
-        DataPermissionService permissionService = mock(DataPermissionService.class);
+        CurrentUserService currentUserService = mock(CurrentUserService.class);
+        DatasourceAuthorizationService datasourceAuthorizationService = mock(DatasourceAuthorizationService.class);
         DatasourceOperationLogPresenter presenter = mock(DatasourceOperationLogPresenter.class);
         OperationLogRecorder recorder = mock(OperationLogRecorder.class);
 
@@ -255,10 +263,10 @@ class ArchiveConnectionServiceImplTest {
                         1L, "mysql_archive", "content", null));
 
         ArchiveConnectionServiceImpl service =
-                new ArchiveConnectionServiceImpl(mapper, null, permissionService, presenter, recorder);
+                new ArchiveConnectionServiceImpl(mapper, null, currentUserService, datasourceAuthorizationService, presenter, recorder);
         service.update(input);
 
-        verify(permissionService).assertAdmin();
+        verify(currentUserService).assertAdmin();
         verify(mapper, times(2)).selectById(1L);
         verify(mapper).update(input);
         verify(recorder).record(any());

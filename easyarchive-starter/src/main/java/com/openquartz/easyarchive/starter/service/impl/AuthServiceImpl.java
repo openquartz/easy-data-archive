@@ -7,6 +7,7 @@ import com.openquartz.easyarchive.starter.model.dto.LoginResponse;
 import com.openquartz.easyarchive.starter.security.JwtTokenUtil;
 import com.openquartz.easyarchive.starter.security.RoleConstants;
 import com.openquartz.easyarchive.starter.service.AuthService;
+import com.openquartz.easyarchive.starter.service.RoleCapabilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class AuthServiceImpl implements AuthService {
     private final SysUserMapper sysUserMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtil jwtTokenUtil;
+    private final RoleCapabilityService roleCapabilityService;
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -49,6 +52,8 @@ public class AuthServiceImpl implements AuthService {
         response.setUsername(user.getUsername());
         response.setRealName(user.getRealName());
         response.setRoleCode(roleCode);
+        response.setCapabilities(roleCapabilityService.listCapabilities(roleCode)
+                .stream().map(Enum::name).collect(Collectors.toList()));
         response.setPermissions(Collections.singletonList(roleCode));
         response.setExpiresIn(86400L);
         return response;
@@ -91,8 +96,10 @@ public class AuthServiceImpl implements AuthService {
         view.put("username", user.getUsername());
         view.put("realName", user.getRealName());
         view.put("status", user.getStatus());
-        view.put("roleCode", RoleConstants.normalizeRoleCode(user.getRoleCode()));
-        view.put("isAdmin", RoleConstants.isAdmin(user.getRoleCode()));
+        String normalizedRole = RoleConstants.normalizeRoleCode(user.getRoleCode());
+        view.put("roleCode", normalizedRole);
+        view.put("capabilities", roleCapabilityService.listCapabilities(normalizedRole)
+                .stream().map(Enum::name).collect(Collectors.toList()));
         return view;
     }
 }

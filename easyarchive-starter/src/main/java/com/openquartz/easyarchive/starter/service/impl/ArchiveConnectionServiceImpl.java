@@ -9,16 +9,22 @@ import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
 import com.openquartz.easyarchive.starter.model.enums.DatasourceTypeEnum;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.DatasourceOperationLogPresenter;
+import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
+import com.openquartz.easyarchive.starter.security.RoleConstants;
+import com.openquartz.easyarchive.starter.security.model.DatasourcePermissionLevelEnum;
 import com.openquartz.easyarchive.starter.service.ArchiveConnectionService;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.service.CurrentUserService;
+import com.openquartz.easyarchive.starter.service.DatasourceAuthorizationService;
 import com.openquartz.easyarchive.starter.support.DatasourceConnectionTester;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * 数据源服务实现
@@ -29,7 +35,8 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
 
     private final ArchiveConnectionMapper datasourceMapper;
     private final DatasourceConnectionTester connectionTester;
-    private final DataPermissionService dataPermissionService;
+    private final CurrentUserService currentUserService;
+    private final DatasourceAuthorizationService datasourceAuthorizationService;
     private final DatasourceOperationLogPresenter datasourceOperationLogPresenter;
     private final OperationLogRecorder operationLogRecorder;
 
@@ -40,20 +47,24 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
 
     @Override
     public List<ArchiveConnection> findAll() {
-        if (dataPermissionService.isAdmin()) {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
             return datasourceMapper.selectList(null, null);
         }
-        Long userId = dataPermissionService.getCurrentUser().getUserId();
-        return datasourceMapper.selectAuthorizedList(userId, null);
+        DatasourcePermissionLevelEnum level = RoleConstants.isArchiveAdmin(currentUser.getRoleCode())
+                ? DatasourcePermissionLevelEnum.MANAGE : DatasourcePermissionLevelEnum.USE;
+        Set<Long> ids = datasourceAuthorizationService.listDatasourceIdsByLevel(currentUser.getUserId(), level);
+        return ids.isEmpty() ? Collections.emptyList() : datasourceMapper.selectAuthorizedListByIds(ids);
     }
 
     @Override
     public ArchiveConnection findById(Long id) {
-        if (dataPermissionService.isAdmin()) {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
             return datasourceMapper.selectById(id);
         }
-        Long userId = dataPermissionService.getCurrentUser().getUserId();
-        return datasourceMapper.selectAuthorizedById(userId, id);
+        datasourceAuthorizationService.assertPermission(currentUser.getUserId(), id, DatasourcePermissionLevelEnum.USE);
+        return datasourceMapper.selectById(id);
     }
 
     @Override
@@ -64,7 +75,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArchiveConnection create(ArchiveConnection datasource) {
-        dataPermissionService.assertAdmin();
+        currentUserService.assertAdmin();
         if (datasource.getStatus() == null || !DatasourceStatusEnum.DISABLED.getCode().equals(datasource.getStatus())) {
             datasource.setStatus(DatasourceStatusEnum.UNTESTED.getCode());
         }
@@ -76,7 +87,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArchiveConnection update(ArchiveConnection datasource) {
-        dataPermissionService.assertAdmin();
+        currentUserService.assertAdmin();
         ArchiveConnection before = datasourceMapper.selectById(datasource.getId());
         if (before == null) {
             throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
@@ -98,7 +109,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
-        dataPermissionService.assertAdmin();
+        currentUserService.assertAdmin();
         ArchiveConnection before = datasourceMapper.selectById(id);
         if (before == null) {
             throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
@@ -115,7 +126,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean testConnection(ArchiveConnection datasource) {
-        dataPermissionService.assertAdmin();
+        currentUserService.assertAdmin();
         ArchiveConnection target = prepareDatasourceForTest(datasource);
         boolean result = connectionTester.testConnection(target);
         if (target.getId() != null) {
