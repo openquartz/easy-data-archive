@@ -25,5 +25,14 @@ public interface ArchiveGroupService {
 
     void updateStatus(Long id, Integer enableStatus);
 
+    /**
+     * 变更归档分组负责人
+     *
+     * @param groupId 分组ID
+     * @param newOwnerUserId 新负责人ID
+     * @return 更新后的分组
+     */
+    ArchiveGroup updateOwner(Long groupId, Long newOwnerUserId);
+
     void delete(Long id);
 }

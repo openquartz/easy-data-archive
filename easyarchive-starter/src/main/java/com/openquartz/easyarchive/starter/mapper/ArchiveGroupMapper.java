@@ -18,6 +18,8 @@ public interface ArchiveGroupMapper {
 
     int updateStatus(@Param("id") Long id, @Param("enableStatus") Integer enableStatus);
 
+    int updateOwner(@Param("id") Long id, @Param("ownerUserId") Long ownerUserId);
+
     int deleteById(@Param("id") Long id);
 
     ArchiveGroup selectById(@Param("id") Long id);

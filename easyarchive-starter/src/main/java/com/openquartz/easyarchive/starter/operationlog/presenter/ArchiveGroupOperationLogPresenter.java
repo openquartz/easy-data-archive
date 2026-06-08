@@ -54,6 +54,13 @@ public class ArchiveGroupOperationLogPresenter {
                 after.getId(), after.getGroupCode(), content, Collections.emptyList());
     }
 
+    public OperationLogCommand buildOwnerUpdate(ArchiveGroup before, ArchiveGroup after) {
+        String content = "\"负责人\" 从 \"" + before.getOwnerUserId() + "\" 修改为：\""
+                + after.getOwnerUserId() + "\"";
+        return new OperationLogCommand("ARCHIVE_GROUP", "UPDATE", "变更分组负责人", "ARCHIVE_GROUP",
+                after.getId(), after.getGroupCode(), content, Collections.emptyList());
+    }
+
     public OperationLogCommand buildDelete(ArchiveGroup before) {
         String content = "删除分组：\"分组编码\" 为 \"" + before.getGroupCode()
                 + "\"; \"分组名称\" 为 \"" + before.getGroupName() + "\"";
