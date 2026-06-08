@@ -15,8 +15,9 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.rule.PlatformArchiveRuleLoader;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupExecutionService;
+import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
 import com.openquartz.easyarchive.starter.support.ArchiveGroupTaskDispatcher;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -38,12 +39,12 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
     private final ArchiveConnectionMapper datasourceMapper;
     private final ArchiveGroupTaskDispatcher dispatcher;
     private final ArchiveTaskLogService taskLogService;
-    private final DataPermissionService dataPermissionService;
+    private final ArchiveResourceAccessService archiveResourceAccessService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArchiveGroupExecuteTask trigger(Long groupId) {
-        dataPermissionService.assertGroupReadable(groupId);
+        archiveResourceAccessService.assertGroupAccessible(groupId);
         return triggerGroupWithoutPermission(groupId);
     }
 
@@ -89,7 +90,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArchiveGroupExecuteTask cancelActiveTask(Long groupId, String cancelReason) {
-        dataPermissionService.assertGroupReadable(groupId);
+        archiveResourceAccessService.assertGroupAccessible(groupId);
         requireExistingGroup(groupId);
         ArchiveGroupExecuteTask activeTask = taskMapper.selectLatestActiveByGroupId(groupId);
         if (activeTask == null) {

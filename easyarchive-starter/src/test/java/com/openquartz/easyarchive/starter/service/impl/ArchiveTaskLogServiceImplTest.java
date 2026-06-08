@@ -10,7 +10,8 @@ import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveTaskOperationLogPresenter;
 import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
+import com.openquartz.easyarchive.starter.service.CurrentUserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -20,7 +21,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -30,16 +30,16 @@ class ArchiveTaskLogServiceImplTest {
 
     private final ArchiveLogRepository archiveLogRepository = mock(ArchiveLogRepository.class);
     private final ArchiveGroupExecuteTaskMapper taskMapper = mock(ArchiveGroupExecuteTaskMapper.class);
-    private final DataPermissionService dataPermissionService = mock(DataPermissionService.class);
+    private final ArchiveResourceAccessService archiveResourceAccessService = mock(ArchiveResourceAccessService.class);
+    private final CurrentUserService currentUserService = mock(CurrentUserService.class);
     private final ArchiveTaskOperationLogPresenter presenter = mock(ArchiveTaskOperationLogPresenter.class);
     private final OperationLogRecorder recorder = mock(OperationLogRecorder.class);
     private final ArchiveTaskLogServiceImpl service = new ArchiveTaskLogServiceImpl(
-            archiveLogRepository, taskMapper, dataPermissionService, presenter, recorder);
+            archiveLogRepository, taskMapper, archiveResourceAccessService, currentUserService, presenter, recorder);
 
     @Test
     void shouldUseAuthorizedTaskPageForNormalUser() {
-        when(dataPermissionService.isAdmin()).thenReturn(false);
-        when(dataPermissionService.getCurrentUser()).thenReturn(currentUser());
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser());
         when(taskMapper.selectPageByUser(2L, 0, 20, "1")).thenReturn(Collections.emptyList());
         when(taskMapper.countByUser(2L, "1")).thenReturn(0);
 
@@ -57,11 +57,10 @@ class ArchiveTaskLogServiceImplTest {
         task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
         when(archiveLogRepository.queryTaskById(11L)).thenReturn(task);
         when(presenter.buildCancel(task, "stop", "取消中")).thenReturn(command("CANCEL"));
-        doNothing().when(dataPermissionService).assertTaskReadable(11L);
 
         service.cancelTask(11L, "stop");
 
-        verify(dataPermissionService).assertTaskReadable(11L);
+        verify(archiveResourceAccessService).assertTaskAccessible(11L);
         verify(archiveLogRepository).updateTaskStatus(11L, ArchiveGroupExecuteTask.STATUS_CANCELLING);
         verify(recorder).record(any());
     }
@@ -74,11 +73,11 @@ class ArchiveTaskLogServiceImplTest {
         task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_WAITING);
         when(archiveLogRepository.queryTaskById(12L)).thenReturn(task);
         when(presenter.buildCancel(task, "manual", "已取消")).thenReturn(command("CANCEL"));
-        doNothing().when(dataPermissionService).assertTaskReadable(12L);
 
         service.cancelTask(12L, "manual");
 
         ArchiveTaskLog log = captureSavedTaskLog();
+        verify(archiveResourceAccessService).assertTaskAccessible(12L);
         verify(archiveLogRepository).updateTaskStatus(12L, ArchiveGroupExecuteTask.STATUS_CANCELLED);
         verify(recorder).record(any());
         assertEquals(enumCode("ArchiveTaskLogTypeEnum", "CANCEL"), log.getLogType());
@@ -94,10 +93,10 @@ class ArchiveTaskLogServiceImplTest {
         task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_CANCELLING);
         when(archiveLogRepository.queryTaskById(13L)).thenReturn(task);
         when(presenter.buildCancel(task, "manual", "重复请求，无需处理")).thenReturn(command("CANCEL"));
-        doNothing().when(dataPermissionService).assertTaskReadable(13L);
 
         service.cancelTask(13L, "manual");
 
+        verify(archiveResourceAccessService).assertTaskAccessible(13L);
         verify(archiveLogRepository, never()).updateTaskStatus(13L, ArchiveGroupExecuteTask.STATUS_CANCELLING);
         verify(recorder).record(any());
     }
@@ -108,11 +107,11 @@ class ArchiveTaskLogServiceImplTest {
         task.setId(14L);
         task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_CANCELLED);
         when(archiveLogRepository.queryTaskById(14L)).thenReturn(task);
-        doNothing().when(dataPermissionService).assertTaskReadable(14L);
 
         StarterManageException error = assertThrows(StarterManageException.class, () -> service.cancelTask(14L, "manual"));
         assertEquals(StarterErrorCode.ARCHIVE_TASK_TERMINAL_CANNOT_CANCEL, error.getErrorCode());
 
+        verify(archiveResourceAccessService).assertTaskAccessible(14L);
         verify(recorder).recordFailure("任务已结束，无法取消");
     }
 
@@ -129,7 +128,7 @@ class ArchiveTaskLogServiceImplTest {
     private static CurrentUserInfo currentUser() {
         CurrentUserInfo currentUserInfo = new CurrentUserInfo();
         currentUserInfo.setUserId(2L);
-        currentUserInfo.setRoleCode("observer");
+        currentUserInfo.setRoleCode("normal_user");
         return currentUserInfo;
     }
 

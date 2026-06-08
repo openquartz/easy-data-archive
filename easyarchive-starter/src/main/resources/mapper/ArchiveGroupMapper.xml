@@ -100,13 +100,17 @@
         FROM ea_archive_group g
         WHERE g.id = #{id}
           AND g.deleted = 0
-          AND EXISTS (
-            SELECT 1
-            FROM ea_user_datasource_permission p
-            WHERE p.deleted = 0
-              AND p.user_id = #{userId}
-              AND p.datasource_id = g.source_datasource_id
-              AND p.permission_type = 'READ'
+          AND (
+            EXISTS (
+                SELECT 1 FROM ea_archive_connection_permission p
+                WHERE p.deleted = 0 AND p.user_id = #{userId}
+                  AND p.datasource_id = g.source_datasource_id
+            )
+            OR EXISTS (
+                SELECT 1 FROM ea_archive_connection_permission p
+                WHERE p.deleted = 0 AND p.user_id = #{userId}
+                  AND p.datasource_id = g.target_datasource_id
+            )
           )
     </select>
 
@@ -131,13 +135,17 @@
                 AND g.enable_status = #{enableStatus}
             </if>
             AND g.deleted = 0
-            AND EXISTS (
-                SELECT 1
-                FROM ea_user_datasource_permission p
-                WHERE p.deleted = 0
-                  AND p.user_id = #{userId}
-                  AND p.datasource_id = g.source_datasource_id
-                  AND p.permission_type = 'READ'
+            AND (
+                EXISTS (
+                    SELECT 1 FROM ea_archive_connection_permission p
+                    WHERE p.deleted = 0 AND p.user_id = #{userId}
+                      AND p.datasource_id = g.source_datasource_id
+                )
+                OR EXISTS (
+                    SELECT 1 FROM ea_archive_connection_permission p
+                    WHERE p.deleted = 0 AND p.user_id = #{userId}
+                      AND p.datasource_id = g.target_datasource_id
+                )
             )
         </where>
         ORDER BY g.group_level ASC, g.parent_id ASC, g.id DESC
