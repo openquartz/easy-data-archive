@@ -157,4 +157,92 @@
         ORDER BY g.group_level ASC, g.parent_id ASC, g.id DESC
     </select>
 
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group
+        <include refid="Where_Clause"/>
+        ORDER BY group_level ASC, parent_id ASC, id DESC
+        LIMIT #{start}, #{size}
+    </select>
+
+    <select id="selectAuthorizedPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group g
+        <where>
+            <if test="enableStatus != null">
+                AND g.enable_status = #{enableStatus}
+            </if>
+            AND g.deleted = 0
+            AND (
+                EXISTS (
+                    SELECT 1 FROM ea_archive_connection_permission p
+                    WHERE p.deleted = 0 AND p.user_id = #{userId}
+                      AND p.datasource_id = g.source_datasource_id
+                )
+                OR EXISTS (
+                    SELECT 1 FROM ea_archive_connection_permission p
+                    WHERE p.deleted = 0 AND p.user_id = #{userId}
+                      AND p.datasource_id = g.target_datasource_id
+                )
+            )
+        </where>
+        ORDER BY g.group_level ASC, g.parent_id ASC, g.id DESC
+        LIMIT #{start}, #{size}
+    </select>
+
+    <select id="selectPageByOwner" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group
+        <where>
+            <if test="enableStatus != null">
+                AND enable_status = #{enableStatus}
+            </if>
+            AND owner_user_id = #{userId}
+            AND deleted = 0
+        </where>
+        ORDER BY group_level ASC, parent_id ASC, id DESC
+        LIMIT #{start}, #{size}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*)
+        FROM ea_archive_group
+        <include refid="Where_Clause"/>
+    </select>
+
+    <select id="countAuthorized" resultType="int">
+        SELECT COUNT(*)
+        FROM ea_archive_group g
+        <where>
+            <if test="enableStatus != null">
+                AND g.enable_status = #{enableStatus}
+            </if>
+            AND g.deleted = 0
+            AND (
+                EXISTS (
+                    SELECT 1 FROM ea_archive_connection_permission p
+                    WHERE p.deleted = 0 AND p.user_id = #{userId}
+                      AND p.datasource_id = g.source_datasource_id
+                )
+                OR EXISTS (
+                    SELECT 1 FROM ea_archive_connection_permission p
+                    WHERE p.deleted = 0 AND p.user_id = #{userId}
+                      AND p.datasource_id = g.target_datasource_id
+                )
+            )
+        </where>
+    </select>
+
+    <select id="countByOwner" resultType="int">
+        SELECT COUNT(*)
+        FROM ea_archive_group
+        <where>
+            <if test="enableStatus != null">
+                AND enable_status = #{enableStatus}
+            </if>
+            AND owner_user_id = #{userId}
+            AND deleted = 0
+        </where>
+    </select>
+
 </mapper>
