@@ -48,6 +48,16 @@ class MigrationVersioningTest {
                 "expected V10 archive group in-app notify cleanup migration to exist");
     }
 
+    @Test
+    void shouldContainDatasourceAuthorizationRefactorMigration() throws IOException {
+        List<String> migrationFiles = Files.list(MIGRATION_DIR)
+                .map(Path::getFileName)
+                .map(Path::toString)
+                .collect(Collectors.toList());
+        assertTrue(migrationFiles.contains("V11__refactor_datasource_authorization.sql"),
+                "expected V11 datasource authorization refactor migration to exist");
+    }
+
     private static String extractVersion(String fileName) {
         return fileName.substring(0, fileName.indexOf("__"));
     }
