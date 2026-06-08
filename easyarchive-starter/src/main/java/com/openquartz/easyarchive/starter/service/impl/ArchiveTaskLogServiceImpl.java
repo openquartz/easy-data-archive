@@ -11,8 +11,11 @@ import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveTaskOperationLogPresenter;
+import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
+import com.openquartz.easyarchive.starter.security.RoleConstants;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
+import com.openquartz.easyarchive.starter.service.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +31,8 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
 
     private final ArchiveLogRepository archiveLogRepository;
     private final ArchiveGroupExecuteTaskMapper archiveGroupExecuteTaskMapper;
-    private final DataPermissionService dataPermissionService;
+    private final ArchiveResourceAccessService archiveResourceAccessService;
+    private final CurrentUserService currentUserService;
     private final ArchiveTaskOperationLogPresenter archiveTaskOperationLogPresenter;
     private final OperationLogRecorder operationLogRecorder;
 
@@ -36,12 +40,13 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
     public Map<String, Object> queryTasks(int page, int size, String status) {
         List<ArchiveGroupExecuteTask> list;
         int total;
-        if (dataPermissionService.isAdmin()) {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
             list = archiveLogRepository.queryTasks(page, size, status);
             total = archiveLogRepository.countTasks(status);
         } else {
             int offset = (page - 1) * size;
-            Long userId = dataPermissionService.getCurrentUser().getUserId();
+            Long userId = currentUser.getUserId();
             list = archiveGroupExecuteTaskMapper.selectPageByUser(userId, offset, size, status);
             total = archiveGroupExecuteTaskMapper.countByUser(userId, status);
         }
@@ -55,13 +60,13 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
 
     @Override
     public Object queryTaskById(Long taskId) {
-        dataPermissionService.assertTaskReadable(taskId);
+        archiveResourceAccessService.assertTaskAccessible(taskId);
         return archiveLogRepository.queryTaskById(taskId);
     }
 
     @Override
     public Map<String, Object> queryLogsByTaskId(Long taskId, int page, int size, String executePhase) {
-        dataPermissionService.assertTaskReadable(taskId);
+        archiveResourceAccessService.assertTaskAccessible(taskId);
         List<ArchiveTaskLog> list = archiveLogRepository.queryLogsByTaskId(taskId, page, size, executePhase);
         int total = archiveLogRepository.countLogsByTaskId(taskId, executePhase);
         Map<String, Object> result = new HashMap<>();
@@ -83,7 +88,7 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cancelTask(Long taskId, String cancelReason) {
-        dataPermissionService.assertTaskReadable(taskId);
+        archiveResourceAccessService.assertTaskAccessible(taskId);
         ArchiveGroupExecuteTask task = archiveLogRepository.queryTaskById(taskId);
         if (task == null) {
             String message = "任务不存在: " + taskId;

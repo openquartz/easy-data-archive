@@ -13,7 +13,7 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupItemByTimeMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
 import com.openquartz.easyarchive.starter.support.ArchiveGroupTaskDispatcher;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -42,10 +42,10 @@ class ArchiveGroupExecutionServiceImplTest {
     private final ArchiveConnectionMapper datasourceMapper = mock(ArchiveConnectionMapper.class);
     private final ArchiveGroupTaskDispatcher dispatcher = mock(ArchiveGroupTaskDispatcher.class);
     private final ArchiveTaskLogService taskLogService = mock(ArchiveTaskLogService.class);
-    private final DataPermissionService dataPermissionService = mock(DataPermissionService.class);
+    private final ArchiveResourceAccessService archiveResourceAccessService = mock(ArchiveResourceAccessService.class);
     private final ArchiveGroupExecutionServiceImpl service = new ArchiveGroupExecutionServiceImpl(
             groupMapper, idMapper, timeMapper, taskMapper, datasourceMapper, dispatcher, taskLogService,
-            dataPermissionService);
+            archiveResourceAccessService);
 
     @Test
     void shouldRejectTriggerWhenActiveTaskExists() {

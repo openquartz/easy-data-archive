@@ -23,8 +23,11 @@ import com.openquartz.easyarchive.starter.model.enums.NotificationChannelEnum;
 import com.openquartz.easyarchive.starter.notification.inapp.ArchiveInAppNotificationService;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupOperationLogPresenter;
+import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
+import com.openquartz.easyarchive.starter.security.RoleConstants;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupService;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
+import com.openquartz.easyarchive.starter.service.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.BeanUtils;
@@ -52,7 +55,8 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     private final ArchiveGroupItemByIdMapper idItemMapper;
     private final ArchiveGroupItemByTimeMapper timeItemMapper;
     private final SysUserMapper sysUserMapper;
-    private final DataPermissionService dataPermissionService;
+    private final CurrentUserService currentUserService;
+    private final ArchiveResourceAccessService archiveResourceAccessService;
     private final ArchiveInAppNotificationService inAppNotificationService;
     private final ArchiveGroupOperationLogPresenter archiveGroupOperationLogPresenter;
     private final OperationLogRecorder operationLogRecorder;
@@ -60,10 +64,11 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     @Override
     public List<ArchiveGroupView> findAll(Integer enableStatus) {
         List<ArchiveGroup> groups;
-        if (dataPermissionService.isAdmin()) {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
             groups = groupMapper.selectList(enableStatus);
         } else {
-            Long userId = dataPermissionService.getCurrentUser().getUserId();
+            Long userId = currentUser.getUserId();
             groups = groupMapper.selectAuthorizedList(userId, enableStatus);
         }
         List<ArchiveGroupView> result = new ArrayList<>(groups.size());
@@ -89,10 +94,11 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
 
     @Override
     public List<ArchiveGroup> tree() {
-        if (dataPermissionService.isAdmin()) {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
             return groupMapper.selectList(null);
         }
-        Long userId = dataPermissionService.getCurrentUser().getUserId();
+        Long userId = currentUser.getUserId();
         return groupMapper.selectAuthorizedList(userId, null);
     }
 
@@ -102,10 +108,11 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
             throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ID_REQUIRED);
         }
         ArchiveGroup group;
-        if (dataPermissionService.isAdmin()) {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
             group = groupMapper.selectById(id);
         } else {
-            Long userId = dataPermissionService.getCurrentUser().getUserId();
+            Long userId = currentUser.getUserId();
             group = groupMapper.selectAuthorizedById(userId, id);
         }
         if (group == null) {
@@ -117,7 +124,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
 
     @Override
     public ArchiveGroupOverviewView findOverview(Long id) {
-        dataPermissionService.assertGroupReadable(id);
+        archiveResourceAccessService.assertGroupAccessible(id);
         ArchiveGroup group = ensureExists(id);
 
         int idTypeCount = idItemMapper.countByGroupId(id);
@@ -157,7 +164,6 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArchiveGroup create(ArchiveGroup group) {
-        dataPermissionService.assertAdmin();
         validateForSave(group, true);
         populateHierarchyFields(group);
         if (group.getEnableStatus() == null) {
@@ -173,10 +179,10 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ArchiveGroup update(ArchiveGroup group) {
-        dataPermissionService.assertAdmin();
         if (group == null || group.getId() == null) {
             throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_ID_REQUIRED);
         }
+        archiveResourceAccessService.assertGroupManageable(group.getId());
         ArchiveGroup before = ensureExists(group.getId());
         ensureNoActiveTask(group.getId(), "分组存在执行中的任务，无法编辑");
         validateForSave(group, false);
@@ -194,7 +200,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer enableStatus) {
-        dataPermissionService.assertAdmin();
+        archiveResourceAccessService.assertGroupManageable(id);
         ArchiveGroup before = ensureExists(id);
         validateEnableStatus(enableStatus);
         ensureNoActiveTask(id, "分组存在执行中的任务，无法修改状态");
@@ -206,7 +212,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
-        dataPermissionService.assertAdmin();
+        archiveResourceAccessService.assertGroupManageable(id);
         ArchiveGroup before = ensureExists(id);
         ensureNoActiveTask(id, "分组存在执行中的任务，无法删除");
         groupMapper.deleteById(id);

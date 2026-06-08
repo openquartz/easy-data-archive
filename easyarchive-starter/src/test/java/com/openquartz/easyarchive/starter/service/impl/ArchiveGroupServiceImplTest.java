@@ -17,7 +17,9 @@ import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupOperationLogPresenter;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
+import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
+import com.openquartz.easyarchive.starter.service.CurrentUserService;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -49,13 +51,14 @@ class ArchiveGroupServiceImplTest {
     private final ArchiveGroupItemByIdMapper idItemMapper = mock(ArchiveGroupItemByIdMapper.class);
     private final ArchiveGroupItemByTimeMapper timeItemMapper = mock(ArchiveGroupItemByTimeMapper.class);
     private final SysUserMapper sysUserMapper = mock(SysUserMapper.class);
-    private final DataPermissionService dataPermissionService = adminPermissionService();
+    private final CurrentUserService currentUserService = adminCurrentUserService();
+    private final ArchiveResourceAccessService archiveResourceAccessService = mock(ArchiveResourceAccessService.class);
     private final ArchiveInAppNotificationService inAppNotificationService = mock(ArchiveInAppNotificationService.class);
     private final ArchiveGroupOperationLogPresenter archiveGroupOperationLogPresenter = mock(ArchiveGroupOperationLogPresenter.class);
     private final OperationLogRecorder operationLogRecorder = mock(OperationLogRecorder.class);
     private final ArchiveGroupServiceImpl service =
             new ArchiveGroupServiceImpl(groupMapper, archiveConnectionMapper, taskMapper, idItemMapper, timeItemMapper,
-                    sysUserMapper, dataPermissionService, inAppNotificationService, archiveGroupOperationLogPresenter, operationLogRecorder);
+                    sysUserMapper, currentUserService, archiveResourceAccessService, inAppNotificationService, archiveGroupOperationLogPresenter, operationLogRecorder);
 
     @Test
     void shouldRejectDuplicateGroupCodeOnCreate() {
@@ -643,8 +646,13 @@ class ArchiveGroupServiceImplTest {
         return datasource;
     }
 
-    private static DataPermissionService adminPermissionService() {
-        DataPermissionService service = mock(DataPermissionService.class);
+    private static CurrentUserService adminCurrentUserService() {
+        CurrentUserInfo adminInfo = new CurrentUserInfo();
+        adminInfo.setUserId(1L);
+        adminInfo.setUsername("admin");
+        adminInfo.setRoleCode("platform_admin");
+        CurrentUserService service = mock(CurrentUserService.class);
+        when(service.getCurrentUser()).thenReturn(adminInfo);
         when(service.isAdmin()).thenReturn(true);
         return service;
     }
