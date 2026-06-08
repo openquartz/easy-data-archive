@@ -2,6 +2,7 @@ import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { loginApi, logoutApi, meApi, type LoginPayload, type UserProfile } from "../api/auth";
 import { AUTH_TOKEN_KEY } from "../utils/http";
+import { normalizeRoleCode } from "../constants/roles";
 
 export const useAuthStore = defineStore("auth", () => {
   const token = ref<string>(localStorage.getItem(AUTH_TOKEN_KEY) || "");
@@ -11,7 +12,12 @@ export const useAuthStore = defineStore("auth", () => {
   const sessionHydrationPromise = ref<Promise<boolean> | null>(null);
 
   const isAuthenticated = computed(() => token.value.length > 0);
-  const isAdmin = computed(() => Boolean(profile.value?.isAdmin));
+  const isAdmin = computed(() => normalizeRoleCode(profile.value?.roleCode) === "platform_admin");
+  const isArchiveAdmin = computed(() => normalizeRoleCode(profile.value?.roleCode) === "archive_admin");
+
+  function hasCapability(capability: string): boolean {
+    return Boolean(profile.value?.capabilities?.includes(capability));
+  }
 
   function setAuth(nextToken: string, nextUsername = ""): void {
     token.value = nextToken;
@@ -85,8 +91,10 @@ export const useAuthStore = defineStore("auth", () => {
     username,
     profile,
     isAdmin,
+    isArchiveAdmin,
     isAuthenticated,
     sessionHydrated,
+    hasCapability,
     setAuth,
     clearAuth,
     login,

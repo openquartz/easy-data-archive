@@ -38,7 +38,7 @@ const permissionDialogSubmitting = ref(false);
 const permissionSelectedIds = ref<number[]>([]);
 const { t } = useI18n();
 const authStore = useAuthStore();
-const isAdmin = computed(() => Boolean(authStore.profile?.isAdmin));
+const isAdmin = computed(() => authStore.isAdmin);
 
 const emptyText = computed(() => (loading.value ? t("user.emptyLoading") : t("user.empty")));
 const getActionKey = (action: string, id: number): string => `${action}:${id}`;
@@ -166,7 +166,7 @@ void loadData();
       <h1>{{ t("user.title") }}</h1>
       <div class="actions">
         <button class="btn btn--subtle" :disabled="loading" @click="loadData">{{ t("common.refresh") }}</button>
-        <button class="btn btn--primary" :disabled="loading" @click="openCreate">{{ t("user.new") }}</button>
+        <button v-if="authStore.hasCapability('USER_CREATE_NORMAL_USER')" class="btn btn--primary" :disabled="loading" @click="openCreate">{{ t("user.new") }}</button>
       </div>
     </header>
     <p v-if="successMessage" class="feedback">{{ successMessage }}</p>

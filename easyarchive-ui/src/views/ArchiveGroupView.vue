@@ -22,6 +22,7 @@ import { archiveEnableStatusDictionary, getStatusLabel, getStatusTagClass } from
 import { computed, onBeforeUnmount, ref } from "vue";
 import { useI18n } from "../i18n";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "../stores/auth";
 import { createPolling } from "../utils/polling";
 import {
   getArchiveGroupRuntimeProcessedRecords,
@@ -45,6 +46,7 @@ const previewDialogItems = ref<ArchiveGroupItemSummary[]>([]);
 const previewDialogGroupName = ref("");
 const { t } = useI18n();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const groupEmptyText = computed(() => (loading.value ? t("archiveGroup.emptyLoading") : t("archiveGroup.empty")));
 const hasActiveTasks = computed(() => groups.value.some((item) => typeof item.activeTaskId === "number"));
@@ -243,7 +245,7 @@ onBeforeUnmount(() => {
       <h1>{{ t("archiveGroup.title") }}</h1>
       <div class="actions">
         <button class="btn btn--subtle" :disabled="loading" @click="loadData">{{ t("common.refresh") }}</button>
-        <button class="btn btn--primary" :disabled="loading" @click="openCreateGroup">{{ t("archiveGroup.new") }}</button>
+        <button v-if="authStore.hasCapability('ARCHIVE_GROUP_CREATE')" class="btn btn--primary" :disabled="loading" @click="openCreateGroup">{{ t("archiveGroup.new") }}</button>
       </div>
     </header>
     <div v-if="loading" class="empty">{{ groupEmptyText }}</div>
@@ -310,6 +312,7 @@ onBeforeUnmount(() => {
                 {{ t("common.detail") }}
               </button>
               <button
+                v-if="authStore.hasCapability('ARCHIVE_GROUP_EDIT')"
                 class="btn btn--subtle"
                 :disabled="isRowBusy(group.id) || !!group.activeTaskId"
                 @click.stop="openEditGroup(group)"
@@ -317,6 +320,7 @@ onBeforeUnmount(() => {
                 {{ t("common.edit") }}
               </button>
               <button
+                v-if="authStore.hasCapability('ARCHIVE_GROUP_STATUS_UPDATE')"
                 class="btn btn--subtle"
                 :disabled="isRowBusy(group.id) || !!group.activeTaskId"
                 @click.stop="toggleGroupStatus(group)"
@@ -324,7 +328,7 @@ onBeforeUnmount(() => {
                 {{ group.enableStatus === 0 ? t("common.disable") : t("common.enable") }}
               </button>
               <button
-                v-if="group.canTrigger !== false"
+                v-if="group.canTrigger !== false && authStore.hasCapability('ARCHIVE_GROUP_TRIGGER')"
                 class="btn btn--subtle"
                 :disabled="isRowBusy(group.id) || !group.canTrigger"
                 @click.stop="triggerGroup(group)"
@@ -332,7 +336,7 @@ onBeforeUnmount(() => {
                 {{ t("archiveGroup.trigger") }}
               </button>
               <button
-                v-if="group.activeTaskId"
+                v-if="group.activeTaskId && authStore.hasCapability('ARCHIVE_GROUP_CANCEL')"
                 class="btn btn--subtle"
                 :disabled="isRowBusy(group.id) || !group.canCancelActiveTask || group.activeTaskStatus === 4"
                 @click.stop="cancelGroupTask(group)"
@@ -348,6 +352,7 @@ onBeforeUnmount(() => {
                 {{ t("archiveGroup.viewTask") }}
               </button>
               <button
+                v-if="authStore.hasCapability('ARCHIVE_GROUP_DELETE')"
                 class="btn btn--subtle"
                 :disabled="isRowBusy(group.id) || !!group.activeTaskId"
                 @click.stop="deleteGroup(group)"

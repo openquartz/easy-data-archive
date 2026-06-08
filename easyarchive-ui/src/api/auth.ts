@@ -10,6 +10,7 @@ export interface LoginResponse {
   token: string;
   username?: string;
   roleCode?: RoleCode | string;
+  capabilities?: string[];
 }
 
 export interface UserProfile {
@@ -20,6 +21,7 @@ export interface UserProfile {
   status?: number;
   roleCode?: RoleCode | string;
   isAdmin?: boolean;
+  capabilities?: string[];
 }
 
 export function loginApi(payload: LoginPayload): Promise<LoginResponse> {

@@ -19,7 +19,7 @@ const workTabsStore = useWorkTabsStore();
 const accountLabel = computed(
   () => authStore.profile?.realName || authStore.username || authStore.profile?.username || ""
 );
-const primaryNavItems = computed(() => buildPrimaryNavItems(Boolean(authStore.profile?.isAdmin)));
+const primaryNavItems = computed(() => buildPrimaryNavItems(authStore.isAdmin, authStore.hasCapability));
 
 watch(
   () => route.fullPath,
