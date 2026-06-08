@@ -18,6 +18,7 @@ import {
 } from "../utils/dictionaries";
 import { computed, ref } from "vue";
 import { useI18n } from "../i18n";
+import { useAuthStore } from "../stores/auth";
 
 const loading = ref(false);
 const list = ref<Datasource[]>([]);
@@ -33,6 +34,7 @@ const dialogMode = ref<"create" | "edit">("create");
 const dialogSubmitting = ref(false);
 const activeItem = ref<Datasource | null>(null);
 const { t } = useI18n();
+const authStore = useAuthStore();
 
 const emptyText = computed(() => (loading.value ? t("datasource.emptyLoading") : t("datasource.empty")));
 const getActionKey = (action: string, id: number): string => `${action}:${id}`;
@@ -155,7 +157,7 @@ void loadData();
       <h1>{{ t("datasource.title") }}</h1>
       <div class="actions">
         <button class="btn btn--subtle" :disabled="loading" @click="loadData">{{ t("common.refresh") }}</button>
-        <button class="btn btn--primary" :disabled="loading" @click="openCreate">{{ t("datasource.new") }}</button>
+        <button v-if="authStore.hasCapability('DATASOURCE_CREATE')" class="btn btn--primary" :disabled="loading" @click="openCreate">{{ t("datasource.new") }}</button>
       </div>
     </header>
     <p v-if="successMessage" class="feedback">{{ successMessage }}</p>
@@ -186,11 +188,11 @@ void loadData();
             <td>{{ item.username }}</td>
             <td><span :class="getStatusTagClass(datasourceStatusDictionary, item.status)">{{ getStatusLabel(datasourceStatusDictionary, item.status) }}</span></td>
             <td class="row-actions">
-              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">{{ t("common.edit") }}</button>
-              <button class="btn btn--subtle" :disabled="isRowBusy(item.id) || item.status !== 1" @click="toggleStatus(item)">
+              <button v-if="authStore.hasCapability('DATASOURCE_EDIT_AUTHORIZED')" class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">{{ t("common.edit") }}</button>
+              <button v-if="authStore.hasCapability('DATASOURCE_EDIT_AUTHORIZED')" class="btn btn--subtle" :disabled="isRowBusy(item.id) || item.status !== 1" @click="toggleStatus(item)">
                 {{ t("common.disable") }}
               </button>
-              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="testConnection(item)">
+              <button v-if="authStore.hasCapability('DATASOURCE_EDIT_AUTHORIZED')" class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="testConnection(item)">
                 {{ isActionBusy("testConnection", item.id) ? t("common.testing") : t("common.test") }}
               </button>
             </td>

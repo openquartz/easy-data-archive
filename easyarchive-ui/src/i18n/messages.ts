@@ -287,12 +287,11 @@ export const messages = {
       saveFailed: "Save failed",
       loadFailed: "Failed to load users",
       statusUpdateFailed: "Status update failed",
-      noAccess: "Only administrators can manage users and archive connection permissions.",
+      noAccess: "You do not have permission to manage users.",
       roles: {
         platform_admin: "Platform Administrator",
         archive_admin: "Archive Administrator",
-        auditor: "Auditor",
-        observer: "Observer"
+        normal_user: "Normal User"
       },
       permissions: {
         action: "Archive Connections",
@@ -719,12 +718,11 @@ export const messages = {
       saveFailed: "保存失败",
       loadFailed: "加载用户失败",
       statusUpdateFailed: "更新状态失败",
-      noAccess: "仅系统管理员支持管理用户和归档连接权限。",
+      noAccess: "您没有权限管理用户。",
       roles: {
         platform_admin: "平台管理员",
         archive_admin: "归档管理员",
-        auditor: "审计员",
-        observer: "观察员"
+        normal_user: "普通用户"
       },
       permissions: {
         action: "归档连接权限",
