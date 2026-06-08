@@ -255,6 +255,15 @@ logging:
 3. 检查数据库表索引是否合理
 4. 监控数据库连接池使用情况
 
+## Authorization
+
+- Roles: `PLATFORM_ADMIN`, `ARCHIVE_ADMIN`, `NORMAL_USER`
+- Datasource scope: `MANAGE`, `USE`
+- Archive-group and task access require both source and target datasource authorization
+- `PLATFORM_ADMIN` has full access to all resources
+- `ARCHIVE_ADMIN` can manage datasource authorizations and create `NORMAL_USER` accounts
+- Both `ARCHIVE_ADMIN` and `NORMAL_USER` can operate on archive groups within their authorized datasource scope
+
 ## 贡献指南
 
 1. Fork项目并创建特性分支
