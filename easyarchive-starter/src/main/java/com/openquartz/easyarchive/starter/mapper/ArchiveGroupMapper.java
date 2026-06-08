@@ -32,4 +32,26 @@ public interface ArchiveGroupMapper {
 
     List<ArchiveGroup> selectAuthorizedList(@Param("userId") Long userId,
                                             @Param("enableStatus") Integer enableStatus);
+
+    List<ArchiveGroup> selectPage(@Param("enableStatus") Integer enableStatus,
+                                  @Param("start") int start,
+                                  @Param("size") int size);
+
+    List<ArchiveGroup> selectAuthorizedPage(@Param("userId") Long userId,
+                                            @Param("enableStatus") Integer enableStatus,
+                                            @Param("start") int start,
+                                            @Param("size") int size);
+
+    List<ArchiveGroup> selectPageByOwner(@Param("userId") Long userId,
+                                         @Param("enableStatus") Integer enableStatus,
+                                         @Param("start") int start,
+                                         @Param("size") int size);
+
+    int count(@Param("enableStatus") Integer enableStatus);
+
+    int countAuthorized(@Param("userId") Long userId,
+                        @Param("enableStatus") Integer enableStatus);
+
+    int countByOwner(@Param("userId") Long userId,
+                     @Param("enableStatus") Integer enableStatus);
 }
