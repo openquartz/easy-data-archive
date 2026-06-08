@@ -86,11 +86,10 @@
           AND d.deleted = 0
           AND EXISTS (
             SELECT 1
-            FROM ea_user_datasource_permission p
+            FROM ea_archive_connection_permission p
             WHERE p.deleted = 0
               AND p.user_id = #{userId}
               AND p.datasource_id = d.id
-              AND p.permission_type = 'READ'
           )
     </select>
 
@@ -117,14 +116,24 @@
             AND d.deleted = 0
             AND EXISTS (
                 SELECT 1
-                FROM ea_user_datasource_permission p
+                FROM ea_archive_connection_permission p
                 WHERE p.deleted = 0
                   AND p.user_id = #{userId}
                   AND p.datasource_id = d.id
-                  AND p.permission_type = 'READ'
             )
         </where>
         ORDER BY d.id DESC
+    </select>
+
+    <select id="selectAuthorizedListByIds" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_datasource
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND deleted = 0
+        ORDER BY id DESC
     </select>
 
     <select id="selectPage" resultMap="BaseResultMap">

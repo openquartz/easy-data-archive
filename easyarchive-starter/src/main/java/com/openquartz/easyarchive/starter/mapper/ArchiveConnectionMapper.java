@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 数据源Mapper
@@ -29,6 +30,8 @@ public interface ArchiveConnectionMapper {
 
     List<ArchiveConnection> selectAuthorizedList(@Param("userId") Long userId,
                                                  @Param("status") Integer status);
+
+    List<ArchiveConnection> selectAuthorizedListByIds(@Param("ids") Set<Long> ids);
 
     List<ArchiveConnection> selectPage(@Param("start") int start, @Param("size") int size,
                                         @Param("status") Integer status, @Param("ownerUserId") Long ownerUserId);

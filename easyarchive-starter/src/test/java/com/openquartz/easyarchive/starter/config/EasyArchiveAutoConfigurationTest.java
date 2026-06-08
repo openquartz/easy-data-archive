@@ -10,7 +10,8 @@ import com.openquartz.easyarchive.starter.notification.ArchiveNotificationListen
 import com.openquartz.easyarchive.starter.notification.inapp.ArchiveInAppNotificationListener;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.DatasourceOperationLogPresenter;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.service.CurrentUserService;
+import com.openquartz.easyarchive.starter.service.DatasourceAuthorizationService;
 import com.openquartz.easyarchive.starter.service.impl.ArchiveConnectionServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
@@ -39,7 +40,8 @@ class EasyArchiveAutoConfigurationTest {
         ArchiveConnectionServiceImpl service = new ArchiveConnectionServiceImpl(
                 mock(ArchiveConnectionMapper.class),
                 null,
-                mock(DataPermissionService.class),
+                mock(CurrentUserService.class),
+                mock(DatasourceAuthorizationService.class),
                 mock(DatasourceOperationLogPresenter.class),
                 mock(OperationLogRecorder.class)
         );

@@ -6,11 +6,16 @@ import com.openquartz.easyarchive.starter.model.dto.LoginRequest;
 import com.openquartz.easyarchive.starter.model.dto.LoginResponse;
 import com.openquartz.easyarchive.starter.security.JwtTokenUtil;
 import com.openquartz.easyarchive.starter.security.RoleConstants;
+import com.openquartz.easyarchive.starter.security.model.PlatformCapabilityEnum;
+import com.openquartz.easyarchive.starter.service.RoleCapabilityService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.EnumSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -26,9 +31,10 @@ class AuthServiceImplTest {
     private final SysUserMapper sysUserMapper = mock(SysUserMapper.class);
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final JwtTokenUtil jwtTokenUtil = mock(JwtTokenUtil.class);
+    private final RoleCapabilityService roleCapabilityService = mock(RoleCapabilityService.class);
 
     private final AuthServiceImpl authService =
-            new AuthServiceImpl(sysUserMapper, passwordEncoder, jwtTokenUtil);
+            new AuthServiceImpl(sysUserMapper, passwordEncoder, jwtTokenUtil, roleCapabilityService);
 
     @Test
     void shouldTreatNonBcryptStoredPasswordAsBadCredentials() {
@@ -60,6 +66,8 @@ class AuthServiceImplTest {
 
         when(sysUserMapper.selectByUsername("admin")).thenReturn(user);
         when(jwtTokenUtil.generateToken(any(User.class))).thenReturn("token-value");
+        when(roleCapabilityService.listCapabilities(RoleConstants.PLATFORM_ADMIN))
+                .thenReturn(EnumSet.of(PlatformCapabilityEnum.DATASOURCE_CREATE, PlatformCapabilityEnum.TASK_VIEW));
 
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
@@ -72,6 +80,8 @@ class AuthServiceImplTest {
         assertEquals("admin", response.getUsername());
         assertEquals("Admin", response.getRealName());
         assertEquals(RoleConstants.PLATFORM_ADMIN, response.getRoleCode());
+        assertNotNull(response.getCapabilities());
+        assertEquals(2, response.getCapabilities().size());
     }
 
     @Test
