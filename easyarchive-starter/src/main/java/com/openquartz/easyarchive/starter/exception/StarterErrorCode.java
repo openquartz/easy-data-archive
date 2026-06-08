@@ -58,7 +58,8 @@ public enum StarterErrorCode implements EasyArchiveErrorCode {
     ARCHIVE_GROUP_NOTIFICATION_RECIPIENT_REQUIRED("50", "启用站内通知时至少选择一个通知成员"),
     ARCHIVE_GROUP_NOTIFY_CHANNEL_REQUIRED("51", "启用执行完成通知时必须选择通知方式"),
     ARCHIVE_GROUP_NOTIFY_WEBHOOK_REQUIRED("52", "启用执行完成通知时必须填写通知地址"),
-    ARCHIVE_GROUP_NOTIFY_OWNER_REQUIRED("53", "站内通知必须指定负责人");
+    ARCHIVE_GROUP_NOTIFY_OWNER_REQUIRED("53", "站内通知必须指定负责人"),
+    USER_ROLE_INVALID_FOR_CREATOR("54", "无权创建该角色的用户");
 
     private static final String BASE_CODE = "StarterError-";
 

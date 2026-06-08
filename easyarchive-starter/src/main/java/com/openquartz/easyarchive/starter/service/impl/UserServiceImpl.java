@@ -7,8 +7,9 @@ import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.UserOperationLogPresenter;
+import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
 import com.openquartz.easyarchive.starter.security.RoleConstants;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.service.CurrentUserService;
 import com.openquartz.easyarchive.starter.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,26 +28,27 @@ public class UserServiceImpl implements UserService {
 
     private final SysUserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final DataPermissionService dataPermissionService;
+    private final CurrentUserService currentUserService;
     private final UserOperationLogPresenter userOperationLogPresenter;
     private final OperationLogRecorder operationLogRecorder;
 
     @Override
     public List<SysUser> findAll() {
-        dataPermissionService.assertAdmin();
+        currentUserService.assertAdmin();
         return normalizeUsers(userMapper.selectList(null));
     }
 
     @Override
     public SysUser findById(Long id) {
-        dataPermissionService.assertAdmin();
+        currentUserService.assertAdmin();
         return normalizeUser(userMapper.selectById(id));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysUser create(SysUser user) {
-        dataPermissionService.assertAdmin();
+        CurrentUserInfo operator = currentUserService.getCurrentUser();
+        assertCanCreateRole(operator, user.getRoleCode());
         if (user.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
@@ -62,11 +64,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public SysUser update(SysUser user) {
-        dataPermissionService.assertAdmin();
+        CurrentUserInfo operator = currentUserService.getCurrentUser();
         SysUser before = userMapper.selectById(user.getId());
         if (before == null) {
             throw new StarterManageException(StarterErrorCode.USER_NOT_FOUND);
         }
+        assertCanUpdateUser(operator, user, before);
         boolean passwordUpdated = user.getPassword() != null && !user.getPassword().trim().isEmpty();
         if (passwordUpdated) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -85,7 +88,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
-        dataPermissionService.assertAdmin();
+        currentUserService.assertAdmin();
         SysUser before = userMapper.selectById(id);
         SysUser user = new SysUser();
         user.setId(id);
@@ -95,6 +98,34 @@ public class UserServiceImpl implements UserService {
         if (before != null && after != null) {
             operationLogRecorder.record(userOperationLogPresenter.buildStatusUpdate(before, after));
         }
+    }
+
+    private void assertCanCreateRole(CurrentUserInfo operator, String targetRoleCode) {
+        if (RoleConstants.isAdmin(operator.getRoleCode())) {
+            return;
+        }
+        if (RoleConstants.isArchiveAdmin(operator.getRoleCode())
+                && RoleConstants.NORMAL_USER.equals(RoleConstants.normalizeRoleCode(targetRoleCode))) {
+            return;
+        }
+        throw new StarterManageException(StarterErrorCode.USER_ROLE_INVALID_FOR_CREATOR);
+    }
+
+    private void assertCanUpdateUser(CurrentUserInfo operator, SysUser input, SysUser existing) {
+        if (RoleConstants.isAdmin(operator.getRoleCode())) {
+            return;
+        }
+        if (RoleConstants.isArchiveAdmin(operator.getRoleCode())) {
+            if (!RoleConstants.NORMAL_USER.equals(RoleConstants.normalizeRoleCode(existing.getRoleCode()))) {
+                throw new StarterManageException(StarterErrorCode.ADMIN_PERMISSION_REQUIRED);
+            }
+            String newRole = RoleConstants.normalizeRoleCode(input.getRoleCode());
+            if (!RoleConstants.NORMAL_USER.equals(newRole)) {
+                throw new StarterManageException(StarterErrorCode.USER_ROLE_INVALID_FOR_CREATOR);
+            }
+            return;
+        }
+        throw new StarterManageException(StarterErrorCode.ADMIN_PERMISSION_REQUIRED);
     }
 
     private String resolveRoleCode(String roleCode, String fallbackRoleCode) {

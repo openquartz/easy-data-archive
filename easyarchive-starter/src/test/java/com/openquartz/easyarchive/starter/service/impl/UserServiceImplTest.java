@@ -5,7 +5,8 @@ import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.UserOperationLogPresenter;
-import com.openquartz.easyarchive.starter.service.DataPermissionService;
+import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
+import com.openquartz.easyarchive.starter.service.CurrentUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -25,11 +26,11 @@ class UserServiceImplTest {
 
     private final SysUserMapper userMapper = mock(SysUserMapper.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
-    private final DataPermissionService dataPermissionService = mock(DataPermissionService.class);
+    private final CurrentUserService currentUserService = mock(CurrentUserService.class);
     private final UserOperationLogPresenter presenter = mock(UserOperationLogPresenter.class);
     private final OperationLogRecorder recorder = mock(OperationLogRecorder.class);
     private final UserServiceImpl service = new UserServiceImpl(
-            userMapper, passwordEncoder, dataPermissionService, presenter, recorder);
+            userMapper, passwordEncoder, currentUserService, presenter, recorder);
 
     @Test
     void shouldEncodePasswordAndRecordCreateOperation() {
@@ -37,9 +38,11 @@ class UserServiceImplTest {
         user.setId(1L);
         user.setUsername("alice");
         user.setPassword("plain");
+        user.setRoleCode("platform_admin");
         when(passwordEncoder.encode("plain")).thenReturn("encoded");
         when(presenter.buildCreate(any())).thenReturn(command("CREATE"));
-        doNothing().when(dataPermissionService).assertAdmin();
+        doNothing().when(currentUserService).assertAdmin();
+        when(currentUserService.getCurrentUser()).thenReturn(platformAdmin());
 
         service.create(user);
 
@@ -63,7 +66,8 @@ class UserServiceImplTest {
 
         when(userMapper.selectById(2L)).thenReturn(before, after);
         when(presenter.buildUpdate(before, after, false)).thenReturn(command("UPDATE"));
-        doNothing().when(dataPermissionService).assertAdmin();
+        doNothing().when(currentUserService).assertAdmin();
+        when(currentUserService.getCurrentUser()).thenReturn(platformAdmin());
 
         service.update(input);
 
@@ -78,7 +82,7 @@ class UserServiceImplTest {
         SysUser after = user(3L, "cindy", 1);
         when(userMapper.selectById(3L)).thenReturn(before, after);
         when(presenter.buildStatusUpdate(before, after)).thenReturn(command("STATUS"));
-        doNothing().when(dataPermissionService).assertAdmin();
+        doNothing().when(currentUserService).assertAdmin();
 
         service.updateStatus(3L, 1);
 
@@ -94,7 +98,7 @@ class UserServiceImplTest {
         SysUser user = user(2L, "user", 0);
         user.setRoleCode("USER");
         when(userMapper.selectList(null)).thenReturn(Arrays.asList(admin, user));
-        doNothing().when(dataPermissionService).assertAdmin();
+        doNothing().when(currentUserService).assertAdmin();
 
         List<SysUser> result = service.findAll();
 
@@ -113,5 +117,13 @@ class UserServiceImplTest {
 
     private static OperationLogCommand command(String action) {
         return new OperationLogCommand("USER", action, action, "USER", 1L, "alice", action, null);
+    }
+
+    private static CurrentUserInfo platformAdmin() {
+        CurrentUserInfo info = new CurrentUserInfo();
+        info.setUserId(1L);
+        info.setUsername("admin");
+        info.setRoleCode("platform_admin");
+        return info;
     }
 }
