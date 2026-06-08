@@ -3,6 +3,7 @@ package com.openquartz.easyarchive.starter.service;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
+import com.openquartz.easyarchive.starter.model.dto.PageResult;
 
 import java.util.List;
 
@@ -12,6 +13,16 @@ import java.util.List;
 public interface ArchiveGroupService {
 
     List<ArchiveGroupView> findAll(Integer enableStatus);
+
+    /**
+     * 分页查询归档分组（带权限过滤）
+     *
+     * @param enableStatus 启用状态
+     * @param page 页码（从1开始）
+     * @param size 每页大小
+     * @return 分页结果
+     */
+    PageResult<ArchiveGroupView> findPage(Integer enableStatus, int page, int size);
 
     List<ArchiveGroup> tree();
 
