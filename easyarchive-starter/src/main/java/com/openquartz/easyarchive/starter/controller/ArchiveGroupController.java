@@ -6,6 +6,8 @@ import com.openquartz.easyarchive.starter.annotation.OperationLog;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
+import com.openquartz.easyarchive.starter.model.dto.PageResult;
+import com.openquartz.easyarchive.starter.model.dto.UpdateOwnerRequest;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupExecutionService;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +37,14 @@ public class ArchiveGroupController {
     @GetMapping
     public ApiResponse<List<ArchiveGroupView>> list(@RequestParam(required = false) Integer enableStatus) {
         return ApiResponse.success(groupService.findAll(enableStatus));
+    }
+
+    @GetMapping("/page")
+    public ApiResponse<PageResult<ArchiveGroupView>> page(
+            @RequestParam(required = false) Integer enableStatus,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(groupService.findPage(enableStatus, page, size));
     }
 
     @GetMapping("/tree")
@@ -76,6 +87,13 @@ public class ArchiveGroupController {
     public ApiResponse<?> delete(@PathVariable Long id) {
         groupService.delete(id);
         return ApiResponse.success();
+    }
+
+    @PutMapping("/{id}/owner")
+    @OperationLog(value = "变更负责人", module = "ARCHIVE_GROUP", action = "UPDATE_OWNER", button = "变更负责人")
+    public ApiResponse<ArchiveGroup> updateOwner(@PathVariable Long id,
+                                                 @Valid @RequestBody UpdateOwnerRequest request) {
+        return ApiResponse.success(groupService.updateOwner(id, request.getNewOwnerUserId()));
     }
 
     @PostMapping("/{id}/trigger")
