@@ -211,6 +211,23 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public ArchiveGroup updateOwner(Long groupId, Long newOwnerUserId) {
+        archiveResourceAccessService.assertGroupManageable(groupId);
+        ArchiveGroup before = ensureExists(groupId);
+        validateOwner(newOwnerUserId);
+        ensureNoActiveTask(groupId, "分组存在执行中的任务，无法变更负责人");
+        ArchiveGroup update = new ArchiveGroup();
+        update.setId(groupId);
+        update.setOwnerUserId(newOwnerUserId);
+        groupMapper.updateOwner(groupId, newOwnerUserId);
+        ArchiveGroup after = ensureExists(groupId);
+        inAppNotificationService.notifyOwnerChanged(before, after);
+        operationLogRecorder.record(archiveGroupOperationLogPresenter.buildOwnerUpdate(before, after));
+        return after;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         archiveResourceAccessService.assertGroupManageable(id);
         ArchiveGroup before = ensureExists(id);
