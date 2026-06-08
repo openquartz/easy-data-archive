@@ -21,7 +21,7 @@ const PRIMARY_NAV_ITEMS: PrimaryNavItem[] = [
   { routeName: "archive-groups", labelKey: "layout.nav.archiveGroups", capability: "ARCHIVE_GROUP_VIEW" },
   { routeName: "tasks", labelKey: "layout.nav.tasks" },
   { routeName: "operation-logs", labelKey: "layout.nav.operationLogs", adminOnly: true },
-  { routeName: "users", labelKey: "layout.nav.users", adminOnly: true }
+  { routeName: "users", labelKey: "layout.nav.users", capability: "USER_VIEW" }
 ];
 
 export function buildPrimaryNavItems(isAdmin: boolean, hasCapability?: (cap: string) => boolean): PrimaryNavItem[] {

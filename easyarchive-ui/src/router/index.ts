@@ -93,7 +93,7 @@ router.beforeEach(async (to) => {
     if (!sessionOk) {
       return { name: "login", query: { redirect: to.fullPath } };
     }
-    if (to.meta.adminOnly && !authStore.profile?.isAdmin) {
+    if (to.meta.adminOnly && !authStore.isAdmin && !authStore.isArchiveAdmin) {
       return { name: "dashboard" };
     }
   }

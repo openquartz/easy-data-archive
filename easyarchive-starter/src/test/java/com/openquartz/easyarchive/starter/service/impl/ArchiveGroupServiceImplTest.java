@@ -20,6 +20,7 @@ import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupOpe
 import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
 import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
 import com.openquartz.easyarchive.starter.service.CurrentUserService;
+import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -53,12 +54,14 @@ class ArchiveGroupServiceImplTest {
     private final SysUserMapper sysUserMapper = mock(SysUserMapper.class);
     private final CurrentUserService currentUserService = adminCurrentUserService();
     private final ArchiveResourceAccessService archiveResourceAccessService = mock(ArchiveResourceAccessService.class);
+    private final DataPermissionService dataPermissionService = mock(DataPermissionService.class);
     private final ArchiveInAppNotificationService inAppNotificationService = mock(ArchiveInAppNotificationService.class);
     private final ArchiveGroupOperationLogPresenter archiveGroupOperationLogPresenter = mock(ArchiveGroupOperationLogPresenter.class);
     private final OperationLogRecorder operationLogRecorder = mock(OperationLogRecorder.class);
     private final ArchiveGroupServiceImpl service =
             new ArchiveGroupServiceImpl(groupMapper, archiveConnectionMapper, taskMapper, idItemMapper, timeItemMapper,
-                    sysUserMapper, currentUserService, archiveResourceAccessService, inAppNotificationService, archiveGroupOperationLogPresenter, operationLogRecorder);
+                    sysUserMapper, currentUserService, archiveResourceAccessService, dataPermissionService,
+                    inAppNotificationService, archiveGroupOperationLogPresenter, operationLogRecorder);
 
     @Test
     void shouldRejectDuplicateGroupCodeOnCreate() {
@@ -160,7 +163,9 @@ class ArchiveGroupServiceImplTest {
         input.setNotifyEnabled(1);
         input.setNotifyChannel("IN_APP");
         input.setOwnerUserId(9L);
-        when(sysUserMapper.selectById(9L)).thenReturn(new com.openquartz.easyarchive.core.common.SysUser());
+        com.openquartz.easyarchive.core.common.SysUser owner = new com.openquartz.easyarchive.core.common.SysUser();
+        owner.setStatus(0);
+        when(sysUserMapper.selectById(9L)).thenReturn(owner);
 
         ArchiveGroup created = service.create(input);
 

@@ -1,4 +1,4 @@
-export const ROLE_CODES = ["platform_admin", "archive_admin", "auditor", "observer"] as const;
+export const ROLE_CODES = ["platform_admin", "archive_admin", "normal_user"] as const;
 
 export type RoleCode = (typeof ROLE_CODES)[number];
 
@@ -7,7 +7,7 @@ const LEGACY_ROLE_MAP: Record<string, RoleCode> = {
   USER: "archive_admin"
 };
 
-export const DEFAULT_ROLE_CODE: RoleCode = "observer";
+export const DEFAULT_ROLE_CODE: RoleCode = "normal_user";
 
 export function normalizeRoleCode(roleCode?: string | null): RoleCode {
   if (!roleCode) {

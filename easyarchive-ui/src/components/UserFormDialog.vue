@@ -2,13 +2,14 @@
 import type { User, UserPayload } from "../api/user";
 import { computed, reactive, ref, watch } from "vue";
 import { useI18n } from "../i18n";
-import { DEFAULT_ROLE_CODE, ROLE_CODES, normalizeRoleCode } from "../constants/roles";
+import { DEFAULT_ROLE_CODE, ROLE_CODES, normalizeRoleCode, isAdminRole } from "../constants/roles";
 
 const props = defineProps<{
   visible: boolean;
   mode: "create" | "edit";
   initialValue?: User | null;
   submitting?: boolean;
+  operatorRole?: string;
 }>();
 
 const emit = defineEmits<{
@@ -29,6 +30,12 @@ const form = reactive<UserPayload>({
 const errorMessage = ref("");
 const { t } = useI18n();
 const title = computed(() => (props.mode === "create" ? t("user.form.createTitle") : t("user.form.editTitle")));
+const availableRoles = computed(() => {
+  if (isAdminRole(props.operatorRole)) {
+    return ROLE_CODES;
+  }
+  return ["normal_user"] as const;
+});
 const usernamePattern = /^[A-Za-z][A-Za-z0-9_.-]{2,31}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const mobilePattern = /^\+?[0-9\- ]{7,20}$/;
@@ -132,7 +139,7 @@ function handleSubmit(): void {
         <label>
           {{ t("user.form.roleCode") }}
           <select v-model="form.roleCode" :disabled="submitting">
-            <option v-for="roleCode in ROLE_CODES" :key="roleCode" :value="roleCode">
+            <option v-for="roleCode in availableRoles" :key="roleCode" :value="roleCode">
               {{ t(`user.roles.${roleCode}`) }}
             </option>
           </select>
