@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 归档分组服务实现
@@ -69,10 +70,33 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         List<ArchiveGroup> groups;
         CurrentUserInfo currentUser = currentUserService.getCurrentUser();
         if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
+            // 系统管理员 - 查看所有分组
             groups = groupMapper.selectList(enableStatus);
         } else {
             Long userId = currentUser.getUserId();
             groups = groupMapper.selectAuthorizedList(userId, enableStatus);
+            if (RoleConstants.isNormalUser(currentUser.getRoleCode())) {
+                // 普通用户 - 只查看自己负责的分组
+                List<ArchiveGroup> filtered = new ArrayList<>(groups.size());
+                for (ArchiveGroup group : groups) {
+                    if (userId.equals(group.getOwnerUserId())) {
+                        filtered.add(group);
+                    }
+                }
+                groups = filtered;
+            } else if (RoleConstants.isArchiveAdmin(currentUser.getRoleCode())) {
+                // 归档管理员 - 查看有权限数据源的分组
+                Set<Long> authorizedDatasourceIds = dataPermissionService.getAuthorizedDatasourceIds(userId);
+                if (authorizedDatasourceIds != null && !authorizedDatasourceIds.isEmpty()) {
+                    List<ArchiveGroup> filtered = new ArrayList<>(groups.size());
+                    for (ArchiveGroup group : groups) {
+                        if (authorizedDatasourceIds.contains(group.getSourceDatasourceId())) {
+                            filtered.add(group);
+                        }
+                    }
+                    groups = filtered;
+                }
+            }
         }
         List<ArchiveGroupView> result = new ArrayList<>(groups.size());
         if (groups.isEmpty()) {
