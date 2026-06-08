@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -339,6 +340,76 @@ class ArchiveGroupOwnerTest {
 
         assertEquals(0, result.getData().size());
         assertEquals(0, result.getTotal());
+    }
+
+    // --- findAll query filtering tests ---
+
+    @Test
+    void shouldReturnAllGroupsForAdmin() {
+        CurrentUserInfo admin = new CurrentUserInfo();
+        admin.setUserId(1L);
+        admin.setRoleCode(RoleConstants.PLATFORM_ADMIN);
+        when(currentUserService.getCurrentUser()).thenReturn(admin);
+
+        ArchiveGroup group1 = new ArchiveGroup();
+        group1.setId(1L);
+        ArchiveGroup group2 = new ArchiveGroup();
+        group2.setId(2L);
+        when(groupMapper.selectList(null)).thenReturn(Arrays.asList(group1, group2));
+        when(taskMapper.selectLatestActiveByGroupIds(anyList())).thenReturn(Collections.emptyList());
+
+        List<ArchiveGroupView> result = service.findAll(null);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void shouldReturnOnlyOwnGroupsForNormalUser() {
+        CurrentUserInfo normalUser = new CurrentUserInfo();
+        normalUser.setUserId(1L);
+        normalUser.setRoleCode(RoleConstants.NORMAL_USER);
+        when(currentUserService.getCurrentUser()).thenReturn(normalUser);
+
+        ArchiveGroup ownGroup = new ArchiveGroup();
+        ownGroup.setId(1L);
+        ownGroup.setOwnerUserId(1L);
+        ArchiveGroup otherGroup = new ArchiveGroup();
+        otherGroup.setId(2L);
+        otherGroup.setOwnerUserId(2L);
+
+        when(groupMapper.selectAuthorizedList(1L, null)).thenReturn(Arrays.asList(ownGroup, otherGroup));
+        when(taskMapper.selectLatestActiveByGroupIds(anyList())).thenReturn(Collections.emptyList());
+
+        List<ArchiveGroupView> result = service.findAll(null);
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getId());
+    }
+
+    @Test
+    void shouldReturnAuthorizedDatasourceGroupsForArchiveAdmin() {
+        CurrentUserInfo archiveAdmin = new CurrentUserInfo();
+        archiveAdmin.setUserId(1L);
+        archiveAdmin.setRoleCode(RoleConstants.ARCHIVE_ADMIN);
+        when(currentUserService.getCurrentUser()).thenReturn(archiveAdmin);
+        when(dataPermissionService.getAuthorizedDatasourceIds(1L))
+                .thenReturn(new HashSet<>(Collections.singletonList(1L)));
+
+        ArchiveGroup authorizedGroup = new ArchiveGroup();
+        authorizedGroup.setId(1L);
+        authorizedGroup.setSourceDatasourceId(1L);
+        ArchiveGroup unauthorizedGroup = new ArchiveGroup();
+        unauthorizedGroup.setId(2L);
+        unauthorizedGroup.setSourceDatasourceId(2L);
+
+        when(groupMapper.selectAuthorizedList(1L, null))
+                .thenReturn(Arrays.asList(authorizedGroup, unauthorizedGroup));
+        when(taskMapper.selectLatestActiveByGroupIds(anyList())).thenReturn(Collections.emptyList());
+
+        List<ArchiveGroupView> result = service.findAll(null);
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getId());
     }
 
     private void stubEnabledDatasources() {
