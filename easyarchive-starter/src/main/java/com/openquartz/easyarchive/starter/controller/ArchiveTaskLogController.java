@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.starter.controller;
 
 import com.openquartz.easyarchive.starter.annotation.OperationLog;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
+import com.openquartz.easyarchive.starter.model.dto.TaskVO;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ public class ArchiveTaskLogController {
     }
 
     @GetMapping("/tasks/{taskId}")
-    public ApiResponse<Object> getTask(@PathVariable Long taskId) {
+    public ApiResponse<TaskVO> getTask(@PathVariable Long taskId) {
         Object task = taskLogService.queryTaskById(taskId);
         if (task == null) {
             return ApiResponse.error("NOT_FOUND", "任务不存在");
