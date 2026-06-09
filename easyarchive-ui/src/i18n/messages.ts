@@ -27,7 +27,8 @@ export const messages = {
       },
       actions: {
         logout: "Sign out",
-        loggingOut: "Signing out..."
+        loggingOut: "Signing out...",
+        changePassword: "Change Password"
       }
     },
     common: {
@@ -55,7 +56,8 @@ export const messages = {
       prev: "Prev",
       next: "Next",
       loading: "Loading...",
-      dismiss: "Dismiss"
+      dismiss: "Dismiss",
+      passwordChanged: "Password changed, please sign in again."
     },
     login: {
       title: "Data Archive Platform",
@@ -457,7 +459,8 @@ export const messages = {
       },
       actions: {
         logout: "退出登录",
-        loggingOut: "退出中..."
+        loggingOut: "退出中...",
+        changePassword: "修改密码"
       }
     },
     common: {
@@ -485,7 +488,8 @@ export const messages = {
       prev: "上一页",
       next: "下一页",
       loading: "加载中...",
-      dismiss: "关闭"
+      dismiss: "关闭",
+      passwordChanged: "密码修改成功，请重新登录。"
     },
     login: {
       title: "数据归档平台",
