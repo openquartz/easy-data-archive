@@ -141,12 +141,16 @@ function openWorkTab(tab: { type: string; id?: string; taskId?: string; title?: 
               {{ accountLabel }} ▾
             </button>
             <div v-if="userMenuOpen" class="user-menu__dropdown" @click.stop>
-              <button type="button" class="user-menu__item" @click="openChangePassword">
+              <button
+                type="button"
+                class="btn btn--subtle user-menu__item"
+                @click="openChangePassword"
+              >
                 {{ t("layout.actions.changePassword") }}
               </button>
               <button
                 type="button"
-                class="user-menu__item"
+                class="btn btn--subtle user-menu__item"
                 :disabled="loggingOut"
                 @click="handleLogout"
               >
@@ -201,37 +205,24 @@ function openWorkTab(tab: { type: string; id?: string; taskId?: string; title?: 
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  min-width: 160px;
+  min-width: 170px;
   background: #fff;
-  border: 1px solid rgba(16, 57, 71, 0.12);
+  border: 1px solid var(--ea-border);
   border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
   padding: 6px;
   z-index: 100;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .user-menu__item {
   width: 100%;
   text-align: left;
-  padding: 8px 12px;
-  border: 0;
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #1e293b;
-  transition: background 120ms ease;
 }
 
 .user-menu__item:hover {
-  background: rgba(16, 57, 71, 0.06);
-}
-
-.user-menu__item:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  background: rgba(16, 57, 71, 0.04);
 }
 </style>
