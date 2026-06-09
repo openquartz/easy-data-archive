@@ -36,9 +36,10 @@ import TaskStatusTag from "../components/TaskStatusTag.vue";
 import { useI18n } from "../i18n";
 import EntityLink from "../components/EntityLink.vue";
 import { getDatasourcesApi, type Datasource } from "../api/datasource";
-import { getUsersApi, type User } from "../api/user";
+import { getUsersApiSilent, type User } from "../api/user";
 import { archiveEnableStatusDictionary, getStatusLabel, getStatusTagClass, taskStatusDictionary } from "../utils/dictionaries";
 import { formatArchiveGroupItemRange } from "../utils/archiveGroupItemRange";
+import { useAuthStore } from "../stores/auth";
 import {
   getArchiveGroupRuntimeProcessedRecords,
   canTriggerArchiveGroup,
@@ -50,6 +51,7 @@ import {
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const authStore = useAuthStore();
 
 const loading = ref(false);
 const errorMessage = ref("");
@@ -176,7 +178,7 @@ async function loadDetail(): Promise<void> {
       getArchiveGroupItemsApi(groupId.value),
       getArchiveGroupOverviewApi(groupId.value),
       getDatasourcesApi(),
-      getUsersApi()
+      getUsersApiSilent().catch(() => [] as User[])
     ]);
 
     if (!isCurrentToken(token)) {
@@ -704,6 +706,7 @@ watch(
       :datasources="enabledDatasources"
       :users="users"
       :submitting="groupDialogSubmitting"
+      :owner-readonly="!authStore.isAdmin && !authStore.isArchiveAdmin"
       @close="groupDialogVisible = false"
       @submit="submitGroup"
     />

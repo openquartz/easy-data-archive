@@ -14,4 +14,8 @@ public class CurrentUserInfo {
     public boolean isAdmin() {
         return RoleConstants.isAdmin(roleCode);
     }
+
+    public boolean isArchiveAdmin() {
+        return RoleConstants.isArchiveAdmin(roleCode);
+    }
 }

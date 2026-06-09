@@ -6,9 +6,12 @@ import { computed, reactive, ref, watch } from "vue";
 import { useI18n } from "../i18n";
 import {
   createArchiveGroupFormValue,
+  createOwnerOptions,
   isNotificationConfigEditable,
   requiresWebhook
 } from "../utils/archiveGroupForm";
+import { useAuthStore } from "../stores/auth";
+import { normalizeRoleCode } from "../constants/roles";
 
 const props = defineProps<{
   visible: boolean;
@@ -17,6 +20,7 @@ const props = defineProps<{
   datasources: Datasource[];
   users: User[];
   submitting?: boolean;
+  ownerReadonly?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -28,7 +32,11 @@ const form = reactive<ArchiveGroupPayload>(createArchiveGroupFormValue());
 const errorMessage = ref("");
 const groupCodePattern = /^[A-Za-z][A-Za-z0-9_-]{1,63}$/;
 const { t } = useI18n();
-const enabledUsers = computed(() => props.users.filter((item) => item.status === 0));
+const authStore = useAuthStore();
+const ownerOptions = computed(() => createOwnerOptions(props.users, props.initialValue));
+const ownerReadonly = computed(() =>
+  props.ownerReadonly ?? normalizeRoleCode(authStore.profile?.roleCode) === "normal_user"
+);
 
 const title = computed(() =>
   props.mode === "create" ? t("archiveGroup.form.createTitle") : t("archiveGroup.form.editTitle")
@@ -132,9 +140,9 @@ function handleSubmit(): void {
         </label>
         <label>
           {{ t("archiveGroup.form.owner") }}
-          <select v-model.number="form.ownerUserId" :disabled="submitting">
+          <select v-model.number="form.ownerUserId" :disabled="submitting || ownerReadonly">
             <option :value="undefined">{{ t("archiveGroup.form.selectOwner") }}</option>
-            <option v-for="user in enabledUsers" :key="user.id" :value="user.id">
+            <option v-for="user in ownerOptions" :key="user.id" :value="user.id">
               {{ user.realName || user.username }} ({{ user.username }})
             </option>
           </select>

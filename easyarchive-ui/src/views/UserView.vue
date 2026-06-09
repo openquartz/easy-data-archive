@@ -47,6 +47,14 @@ const getActionKey = (action: string, id: number): string => `${action}:${id}`;
 const isRowBusy = (id: number): boolean => busyRows.value.has(id);
 const isActionBusy = (action: string, id: number): boolean => busyActions.value.has(getActionKey(action, id));
 
+function canManageUser(targetRoleCode?: string): boolean {
+  if (isAdmin.value) return true;
+  if (isArchiveAdmin.value) {
+    return normalizeRoleCode(targetRoleCode) === "normal_user";
+  }
+  return false;
+}
+
 async function loadData(): Promise<void> {
   loading.value = true;
   errorMessage.value = "";
@@ -74,7 +82,7 @@ function openEdit(item: User): void {
 }
 
 async function openPermissions(item: User): Promise<void> {
-  if (!isAdmin.value || isRowBusy(item.id)) {
+  if (!canManageUser(item.roleCode) || isRowBusy(item.id)) {
     return;
   }
   activeItem.value = item;
@@ -200,11 +208,11 @@ void loadData();
             <td><span :class="getStatusTagClass(userStatusDictionary, item.status)">{{ getStatusLabel(userStatusDictionary, item.status) }}</span></td>
             <td>{{ item.lastLoginTime || "-" }}</td>
             <td class="row-actions">
-              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">{{ t("common.edit") }}</button>
-              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openPermissions(item)">
+              <button v-if="canManageUser(item.roleCode)" class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">{{ t("common.edit") }}</button>
+              <button v-if="canManageUser(item.roleCode)" class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openPermissions(item)">
                 {{ t("user.permissions.action") }}
               </button>
-              <button class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
+              <button v-if="canManageUser(item.roleCode)" class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="toggleStatus(item)">
                 {{ item.status === 0 ? t("common.disable") : t("common.enable") }}
               </button>
             </td>
