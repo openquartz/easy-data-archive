@@ -35,3 +35,7 @@ export function logoutApi(): Promise<void> {
 export function meApi(): Promise<UserProfile> {
   return http.post<UserProfile>("auth/me");
 }
+
+export function changePasswordApi(newPassword: string): Promise<void> {
+  return http.post<void>("auth/change-password", { newPassword });
+}
