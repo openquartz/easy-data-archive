@@ -20,6 +20,7 @@ import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupTaskStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
 import com.openquartz.easyarchive.starter.model.dto.PageResult;
+import com.openquartz.easyarchive.starter.model.dto.RecentTaskVO;
 import com.openquartz.easyarchive.starter.model.enums.NotificationChannelEnum;
 import com.openquartz.easyarchive.starter.notification.inapp.ArchiveInAppNotificationService;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
@@ -231,7 +232,17 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
         overview.setGroup(toView(group, isActiveTask(latestTask) ? latestTask : null));
         overview.setItemStats(itemStats);
         overview.setTaskStats(taskStats);
-        overview.setRecentTasks(recentTasks == null ? Collections.emptyList() : recentTasks);
+        if (recentTasks == null || recentTasks.isEmpty()) {
+            overview.setRecentTasks(Collections.emptyList());
+        } else {
+            List<RecentTaskVO> recentTaskVOList = new java.util.ArrayList<>(recentTasks.size());
+            for (ArchiveGroupExecuteTask task : recentTasks) {
+                RecentTaskVO vo = new RecentTaskVO();
+                BeanUtils.copyProperties(task, vo);
+                recentTaskVOList.add(vo);
+            }
+            overview.setRecentTasks(recentTaskVOList);
+        }
         return overview;
     }
 
