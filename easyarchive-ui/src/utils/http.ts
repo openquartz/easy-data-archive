@@ -42,13 +42,15 @@ client.interceptors.request.use((config) => {
 });
 
 client.interceptors.response.use(
-  <T>(response: { data: ApiResponse<T> | T | null; status: number }) => {
+  <T>(response: { data: ApiResponse<T> | T | null; status: number; config: AxiosRequestConfig }) => {
     const payload = response.data as ApiResponse<T> | T | null;
     if (payload && typeof payload === "object" && "code" in payload) {
       const envelope = payload as ApiResponse<T>;
       if (envelope.code !== API_SUCCESS_CODE) {
         const message = envelope.message || "Request failed";
-        emitHttpErrorToast(message);
+        if (!(response.config as unknown as Record<string, unknown>).silent) {
+          emitHttpErrorToast(message);
+        }
         throw createApiError(message, {
           status: response.status,
           code: envelope.code,
@@ -71,7 +73,9 @@ client.interceptors.response.use(
     }
 
     const message = payload?.message || error.message || "Request failed";
-    emitHttpErrorToast(message);
+    if (!(error.config as unknown as Record<string, unknown>)?.silent) {
+      emitHttpErrorToast(message);
+    }
     throw createApiError(message, {
       status,
       code: payload?.code,
@@ -99,6 +103,9 @@ export const http = {
   },
   delete<T>(path: string, headers?: Record<string, string>): Promise<T> {
     return request<T>({ url: path, method: "DELETE", headers });
+  },
+  silentGet<T>(path: string): Promise<T> {
+    return request<T>({ url: path, method: "GET", silent: true } as AxiosRequestConfig);
   }
 };
 

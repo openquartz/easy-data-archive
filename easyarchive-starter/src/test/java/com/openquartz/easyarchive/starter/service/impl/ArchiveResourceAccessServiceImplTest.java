@@ -101,6 +101,19 @@ class ArchiveResourceAccessServiceImplTest {
         verify(datasourceAuthorizationService).assertPermission(2L, 2L, DatasourcePermissionLevelEnum.MANAGE);
     }
 
+    @Test
+    void shouldAllowNormalUserToManageOwnedGroup() {
+        when(currentUserService.getCurrentUser()).thenReturn(normalUser());
+        when(groupMapper.selectById(10L)).thenReturn(group(10L, 1L, 2L, 2L));
+
+        service.assertGroupManageable(10L);
+
+        verify(datasourceAuthorizationService, never()).assertPermission(
+                org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
     // --- assertTaskAccessible ---
 
     @Test
@@ -163,10 +176,15 @@ class ArchiveResourceAccessServiceImplTest {
     }
 
     private static ArchiveGroup group(Long id, Long sourceDatasourceId, Long targetDatasourceId) {
+        return group(id, sourceDatasourceId, targetDatasourceId, null);
+    }
+
+    private static ArchiveGroup group(Long id, Long sourceDatasourceId, Long targetDatasourceId, Long ownerUserId) {
         ArchiveGroup group = new ArchiveGroup();
         group.setId(id);
         group.setSourceDatasourceId(sourceDatasourceId);
         group.setTargetDatasourceId(targetDatasourceId);
+        group.setOwnerUserId(ownerUserId);
         return group;
     }
 }

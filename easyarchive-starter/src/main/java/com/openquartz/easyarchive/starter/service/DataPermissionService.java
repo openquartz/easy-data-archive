@@ -12,6 +12,10 @@ public interface DataPermissionService {
 
     void assertAdmin();
 
+    boolean isArchiveAdmin();
+
+    void assertAdminOrArchiveAdmin();
+
     Set<Long> getAuthorizedDatasourceIds(Long userId);
 
     void assertDatasourceReadable(Long datasourceId);

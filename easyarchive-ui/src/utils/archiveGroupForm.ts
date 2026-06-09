@@ -1,4 +1,5 @@
 import type { ArchiveGroup, ArchiveGroupPayload } from "../api/archiveGroup";
+import type { User } from "../api/user";
 
 type ArchiveGroupSeed = Partial<ArchiveGroup> &
   Pick<
@@ -53,6 +54,24 @@ export function createArchiveGroupFormValue(seed?: ArchiveGroupSeed | null): Arc
     notifyWebhookUrl,
     remark: seed?.remark || ""
   };
+}
+
+export function createOwnerOptions(users: User[], currentGroup?: ArchiveGroup | null): User[] {
+  const enabledUsers = users.filter((item) => item.status === 0);
+  if (!currentGroup?.ownerUserId || enabledUsers.some((item) => item.id === currentGroup.ownerUserId)) {
+    return enabledUsers;
+  }
+  const displayName = currentGroup.ownerDisplayName || String(currentGroup.ownerUserId);
+  const match = displayName.match(/^(.+?)\s*\((.+)\)$/);
+  return [
+    ...enabledUsers,
+    {
+      id: currentGroup.ownerUserId,
+      username: match ? match[2] : displayName,
+      realName: match ? match[1] : displayName,
+      status: 0
+    }
+  ];
 }
 
 export function isNotificationConfigEditable(form: Pick<ArchiveGroupPayload, "notifyEnabled">): boolean {

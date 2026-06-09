@@ -42,6 +42,10 @@ export function getUsersApi(): Promise<User[]> {
   return http.get<User[]>("/users");
 }
 
+export function getUsersApiSilent(): Promise<User[]> {
+  return http.silentGet<User[]>("/users");
+}
+
 export function createUserApi(payload: UserPayload): Promise<User> {
   return http.post<User>("/users", payload);
 }

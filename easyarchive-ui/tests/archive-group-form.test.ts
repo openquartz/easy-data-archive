@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   createArchiveGroupFormValue,
+  createOwnerOptions,
   isNotificationConfigEditable,
   requiresWebhook
 } from "../src/utils/archiveGroupForm";
@@ -60,4 +61,26 @@ test("createArchiveGroupFormValue keeps in-app channel without requiring webhook
   assert.equal(form.notifyEnabled, 1);
   assert.equal(form.notifyChannel, "IN_APP");
   assert.equal(requiresWebhook(form), false);
+});
+
+test("createOwnerOptions includes current owner when user list is unavailable", () => {
+  const options = createOwnerOptions([], {
+    id: 3,
+    groupCode: "IN_APP_ARCHIVE",
+    groupName: "In App Archive",
+    sourceDatasourceId: 30,
+    targetDatasourceId: 31,
+    ownerUserId: 4,
+    ownerDisplayName: "jackchen (jackchen)",
+    enableStatus: 0
+  });
+
+  assert.deepEqual(options, [
+    {
+      id: 4,
+      username: "jackchen",
+      realName: "jackchen",
+      status: 0
+    }
+  ]);
 });

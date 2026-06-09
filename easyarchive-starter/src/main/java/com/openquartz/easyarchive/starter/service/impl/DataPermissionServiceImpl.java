@@ -9,6 +9,7 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupMapper;
 import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
 import com.openquartz.easyarchive.starter.mapper.UserDatasourcePermissionMapper;
+import com.openquartz.easyarchive.starter.security.RoleConstants;
 import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
 import com.openquartz.easyarchive.starter.service.DataPermissionService;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +67,18 @@ public class DataPermissionServiceImpl implements DataPermissionService {
     @Override
     public void assertAdmin() {
         if (!isAdmin()) {
+            throw new StarterManageException(StarterErrorCode.ADMIN_PERMISSION_REQUIRED);
+        }
+    }
+
+    @Override
+    public boolean isArchiveAdmin() {
+        return getCurrentUser().isArchiveAdmin();
+    }
+
+    @Override
+    public void assertAdminOrArchiveAdmin() {
+        if (!isAdmin() && !isArchiveAdmin()) {
             throw new StarterManageException(StarterErrorCode.ADMIN_PERMISSION_REQUIRED);
         }
     }

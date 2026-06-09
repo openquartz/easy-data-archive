@@ -12,7 +12,7 @@ import {
 } from "../api/archiveGroup";
 import { getArchiveGroupItemsApi, type ArchiveGroupItemSummary } from "../api/archiveGroupItem";
 import { getDatasourcesApi, type Datasource } from "../api/datasource";
-import { getUsersApi, type User } from "../api/user";
+import { getUsersApiSilent, type User } from "../api/user";
 import ArchiveGroupFormDialog from "../components/ArchiveGroupFormDialog.vue";
 import ArchiveGroupItemsPreviewDialog from "../components/ArchiveGroupItemsPreviewDialog.vue";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
@@ -75,7 +75,7 @@ async function loadData(): Promise<void> {
     const [groupResult, datasourceResult, userResult] = await Promise.all([
       getArchiveGroupsApi(),
       getDatasourcesApi(),
-      getUsersApi()
+      getUsersApiSilent().catch(() => [] as User[])
     ]);
     groups.value = groupResult;
     datasources.value = datasourceResult;
@@ -372,6 +372,7 @@ onBeforeUnmount(() => {
       :datasources="enabledDatasources"
       :users="users"
       :submitting="groupDialogSubmitting"
+      :owner-readonly="!authStore.isAdmin && !authStore.isArchiveAdmin"
       @close="groupDialogVisible = false"
       @submit="submitGroup"
     />

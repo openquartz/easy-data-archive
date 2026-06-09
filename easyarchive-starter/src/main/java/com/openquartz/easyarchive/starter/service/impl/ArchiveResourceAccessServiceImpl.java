@@ -56,6 +56,9 @@ public class ArchiveResourceAccessServiceImpl implements ArchiveResourceAccessSe
             throw new StarterManageException(StarterErrorCode.ARCHIVE_GROUP_NOT_FOUND);
         }
         Long userId = currentUser.getUserId();
+        if (RoleConstants.isNormalUser(currentUser.getRoleCode()) && userId.equals(group.getOwnerUserId())) {
+            return;
+        }
         datasourceAuthorizationService.assertPermission(userId, group.getSourceDatasourceId(), DatasourcePermissionLevelEnum.MANAGE);
         datasourceAuthorizationService.assertPermission(userId, group.getTargetDatasourceId(), DatasourcePermissionLevelEnum.MANAGE);
     }
