@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppBrand from "../components/AppBrand.vue";
+import ChangePasswordDialog from "../components/ChangePasswordDialog.vue";
 import InAppNotificationBell from "../components/InAppNotificationBell.vue";
 import LanguageSwitcher from "../components/LanguageSwitcher.vue";
 import { computed, ref, watch } from "vue";
@@ -7,6 +8,7 @@ import { buildPrimaryNavItems } from "../content/navigation";
 import { useI18n } from "../i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
+import { showSuccessToast } from "../stores/toast";
 import { useWorkTabsStore, getTabKey } from "../stores/workTabs";
 
 const { t } = useI18n();
@@ -14,6 +16,9 @@ const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 const loggingOut = ref(false);
+const userMenuOpen = ref(false);
+const changePasswordVisible = ref(false);
+const changePasswordSubmitting = ref(false);
 const workTabsStore = useWorkTabsStore();
 
 const accountLabel = computed(
@@ -33,6 +38,7 @@ async function handleLogout(): Promise<void> {
   if (loggingOut.value) {
     return;
   }
+  userMenuOpen.value = false;
   loggingOut.value = true;
   try {
     await authStore.logout();
@@ -40,6 +46,18 @@ async function handleLogout(): Promise<void> {
   } finally {
     loggingOut.value = false;
   }
+}
+
+function openChangePassword(): void {
+  userMenuOpen.value = false;
+  changePasswordVisible.value = true;
+}
+
+async function handlePasswordChanged(): Promise<void> {
+  changePasswordVisible.value = false;
+  showSuccessToast(t("common.passwordChanged"));
+  await authStore.logout();
+  await router.push({ name: "login" });
 }
 
 function resolveParam(value: unknown): string {
@@ -114,11 +132,29 @@ function openWorkTab(tab: { type: string; id?: string; taskId?: string; title?: 
       <header class="app-shell__topbar">
         <strong>{{ t("layout.topbar") }}</strong>
         <div class="app-shell__topbar-actions">
-          <span v-if="accountLabel" class="account-pill">{{ accountLabel }}</span>
+          <div class="user-menu" :class="{ 'user-menu--open': userMenuOpen }">
+            <button
+              type="button"
+              class="account-pill user-menu__trigger"
+              @click="userMenuOpen = !userMenuOpen"
+            >
+              {{ accountLabel }} ▾
+            </button>
+            <div v-if="userMenuOpen" class="user-menu__dropdown" @click.stop>
+              <button type="button" class="user-menu__item" @click="openChangePassword">
+                {{ t("layout.actions.changePassword") }}
+              </button>
+              <button
+                type="button"
+                class="user-menu__item"
+                :disabled="loggingOut"
+                @click="handleLogout"
+              >
+                {{ loggingOut ? t("layout.actions.loggingOut") : t("layout.actions.logout") }}
+              </button>
+            </div>
+          </div>
           <InAppNotificationBell />
-          <button class="btn btn--subtle" :disabled="loggingOut" @click="handleLogout">
-            {{ loggingOut ? t("layout.actions.loggingOut") : t("layout.actions.logout") }}
-          </button>
           <LanguageSwitcher />
         </div>
       </header>
@@ -138,4 +174,64 @@ function openWorkTab(tab: { type: string; id?: string; taskId?: string; title?: 
       </main>
     </div>
   </div>
+  <ChangePasswordDialog
+    :visible="changePasswordVisible"
+    :submitting="changePasswordSubmitting"
+    @close="changePasswordVisible = false"
+    @password-changed="handlePasswordChanged"
+  />
 </template>
+
+<style scoped>
+.user-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.user-menu__trigger {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.user-menu--open .user-menu__trigger {
+  color: #164b5a;
+}
+
+.user-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid rgba(16, 57, 71, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-menu__item {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #1e293b;
+  transition: background 120ms ease;
+}
+
+.user-menu__item:hover {
+  background: rgba(16, 57, 71, 0.06);
+}
+
+.user-menu__item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+</style>
