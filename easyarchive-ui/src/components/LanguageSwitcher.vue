@@ -1,51 +1,52 @@
 <script setup lang="ts">
 import { useI18n, type Locale } from "../i18n";
 
-const { locale, locales, setLocale, t } = useI18n();
+const { locale, setLocale } = useI18n();
 
-function switchLocale(nextLocale: Locale): void {
-  if (locale.value === nextLocale) {
-    return;
-  }
-  setLocale(nextLocale);
-}
+const options: { value: Locale; label: string }[] = [
+  { value: "zh-CN", label: "中" },
+  { value: "en-US", label: "EN" },
+];
 </script>
 
 <template>
-  <label class="language-switcher">
-    <span class="language-switcher__label">{{ t("language.switch") }}</span>
-    <select
-      :value="locale"
-      class="language-switcher__select"
-      @change="switchLocale(($event.target as HTMLSelectElement).value as Locale)"
+  <div class="language-switcher">
+    <button
+      v-for="opt in options"
+      :key="opt.value"
+      class="language-switcher__btn"
+      :class="{ 'language-switcher__btn--active': locale === opt.value }"
+      @click="setLocale(opt.value)"
     >
-      <option v-for="item in locales" :key="item" :value="item">
-        {{ item === "zh-CN" ? t("language.zhCN") : t("language.enUS") }}
-      </option>
-    </select>
-  </label>
+      {{ opt.label }}
+    </button>
+  </div>
 </template>
 
 <style scoped>
 .language-switcher {
-  display: inline-grid;
-  gap: 8px;
-}
-
-.language-switcher__label {
-  font-size: 12px;
-  color: #5f6b7a;
-}
-
-.language-switcher__select {
-  min-width: 96px;
-  height: 34px;
+  display: inline-flex;
   border: 1px solid rgba(16, 57, 71, 0.16);
   border-radius: 10px;
-  padding: 0 10px;
+  overflow: hidden;
   background: #fff;
-  color: #164b5a;
+}
+
+.language-switcher__btn {
+  min-width: 48px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: #5f6b7a;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 160ms ease;
+  padding: 0 12px;
+}
+
+.language-switcher__btn--active {
+  background: #164b5a;
+  color: #fff;
 }
 </style>

@@ -29,7 +29,7 @@ public class ArchiveTaskLogController {
 
     @GetMapping("/tasks/{taskId}")
     public ApiResponse<TaskVO> getTask(@PathVariable Long taskId) {
-        Object task = taskLogService.queryTaskById(taskId);
+        TaskVO task = taskLogService.queryTaskById(taskId);
         if (task == null) {
             return ApiResponse.error("NOT_FOUND", "任务不存在");
         }

@@ -14,6 +14,7 @@ import com.openquartz.easyarchive.starter.mapper.SysUserMapper;
 import com.openquartz.easyarchive.starter.notification.inapp.ArchiveInAppNotificationService;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
+import com.openquartz.easyarchive.starter.model.dto.RecentTaskVO;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveGroupOperationLogPresenter;
@@ -520,7 +521,7 @@ class ArchiveGroupServiceImplTest {
 
         ArchiveGroupOverviewView overview = service.findOverview(10L);
 
-        assertSame(recentTasks, overview.getRecentTasks());
+        assertEquals(1, overview.getRecentTasks().size());
         assertEquals(99L, overview.getRecentTasks().get(0).getId());
         assertEquals(ArchiveGroupExecuteTask.STATUS_RUNNING, overview.getRecentTasks().get(0).getExecuteStatus());
         verify(taskMapper, never()).selectLatestActiveByGroupId(10L);

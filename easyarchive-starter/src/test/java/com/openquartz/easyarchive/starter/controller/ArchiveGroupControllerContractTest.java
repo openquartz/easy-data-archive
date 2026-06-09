@@ -5,6 +5,7 @@ import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupItemStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupTaskStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
+import com.openquartz.easyarchive.starter.model.dto.RecentTaskVO;
 import com.openquartz.easyarchive.starter.security.JwtAuthenticationEntryPoint;
 import com.openquartz.easyarchive.starter.security.JwtTokenUtil;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupExecutionService;
@@ -133,7 +134,7 @@ class ArchiveGroupControllerContractTest {
         taskStats.setLastExecuteStatus(ArchiveGroupExecuteTask.STATUS_SUCCESS);
         taskStats.setLastExecuteTime(1704067200000L);
 
-        ArchiveGroupExecuteTask recentTask = new ArchiveGroupExecuteTask();
+        RecentTaskVO recentTask = new RecentTaskVO();
         recentTask.setId(99L);
         recentTask.setGroupId(10L);
         recentTask.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
