@@ -62,7 +62,7 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
     }
 
     @Override
-    public Object queryTaskById(Long taskId) {
+    public TaskVO queryTaskById(Long taskId) {
         archiveResourceAccessService.assertTaskAccessible(taskId);
         return TaskConvertUtils.fromEntity(archiveLogRepository.queryTaskById(taskId));
     }
