@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.starter.controller;
 
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
+import com.openquartz.easyarchive.starter.model.dto.ChangePasswordRequest;
 import com.openquartz.easyarchive.starter.model.dto.LoginRequest;
 import com.openquartz.easyarchive.starter.model.dto.LoginResponse;
 import com.openquartz.easyarchive.starter.service.AuthService;
@@ -39,5 +40,11 @@ public class AuthController {
     @PostMapping("/me")
     public ApiResponse<?> getCurrentUser() {
         return ApiResponse.success(authService.getCurrentUser());
+    }
+
+    @PostMapping("/change-password")
+    public ApiResponse<?> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(request.getNewPassword());
+        return ApiResponse.success();
     }
 }
