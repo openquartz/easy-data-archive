@@ -9,6 +9,8 @@ import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogTypeEnum;
 import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
 import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
+import com.openquartz.easyarchive.starter.model.dto.TaskLogVO;
+import com.openquartz.easyarchive.starter.model.dto.TaskVO;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveTaskOperationLogPresenter;
 import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
@@ -16,6 +18,7 @@ import com.openquartz.easyarchive.starter.security.RoleConstants;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
 import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
 import com.openquartz.easyarchive.starter.service.CurrentUserService;
+import com.openquartz.easyarchive.starter.utils.TaskConvertUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +54,7 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
             total = archiveGroupExecuteTaskMapper.countByUser(userId, status);
         }
         Map<String, Object> result = new HashMap<>();
-        result.put("list", list);
+        result.put("list", TaskConvertUtils.fromEntityTaskList(list));
         result.put("total", total);
         result.put("page", page);
         result.put("size", size);
@@ -61,7 +64,7 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
     @Override
     public Object queryTaskById(Long taskId) {
         archiveResourceAccessService.assertTaskAccessible(taskId);
-        return archiveLogRepository.queryTaskById(taskId);
+        return TaskConvertUtils.fromEntity(archiveLogRepository.queryTaskById(taskId));
     }
 
     @Override
@@ -70,7 +73,7 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
         List<ArchiveTaskLog> list = archiveLogRepository.queryLogsByTaskId(taskId, page, size, executePhase);
         int total = archiveLogRepository.countLogsByTaskId(taskId, executePhase);
         Map<String, Object> result = new HashMap<>();
-        result.put("list", list);
+        result.put("list", TaskConvertUtils.fromEntityLogList(list));
         result.put("total", total);
         result.put("page", page);
         result.put("size", size);
