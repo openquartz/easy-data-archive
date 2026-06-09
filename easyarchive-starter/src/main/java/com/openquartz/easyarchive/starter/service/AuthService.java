@@ -13,4 +13,6 @@ public interface AuthService {
     void logout();
 
     Object getCurrentUser();
+
+    void changePassword(String newPassword);
 }
