@@ -2,8 +2,7 @@ export const messages = {
   "en-US": {
     language: {
       zhCN: "中文",
-      enUS: "English",
-      switch: "Language"
+      enUS: "English"
     },
     layout: {
       brand: "Data Archive Platform",
@@ -429,13 +428,24 @@ export const messages = {
     workTab: {
       groupDetail: "Group Detail",
       task: "Task"
+    },
+    changePassword: {
+      title: "Change Password",
+      newPassword: "New Password",
+      confirmPassword: "Confirm Password",
+      validation: {
+        required: "Password is required",
+        minLength: "Password must be at least 8 characters",
+        pattern: "Password must contain both letters and numbers",
+        mismatch: "Passwords do not match"
+      },
+      failed: "Failed to change password"
     }
   },
   "zh-CN": {
     language: {
       zhCN: "中文",
-      enUS: "English",
-      switch: "语言"
+      enUS: "English"
     },
     layout: {
       brand: "数据归档平台",
@@ -863,6 +873,18 @@ export const messages = {
     workTab: {
       groupDetail: "分组详情",
       task: "任务"
+    },
+    changePassword: {
+      title: "修改密码",
+      newPassword: "新密码",
+      confirmPassword: "确认密码",
+      validation: {
+        required: "请输入新密码",
+        minLength: "密码长度不能少于8位",
+        pattern: "密码必须包含字母和数字",
+        mismatch: "两次输入的密码不一致"
+      },
+      failed: "修改密码失败"
     }
   }
 } as const;
