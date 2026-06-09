@@ -102,4 +102,31 @@ public class AuthServiceImpl implements AuthService {
                 .stream().map(Enum::name).collect(Collectors.toList()));
         return view;
     }
+
+    @Override
+    public void changePassword(String newPassword) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getPrincipal() == null) {
+            throw new BadCredentialsException("未登录");
+        }
+
+        String username;
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User) {
+            username = ((User) principal).getUsername();
+        } else {
+            username = String.valueOf(principal);
+        }
+
+        SysUser user = sysUserMapper.selectByUsername(username);
+        if (user == null || user.getDeleted() != null && user.getDeleted() != 0) {
+            throw new BadCredentialsException("用户不存在");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        sysUserMapper.update(user);
+
+        // 修改成功后强制登出
+        logout();
+    }
 }
