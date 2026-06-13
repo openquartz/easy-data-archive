@@ -1,5 +1,8 @@
 package com.openquartz.easyarchive.core.event;
 
+import lombok.Getter;
+
+@Getter
 public class RuleEndEvent extends ArchiveEvent {
 
     private final String sourceTable;
@@ -25,11 +28,4 @@ public class RuleEndEvent extends ArchiveEvent {
         this.errorMsg = errorMsg;
     }
 
-    public String getSourceTable() { return sourceTable; }
-    public String getTargetTable() { return targetTable; }
-    public String getRuleType() { return ruleType; }
-    public boolean isSuccess() { return success; }
-    public long getProcessedRows() { return processedRows; }
-    public long getElapsedMs() { return elapsedMs; }
-    public String getErrorMsg() { return errorMsg; }
 }
