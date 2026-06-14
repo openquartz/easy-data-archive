@@ -37,6 +37,8 @@ services:
       MYSQL_USER: ${MYSQL_USER:-easyarchive}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-easyarchive123}
       MYSQL_TIMEZONE: ${MYSQL_TIMEZONE:-Asia/Shanghai}
+    ports:
+      - "${BACKEND_PORT:-8789}:8789"
 
   frontend:
     image: ${FRONTEND_IMAGE:-easyarchive-frontend:local}
