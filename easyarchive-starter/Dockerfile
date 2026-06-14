@@ -13,5 +13,5 @@ WORKDIR /app
 
 COPY --from=build /workspace/easyarchive-starter/target/easyarchive-starter.jar /app/easyarchive-starter.jar
 
-EXPOSE 8080
+EXPOSE 8789
 ENTRYPOINT ["java", "-jar", "/app/easyarchive-starter.jar"]
