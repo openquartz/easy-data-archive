@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.core.source.mysql;
 
 import com.google.common.base.Joiner;
 import com.openquartz.easyarchive.common.api.model.*;
+import com.openquartz.easyarchive.common.constant.Constants;
 import com.openquartz.easyarchive.common.util.ExceptionUtils;
 import java.io.Closeable;
 import java.sql.Connection;
@@ -28,8 +29,9 @@ import org.apache.ibatis.jdbc.SqlRunner;
 @Slf4j
 public class MysqlSource implements PageSource, Closeable {
 
-    private static final String COMMA = ",";
     private static final String ID_COLUMN = "ID";
+    private static final String SELECT_ALL_FROM_WHERE_IN_TEMPLATE = "SELECT * FROM %s WHERE %s IN (%s)";
+    private static final String DELETE_FROM_WHERE_IN_TEMPLATE = "DELETE FROM %s WHERE %s IN (%s)";
 
     private final ArchiveConnection archiveConnection;
     @Getter
@@ -62,11 +64,10 @@ public class MysqlSource implements PageSource, Closeable {
 
         this.function = ids -> {
             try {
-                String fetDataSql = "SELECT * FROM "
-                    + tableInfo.getTableName()
-                    + " WHERE "+tableInfo.getIdColum().toUpperCase()+" IN ("
-                    + Joiner.on(COMMA).join(ids)
-                    + ")";
+                String fetDataSql = String.format(SELECT_ALL_FROM_WHERE_IN_TEMPLATE,
+                    tableInfo.getTableName(),
+                    tableInfo.getIdColum().toUpperCase(),
+                    Joiner.on(Constants.COMMA).join(ids));
 
                 List<Map<String, Object>> list = runner.selectAll(fetDataSql);
                 return list.stream().map(DataRecord::new).collect(Collectors.toList());
@@ -99,7 +100,7 @@ public class MysqlSource implements PageSource, Closeable {
         if (this.enableDelete) {
             splitterFetchSql = this.fetchSql + " limit " + maxLoadRows;
         } else {
-            splitterFetchSql = this.fetchSql + " order by id limit " + maxLoadRows * exePage + COMMA + maxLoadRows;
+            splitterFetchSql = this.fetchSql + " order by id limit " + (maxLoadRows * exePage) + Constants.COMMA + maxLoadRows;
         }
         List<Long> ids = resolveId(splitterFetchSql, start, end);
         if (CollectionUtils.isEmpty(ids)) {
@@ -126,11 +127,10 @@ public class MysqlSource implements PageSource, Closeable {
         }
 
         List<String> ids = data.stream().map(t -> t.getData().get(ID_COLUMN).toString()).collect(Collectors.toList());
-        String sql = "DELETE FROM "
-            + this.getTableInfo().getTableName()
-            + " WHERE "+tableInfo.getIdColum().toUpperCase()+" IN ("
-            + String.join(COMMA, ids)
-            + ")";
+        String sql = String.format(DELETE_FROM_WHERE_IN_TEMPLATE,
+            this.getTableInfo().getTableName(),
+            tableInfo.getIdColum().toUpperCase(),
+            String.join(Constants.COMMA, ids));
         if (StringUtils.isNotBlank(deleteWhere)) {
             sql = sql + "\n AND ";
             sql = sql + "(";

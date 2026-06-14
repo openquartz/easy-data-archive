@@ -36,6 +36,7 @@ public class ArchiveGroupItemController {
     private static final String TYPE_TIME = "TIME";
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final long SECONDS_PER_DAY = 24L * 60 * 60;
 
     private final ArchiveGroupItemByIdService idService;
     private final ArchiveGroupItemByTimeService timeService;
@@ -156,7 +157,7 @@ public class ArchiveGroupItemController {
         if (keepDay == null) {
             return null;
         }
-        Instant endTime = Instant.now().minusSeconds(keepDay.longValue() * 24 * 60 * 60);
+        Instant endTime = Instant.now().minusSeconds(keepDay.longValue() * SECONDS_PER_DAY);
         return DATE_TIME_FORMATTER.format(endTime.atZone(ZoneId.systemDefault()).toLocalDateTime());
     }
 

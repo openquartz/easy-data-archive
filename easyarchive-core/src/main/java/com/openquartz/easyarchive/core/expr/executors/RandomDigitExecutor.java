@@ -17,6 +17,7 @@ import java.util.Random;
 public class RandomDigitExecutor implements CommandExecutor {
 
     private static final Random RANDOM = new Random();
+    private static final int DIGIT_RANGE = 10;
 
     @Override
     public Result exec(Command command) {
@@ -30,7 +31,7 @@ public class RandomDigitExecutor implements CommandExecutor {
     }
 
     private int randGetSingleDigit() {
-        return RANDOM.nextInt(10);
+        return RANDOM.nextInt(DIGIT_RANGE);
     }
 
     @Override
