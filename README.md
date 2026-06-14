@@ -495,7 +495,3 @@ public class MyCustomExecutor implements CommandExecutor {
 ## 📄 许可证
 
 本项目采用 [Apache License 2.0](LICENSE)。
-
-## 👥 作者
-
-**svnee**
