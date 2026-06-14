@@ -175,7 +175,7 @@ DefaultArchiveEventPublisher
 
 | 角色 | 说明 |
 |------|------|
-| `platform_admin` | 平台管理员 (全部权限) |
+| `platform_admin` | 系统管理员 (全部权限) |
 | `archive_admin` | 归档管理员 (归档配置管理) |
 | `normal_user` | 普通用户 (默认角色) |
 

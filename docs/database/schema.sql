@@ -1,253 +1,531 @@
--- EasyArchive 数据库表结构
--- MySQL 5.7+
+-- EasyArchive Platform 数据库初始化脚本
+-- 最终版本（整合 V1~V12 所有变更）
+-- 适用场景：全新部署，直接执行此脚本即可构建完整数据库结构
 SET NAMES utf8mb4;
 
--- 创建数据库
-CREATE DATABASE IF NOT EXISTS easy_archive DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE easy_archive;
+-- ============================================================
+-- 权限与审计模块
+-- ============================================================
 
--- 归档连接配置表
-CREATE TABLE archive_connection (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    connect_code VARCHAR(100) NOT NULL UNIQUE COMMENT '连接编码，唯一',
-    connect_type VARCHAR(50) NOT NULL DEFAULT 'MYSQL' COMMENT '连接类型。MYSQL、ES等',
-    url VARCHAR(500) NOT NULL COMMENT '数据库连接URL',
-    username VARCHAR(100) NOT NULL COMMENT '用户名',
-    password VARCHAR(200) NOT NULL COMMENT '密码',
-    status INT NOT NULL DEFAULT 0 COMMENT '0-未测试，1-正常，2-异常',
-    remark VARCHAR(500) COMMENT '备注',
-    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creator_id VARCHAR(50) COMMENT '创建人ID',
-    updater_id VARCHAR(50) COMMENT '更新人ID',
-    deleted BIGINT NOT NULL DEFAULT 0 COMMENT '0代表正常数据，其他为逻辑删除'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档连接配置表';
+CREATE TABLE IF NOT EXISTS `sys_user` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `username` VARCHAR(64) NOT NULL COMMENT '登录账号，唯一',
+    `password` VARCHAR(128) NOT NULL COMMENT 'BCrypt 密文',
+    `real_name` VARCHAR(64) NOT NULL COMMENT '姓名',
+    `mobile` VARCHAR(32) NULL COMMENT '手机',
+    `email` VARCHAR(128) NULL COMMENT '邮箱',
+    `role_code` VARCHAR(64) NOT NULL COMMENT '角色编码: platform_admin/archive_admin/normal_user',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
+    `last_login_time` DATETIME NULL COMMENT '最近登录时间',
+    `remark` VARCHAR(255) NULL COMMENT '备注',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `creator_id` BIGINT NULL COMMENT '创建人ID',
+    `updater_id` BIGINT NULL COMMENT '更新人ID',
+    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uk_username` (`username`),
+    INDEX `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
--- 归档分组表
-CREATE TABLE archive_group (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    group_code VARCHAR(100) NOT NULL UNIQUE COMMENT '分组编码，唯一',
-    group_name VARCHAR(200) NOT NULL COMMENT '分组名称',
-    source_connection_id INT NOT NULL COMMENT '源库连接ID',
-    target_connection_id INT COMMENT '目标库连接ID，可选',
-    owner_user_id BIGINT NOT NULL COMMENT '所属人ID',
-    enable_status INT NOT NULL DEFAULT 0 COMMENT '0-启用，1-禁用',
-    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creator_id VARCHAR(50) COMMENT '创建人ID',
-    updater_id VARCHAR(50) COMMENT '更新人ID',
-    deleted BIGINT NOT NULL DEFAULT 0 COMMENT '0代表正常数据，其他为逻辑删除',
+CREATE TABLE IF NOT EXISTS `sys_role` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `role_code` VARCHAR(64) NOT NULL COMMENT '角色编码，唯一',
+    `role_name` VARCHAR(64) NOT NULL COMMENT '角色名称',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
+    `data_scope_type` VARCHAR(32) NULL COMMENT '数据范围类型',
+    `remark` VARCHAR(255) NULL COMMENT '备注',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `creator_id` BIGINT NULL COMMENT '创建人ID',
+    `updater_id` BIGINT NULL COMMENT '更新人ID',
+    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uk_role_code` (`role_code`),
+    INDEX `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色表';
 
-    INDEX idx_group_code (group_code),
-    INDEX idx_enable_status (enable_status),
-    INDEX idx_owner_user (owner_user_id)
+CREATE TABLE IF NOT EXISTS `sys_permission` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `permission_code` VARCHAR(128) NOT NULL COMMENT '权限码，唯一',
+    `permission_name` VARCHAR(64) NOT NULL COMMENT '权限名',
+    `permission_type` VARCHAR(16) NOT NULL COMMENT 'MENU/BUTTON/API',
+    `parent_id` BIGINT NULL COMMENT '父节点',
+    `route_path` VARCHAR(128) NULL COMMENT '前端路由',
+    `component` VARCHAR(128) NULL COMMENT '前端组件',
+    `sort_no` INT NOT NULL DEFAULT 0 COMMENT '排序',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '启用状态',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `creator_id` BIGINT NULL COMMENT '创建人ID',
+    `updater_id` BIGINT NULL COMMENT '更新人ID',
+    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uk_permission_code` (`permission_code`),
+    INDEX `idx_parent_id` (`parent_id`),
+    INDEX `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限表';
+
+CREATE TABLE IF NOT EXISTS `sys_user_role` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id` BIGINT NOT NULL COMMENT '用户 ID',
+    `role_id` BIGINT NOT NULL COMMENT '角色 ID',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `creator_id` BIGINT NULL COMMENT '创建人ID',
+    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uk_user_role` (`user_id`, `role_id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_role_id` (`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户角色关联表';
+
+CREATE TABLE IF NOT EXISTS `sys_role_permission` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `role_id` BIGINT NOT NULL COMMENT '角色 ID',
+    `permission_id` BIGINT NOT NULL COMMENT '权限 ID',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `creator_id` BIGINT NULL COMMENT '创建人ID',
+    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uk_role_permission` (`role_id`, `permission_id`),
+    INDEX `idx_role_id` (`role_id`),
+    INDEX `idx_permission_id` (`permission_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色权限关联表';
+
+CREATE TABLE IF NOT EXISTS `sys_login_session` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id` BIGINT NOT NULL COMMENT '用户 ID',
+    `token_id` VARCHAR(64) NOT NULL COMMENT '会话标识',
+    `login_ip` VARCHAR(64) NULL COMMENT '登录 IP',
+    `user_agent` VARCHAR(255) NULL COMMENT '终端信息',
+    `login_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-成功 1-登出 2-失效',
+    `expire_time` DATETIME NOT NULL COMMENT '过期时间',
+    `logout_time` DATETIME NULL COMMENT '登出时间',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uk_token_id` (`token_id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_status_expire` (`login_status`, `expire_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录会话表';
+
+CREATE TABLE IF NOT EXISTS `sys_operation_log` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id` BIGINT NOT NULL COMMENT '操作人',
+    `module_code` VARCHAR(64) NOT NULL COMMENT '模块编码',
+    `action_code` VARCHAR(64) NOT NULL COMMENT '操作类型',
+    `button_name` VARCHAR(128) NULL COMMENT '按钮名称',
+    `biz_type` VARCHAR(64) NULL COMMENT '业务对象类型',
+    `biz_id` BIGINT NULL COMMENT '业务对象主键',
+    `biz_key` VARCHAR(255) NULL COMMENT '业务对象摘要',
+    `content` TEXT NULL COMMENT '中文操作内容',
+    `request_uri` VARCHAR(255) NULL COMMENT '请求路径',
+    `request_method` VARCHAR(16) NULL COMMENT 'HTTP 方法',
+    `request_param` TEXT NULL COMMENT '参数摘要',
+    `response_code` VARCHAR(32) NULL COMMENT '响应码',
+    `result_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-成功 1-失败',
+    `cost_ms` BIGINT NULL COMMENT '耗时',
+    `client_ip` VARCHAR(64) NULL COMMENT 'IP',
+    `error_message` VARCHAR(500) NULL COMMENT '失败原因',
+    `operate_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_module_action` (`module_code`, `action_code`),
+    INDEX `idx_biz_type_id` (`biz_type`, `biz_id`),
+    INDEX `idx_module_action_time` (`module_code`, `action_code`, `operate_time`),
+    INDEX `idx_result_status` (`result_status`),
+    INDEX `idx_operate_time` (`operate_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
+
+-- ============================================================
+-- 归档核心模块
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS `ea_archive_datasource` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `datasource_code` VARCHAR(64) NOT NULL COMMENT '编码，唯一',
+    `datasource_name` VARCHAR(64) NOT NULL COMMENT '名称',
+    `datasource_type` VARCHAR(32) NOT NULL COMMENT 'MYSQL 等',
+    `jdbc_url` VARCHAR(255) NOT NULL COMMENT 'JDBC 地址',
+    `username` VARCHAR(128) NOT NULL COMMENT '用户名',
+    `password_cipher` VARCHAR(255) NOT NULL COMMENT '加密密码',
+    `schema_name` VARCHAR(64) NULL COMMENT 'Schema',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-未测试 1-已启用 2-已停用',
+    `last_check_time` DATETIME NULL COMMENT '最近校验时间',
+    `owner_user_id` BIGINT NULL COMMENT '负责人',
+    `remark` VARCHAR(255) NULL COMMENT '备注',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `creator_id` BIGINT NULL COMMENT '创建人ID',
+    `updater_id` BIGINT NULL COMMENT '更新人ID',
+    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uk_datasource_code` (`datasource_code`),
+    INDEX `idx_status_owner` (`status`, `owner_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='数据源表';
+
+CREATE TABLE IF NOT EXISTS `ea_archive_group` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `parent_id` BIGINT NULL COMMENT '父分组 ID',
+    `group_code` VARCHAR(64) NOT NULL COMMENT '分组编码，唯一',
+    `group_name` VARCHAR(64) NOT NULL COMMENT '分组名称',
+    `group_path` VARCHAR(255) NULL COMMENT '层级路径',
+    `group_level` INT NOT NULL DEFAULT 1 COMMENT '层级',
+    `source_datasource_id` BIGINT NOT NULL COMMENT '源数据源',
+    `target_datasource_id` BIGINT NOT NULL COMMENT '目标数据源',
+    `owner_user_id` BIGINT NULL COMMENT '负责人',
+    `enable_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
+    `notify_enabled` TINYINT NOT NULL DEFAULT 0 COMMENT '0-关闭通知 1-开启通知',
+    `notify_channel` VARCHAR(16) NULL COMMENT '通知渠道：FEISHU/WECOM',
+    `notify_webhook_url` VARCHAR(500) NULL COMMENT '通知 webhook 地址',
+    `remark` VARCHAR(255) NULL COMMENT '备注',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `creator_id` BIGINT NULL COMMENT '创建人ID',
+    `updater_id` BIGINT NULL COMMENT '更新人ID',
+    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uk_group_code` (`group_code`),
+    INDEX `idx_parent_id` (`parent_id`),
+    INDEX `idx_source_datasource` (`source_datasource_id`),
+    INDEX `idx_target_datasource` (`target_datasource_id`),
+    INDEX `idx_enable_status` (`enable_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档分组表';
 
--- 归档配置表（按时间归档）
-CREATE TABLE archive_config_by_time (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    group_id BIGINT NOT NULL COMMENT '分组ID',
-    source_table VARCHAR(200) NOT NULL COMMENT '来源表名',
-    target_table VARCHAR(200) NOT NULL COMMENT '目标表名',
-    priority INT NOT NULL DEFAULT 0 COMMENT '优先级',
-    fetch_sql TEXT NOT NULL COMMENT '执行SQL',
-    delete_where VARCHAR(1000) COMMENT '删除条件',
-    start_time DATETIME NOT NULL COMMENT '开始时间',
-    keep_day INT NOT NULL DEFAULT 30 COMMENT '保持多少天',
-    step_minutes INT NOT NULL DEFAULT 60 COMMENT '滚动步长时间，单位：分钟',
-    step_count INT NOT NULL DEFAULT 1000 COMMENT '步长',
-    pause_ms INT COMMENT '规则停顿时间，单位毫秒，为空时走全局配置',
-    enable_clean INT NOT NULL DEFAULT 0 COMMENT '0-启用清理源数据，1-不启用清理源数据',
-    enable_write INT NOT NULL DEFAULT 0 COMMENT '0-启用写入目标数据，1-不启用',
-    enable_status INT NOT NULL DEFAULT 0 COMMENT '0-启用，1-禁用',
-    id_column VARCHAR(50) NOT NULL DEFAULT 'ID' COMMENT 'ID字段名，默认为ID',
-    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creator_id VARCHAR(50) COMMENT '创建人ID',
-    updater_id VARCHAR(50) COMMENT '更新人ID',
-    deleted BIGINT NOT NULL DEFAULT 0 COMMENT '0代表正常数据，其他为逻辑删除',
+CREATE TABLE IF NOT EXISTS `ea_archive_task` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `task_no` VARCHAR(64) NOT NULL COMMENT '任务编号，唯一',
+    `group_id` BIGINT NOT NULL COMMENT '分组 ID',
+    `trigger_type` VARCHAR(16) NOT NULL COMMENT 'MANUAL/SCHEDULE/RETRY',
+    `execute_status` VARCHAR(16) NOT NULL DEFAULT 'WAITING' COMMENT 'WAITING/RUNNING/SUCCESS/FAILED/CANCELLING/CANCELLED',
+    `start_time` DATETIME NULL COMMENT '开始时间',
+    `end_time` DATETIME NULL COMMENT '结束时间',
+    `processed_records` BIGINT NOT NULL DEFAULT 0 COMMENT '已处理条数',
+    `processed_speed` DECIMAL(18,2) NULL COMMENT '当前速率',
+    `current_rule_id` BIGINT NULL COMMENT '当前明细 ID',
+    `current_item_type` VARCHAR(16) NULL COMMENT '当前明细类型 ID/TIME',
+    `heartbeat_time` DATETIME NULL COMMENT '最近心跳',
+    `cancel_reason` VARCHAR(255) NULL COMMENT '取消原因',
+    `error_msg` VARCHAR(1000) NULL COMMENT '错误摘要',
+    `trigger_user_id` BIGINT NULL COMMENT '触发人',
+    `finished_flag` BIGINT NULL COMMENT '终态幂等标记',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `uk_task_no` (`task_no`),
+    INDEX `idx_group_status` (`group_id`, `execute_status`),
+    INDEX `idx_status_heartbeat` (`execute_status`, `heartbeat_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档任务表';
 
-    INDEX idx_group_id (group_id),
-    INDEX idx_enable_status (enable_status),
-    INDEX idx_priority (priority)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档配置表-按时间';
+CREATE TABLE IF NOT EXISTS `ea_archive_task_detail` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `task_id` BIGINT NOT NULL COMMENT '任务 ID',
+    `rule_id` BIGINT NOT NULL COMMENT '明细 ID',
+    `item_type` VARCHAR(16) NOT NULL COMMENT 'ID/TIME',
+    `execute_status` VARCHAR(16) NOT NULL DEFAULT 'WAITING' COMMENT '明细状态',
+    `processed_records` BIGINT NOT NULL DEFAULT 0 COMMENT '已处理条数',
+    `processed_speed` DECIMAL(18,2) NULL COMMENT '处理速率',
+    `start_time` DATETIME NULL COMMENT '开始时间',
+    `end_time` DATETIME NULL COMMENT '结束时间',
+    `error_msg` VARCHAR(1000) NULL COMMENT '失败摘要',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_task_id` (`task_id`),
+    INDEX `idx_rule_id` (`rule_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档任务明细表';
 
--- 归档配置表（按ID归档）
-CREATE TABLE archive_config_by_id (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    group_id BIGINT NOT NULL COMMENT '分组ID',
-    source_table VARCHAR(200) NOT NULL COMMENT '来源表名',
-    target_table VARCHAR(200) NOT NULL COMMENT '目标表名',
-    priority INT NOT NULL DEFAULT 0 COMMENT '优先级',
-    fetch_sql TEXT NOT NULL COMMENT '执行SQL',
-    delete_where VARCHAR(1000) COMMENT '删除条件',
-    start_id VARCHAR(50) NOT NULL DEFAULT '0' COMMENT '开始ID',
-    end_id VARCHAR(50) NOT NULL DEFAULT '9223372036854775807' COMMENT '结束ID',
-    step_count INT NOT NULL DEFAULT 1000 COMMENT '步长',
-    step_rounds INT NOT NULL DEFAULT 5000 COMMENT '滚动步长',
-    pause_ms INT COMMENT '规则停顿时间，单位毫秒，为空时走全局配置',
-    enable_clean INT NOT NULL DEFAULT 0 COMMENT '0-启用清理源数据，1-不启用清理源数据',
-    enable_write INT NOT NULL DEFAULT 0 COMMENT '0-启用写入目标数据，1-不启用',
-    enable_status INT NOT NULL DEFAULT 0 COMMENT '0-启用，1-禁用',
-    id_column VARCHAR(50) NOT NULL DEFAULT 'ID' COMMENT 'ID字段名，默认为ID',
-    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creator_id VARCHAR(50) COMMENT '创建人ID',
-    updater_id VARCHAR(50) COMMENT '更新人ID',
-    deleted BIGINT NOT NULL DEFAULT 0 COMMENT '0代表正常数据，其他为逻辑删除',
+CREATE TABLE IF NOT EXISTS `ea_archive_task_progress` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `task_id` BIGINT NOT NULL COMMENT '任务 ID',
+    `snapshot_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '快照时间',
+    `execute_phase` VARCHAR(64) NULL COMMENT '当前阶段',
+    `processed_records` BIGINT NOT NULL DEFAULT 0 COMMENT '已处理条数',
+    `processed_speed` DECIMAL(18,2) NULL COMMENT '当前速率',
+    `current_rule_id` BIGINT NULL COMMENT '当前明细 ID',
+    `current_item_type` VARCHAR(16) NULL COMMENT '当前明细类型 ID/TIME',
+    `heartbeat_flag` TINYINT NOT NULL DEFAULT 1 COMMENT '心跳正常标记',
+    PRIMARY KEY (`id`),
+    INDEX `idx_task_id` (`task_id`),
+    INDEX `idx_snapshot_time` (`snapshot_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档任务进度表';
 
-    INDEX idx_group_id (group_id),
-    INDEX idx_enable_status (enable_status),
-    INDEX idx_priority (priority)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档配置表-按ID';
-
--- 统一归档配置表（用于DbArchiveRuleLoader）
-CREATE TABLE archive_config (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    group_id BIGINT NOT NULL COMMENT '分组ID',
-    archive_type VARCHAR(20) NOT NULL COMMENT '归档类型：TIME-按时间，ID-按ID',
-    source_table VARCHAR(200) NOT NULL COMMENT '来源表名',
-    target_table VARCHAR(200) NOT NULL COMMENT '目标表名',
-    priority INT NOT NULL DEFAULT 0 COMMENT '优先级',
-    fetch_sql TEXT NOT NULL COMMENT '执行SQL',
-    delete_where VARCHAR(1000) COMMENT '删除条件',
-
-    -- 按时间归档相关字段
-    start_time DATETIME COMMENT '开始时间',
-    keep_day INT COMMENT '保持多少天',
-    step_minutes INT COMMENT '滚动步长时间，单位：分钟',
-
-    -- 按ID归档相关字段
-    start_id VARCHAR(50) COMMENT '开始ID',
-    end_id VARCHAR(50) COMMENT '结束ID',
-    step_rounds INT COMMENT '滚动步长',
-
-    -- 通用字段
-    step_count INT NOT NULL DEFAULT 1000 COMMENT '步长',
-    pause_ms INT COMMENT '规则停顿时间，单位毫秒，为空时走全局配置',
-    enable_clean INT NOT NULL DEFAULT 0 COMMENT '0-启用清理源数据，1-不启用清理源数据',
-    enable_write INT NOT NULL DEFAULT 0 COMMENT '0-启用写入目标数据，1-不启用',
-    enable_status INT NOT NULL DEFAULT 0 COMMENT '0-启用，1-禁用',
-    id_column VARCHAR(50) NOT NULL DEFAULT 'ID' COMMENT 'ID字段名，默认为ID',
-    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creator_id VARCHAR(50) COMMENT '创建人ID',
-    updater_id VARCHAR(50) COMMENT '更新人ID',
-    deleted BIGINT NOT NULL DEFAULT 0 COMMENT '0代表正常数据，其他为逻辑删除',
-
-    INDEX idx_group_id (group_id),
-    INDEX idx_archive_type (archive_type),
-    INDEX idx_enable_status (enable_status),
-    INDEX idx_priority (priority)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='统一归档配置表';
-
--- 归档执行任务表
-CREATE TABLE archive_group_execute_task (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    group_id BIGINT NOT NULL COMMENT '归档分组ID',
-    start_time DATETIME COMMENT '执行开始时间',
-    end_time DATETIME COMMENT '执行结束时间',
-    execute_status INT NOT NULL DEFAULT 0 COMMENT '执行状态：0-等待，1-执行中，2-成功，3-失败',
-    error_msg TEXT COMMENT '执行异常信息',
-    processed_records BIGINT NOT NULL DEFAULT 0 COMMENT '已经处理记录数',
-    processed_speed DECIMAL(10,2) COMMENT '处理速度（记录/秒）',
-    heartbeat_time DATETIME COMMENT '最新心跳时间点',
-    finished_flag BIGINT NOT NULL DEFAULT 0 COMMENT '是否已完成标记，0-为未完成，否则为id',
-    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    creator_id VARCHAR(50) COMMENT '创建人ID',
-    updater_id VARCHAR(50) COMMENT '更新人ID',
-    deleted BIGINT NOT NULL DEFAULT 0 COMMENT '0代表正常数据，其他为逻辑删除',
-
-    INDEX idx_group_id (group_id),
-    INDEX idx_execute_status (execute_status),
-    INDEX idx_heartbeat_time (heartbeat_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档执行任务表';
-
--- 归档任务日志表
-CREATE TABLE archive_task_log (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    task_id BIGINT NOT NULL COMMENT '任务ID',
-    table_name VARCHAR(200) NOT NULL COMMENT '表名',
-    archive_type VARCHAR(20) NOT NULL COMMENT '归档类型：TIME-按时间，ID-按ID',
-    start_range VARCHAR(100) COMMENT '开始范围',
-    end_range VARCHAR(100) COMMENT '结束范围',
-    processed_rows INT NOT NULL DEFAULT 0 COMMENT '处理行数',
-    status INT NOT NULL DEFAULT 0 COMMENT '状态：0-成功，1-失败',
-    error_message TEXT COMMENT '错误信息',
-    execute_time BIGINT COMMENT '执行时间（毫秒）',
-    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    INDEX idx_task_id (task_id),
-    INDEX idx_table_name (table_name),
-    INDEX idx_created_time (created_time)
+CREATE TABLE IF NOT EXISTS `ea_archive_task_log` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `task_id` BIGINT NOT NULL COMMENT '任务 ID',
+    `rule_id` BIGINT NULL COMMENT '明细 ID',
+    `item_type` VARCHAR(16) NULL COMMENT '明细类型 ID/TIME',
+    `log_type` VARCHAR(32) NOT NULL COMMENT 'START/PROGRESS/FINISH/ERROR/CANCEL',
+    `log_level` VARCHAR(16) NOT NULL DEFAULT 'INFO' COMMENT 'INFO/WARN/ERROR',
+    `execute_phase` VARCHAR(64) NULL COMMENT '执行阶段',
+    `log_content` TEXT NOT NULL COMMENT '日志内容',
+    `processed_count` BIGINT NULL COMMENT '已处理数',
+    `process_speed` DECIMAL(18,2) NULL COMMENT '处理速率',
+    `log_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '日志时间',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_task_id` (`task_id`),
+    INDEX `idx_rule_id` (`rule_id`),
+    INDEX `idx_log_type` (`log_type`),
+    INDEX `idx_log_time` (`log_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档任务日志表';
 
--- 插入示例数据
-INSERT INTO archive_connection (connect_code, connect_type, url, username, password, status, remark) VALUES
-('SOURCE_DB', 'MYSQL', 'jdbc:mysql://localhost:3306/source_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true', 'root', 'password', 1, '源数据库'),
-('TARGET_DB', 'MYSQL', 'jdbc:mysql://localhost:3306/target_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true', 'root', 'password', 1, '目标数据库'),
-('CONFIG_DB', 'MYSQL', 'jdbc:mysql://localhost:3306/config_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true', 'root', 'password', 1, '配置数据库');
+CREATE TABLE IF NOT EXISTS `ea_archive_group_execute_task` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `group_id` BIGINT NOT NULL COMMENT '归档分组 ID',
+    `start_time` DATETIME NULL COMMENT '执行开始时间',
+    `end_time` DATETIME NULL COMMENT '执行结束时间',
+    `execute_status` INT NOT NULL DEFAULT 0 COMMENT '0-等待 1-运行中 2-成功 3-失败',
+    `error_msg` VARCHAR(1000) NULL COMMENT '执行异常信息',
+    `processed_records` BIGINT NOT NULL DEFAULT 0 COMMENT '已处理记录数',
+    `processed_speed` DECIMAL(18,2) NULL COMMENT '处理速度(记录/秒)',
+    `heartbeat_time` DATETIME NULL COMMENT '最新心跳时间',
+    `finished_flag` BIGINT NOT NULL DEFAULT 0 COMMENT '0-未完成, 否则为id',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `creator_id` VARCHAR(64) NULL COMMENT '创建人ID',
+    `updater_id` VARCHAR(64) NULL COMMENT '更新人ID',
+    `deleted` BIGINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    INDEX `idx_group_id` (`group_id`),
+    INDEX `idx_execute_status` (`execute_status`),
+    INDEX `idx_start_time` (`start_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档执行任务表';
 
-INSERT INTO archive_group (group_code, group_name, source_connection_id, target_connection_id, owner_user_id, enable_status) VALUES
-('USER_DATA_GROUP', '用户数据归档组', 1, 2, 1001, 0);
+CREATE TABLE IF NOT EXISTS `ea_archive_group_item_by_id` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `group_id` BIGINT NOT NULL COMMENT '归档分组 ID',
+    `source_table` VARCHAR(128) NOT NULL COMMENT '来源表',
+    `target_table` VARCHAR(128) NOT NULL COMMENT '目标表',
+    `priority` INT NOT NULL COMMENT '组内执行优先级',
+    `fetch_sql` TEXT NOT NULL COMMENT '抓取 SQL',
+    `delete_where` TEXT NULL COMMENT '删除保护条件',
+    `start_id` VARCHAR(255) NOT NULL DEFAULT '0' COMMENT '起始 ID 表达式',
+    `end_id` VARCHAR(255) NOT NULL DEFAULT '9223372036854775807' COMMENT '结束 ID 表达式',
+    `step_count` INT NOT NULL DEFAULT 1000 COMMENT '单批大小',
+    `step_rounds` INT NOT NULL DEFAULT 5000 COMMENT 'ID 滚动窗口',
+    `pause_ms` INT NULL COMMENT '批间停顿毫秒',
+    `enable_clean` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用清理 1-不清理',
+    `enable_write` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用写入 1-不写入',
+    `enable_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
+    `id_column` VARCHAR(64) NOT NULL DEFAULT 'ID' COMMENT 'ID 字段名',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `creator_id` VARCHAR(64) NULL COMMENT '创建人ID',
+    `updater_id` VARCHAR(64) NULL COMMENT '更新人ID',
+    `deleted` BIGINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    INDEX `idx_group_status` (`group_id`, `enable_status`),
+    INDEX `idx_group_priority_id` (`group_id`, `priority`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='按 ID 归档分组明细';
 
--- 示例：按时间归档配置
-INSERT INTO archive_config (group_id, archive_type, source_table, target_table, priority, fetch_sql, start_time, keep_day, step_minutes, step_count, enable_clean, enable_write, enable_status, id_column) VALUES
-(1, 'TIME', 'user_orders', 'user_orders_archive', 1, 'SELECT * FROM user_orders WHERE create_time BETWEEN ? AND ?', '2020-01-01 00:00:00', 365, 60, 1000, 0, 0, 0, 'id');
+CREATE TABLE IF NOT EXISTS `ea_archive_group_item_by_time` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `group_id` BIGINT NOT NULL COMMENT '归档分组 ID',
+    `source_table` VARCHAR(128) NOT NULL COMMENT '来源表',
+    `target_table` VARCHAR(128) NOT NULL COMMENT '目标表',
+    `priority` INT NOT NULL COMMENT '组内执行优先级',
+    `fetch_sql` TEXT NOT NULL COMMENT '抓取 SQL',
+    `delete_where` TEXT NULL COMMENT '删除保护条件',
+    `start_time` DATETIME NOT NULL COMMENT '开始时间',
+    `keep_day` INT NOT NULL COMMENT '保留天数',
+    `step_minutes` INT NOT NULL COMMENT '时间滚动窗口分钟',
+    `step_count` INT NOT NULL DEFAULT 1000 COMMENT '单批大小',
+    `pause_ms` INT NULL COMMENT '批间停顿毫秒',
+    `enable_clean` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用清理 1-不清理',
+    `enable_write` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用写入 1-不写入',
+    `enable_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用 1-禁用',
+    `id_column` VARCHAR(64) NOT NULL DEFAULT 'ID' COMMENT 'ID 字段名',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `creator_id` VARCHAR(64) NULL COMMENT '创建人ID',
+    `updater_id` VARCHAR(64) NULL COMMENT '更新人ID',
+    `deleted` BIGINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    INDEX `idx_group_status` (`group_id`, `enable_status`),
+    INDEX `idx_group_priority_time` (`group_id`, `priority`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='按时间归档分组明细';
 
--- 示例：按ID归档配置
-INSERT INTO archive_config (group_id, archive_type, source_table, target_table, priority, fetch_sql, start_id, end_id, step_count, step_rounds, enable_clean, enable_write, enable_status, id_column) VALUES
-(1, 'ID', 'user_logs', 'user_logs_archive', 2, 'SELECT * FROM user_logs WHERE id BETWEEN ? AND ?', '0', '1000000', 1000, 5000, 0, 0, 0, 'id');
+-- ============================================================
+-- 数据源授权模块（V11: 重构 ea_user_datasource_permission -> ea_archive_connection_permission）
+-- ============================================================
 
--- 创建视图：归档配置视图（合并时间和ID归档配置）
-CREATE VIEW v_archive_config AS
-SELECT
-    id,
-    group_id,
-    'TIME' as archive_type,
-    source_table,
-    target_table,
-    priority,
-    fetch_sql,
-    delete_where,
-    start_time,
-    keep_day,
-    step_minutes,
-    NULL as start_id,
-    NULL as end_id,
-    NULL as step_rounds,
-    step_count,
-    pause_ms,
-    enable_clean,
-    enable_write,
-    enable_status,
-    id_column
-FROM archive_config_by_time
-WHERE enable_status = 0 AND deleted = 0
+CREATE TABLE IF NOT EXISTS `ea_archive_connection_permission` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT NOT NULL,
+    `datasource_id` BIGINT NOT NULL,
+    `permission_level` VARCHAR(32) NOT NULL,
+    `grant_source` VARCHAR(32) NOT NULL,
+    `granted_by_user_id` BIGINT NOT NULL,
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted` TINYINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user_ds_level` (`user_id`, `datasource_id`, `permission_level`, `deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-UNION ALL
+-- ============================================================
+-- 监控告警模块
+-- ============================================================
 
-SELECT
-    id,
-    group_id,
-    'ID' as archive_type,
-    source_table,
-    target_table,
-    priority,
-    fetch_sql,
-    delete_where,
-    NULL as start_time,
-    NULL as keep_day,
-    NULL as step_minutes,
-    start_id,
-    end_id,
-    step_rounds,
-    step_count,
-    pause_ms,
-    enable_clean,
-    enable_write,
-    enable_status,
-    id_column
-FROM archive_config_by_id
-WHERE enable_status = 0 AND deleted = 0;
+CREATE TABLE IF NOT EXISTS `ea_monitor_rule` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `rule_name` VARCHAR(64) NOT NULL COMMENT '监控规则名称',
+    `group_id` BIGINT NULL COMMENT '关联分组，可空',
+    `metric_code` VARCHAR(32) NOT NULL COMMENT 'FAILURE_COUNT/HEARTBEAT_TIMEOUT/SPEED_LOW',
+    `threshold_value` DECIMAL(18,2) NOT NULL COMMENT '阈值',
+    `compare_type` VARCHAR(8) NOT NULL COMMENT 'GT/LT/GTE/LTE',
+    `channel_type` VARCHAR(32) NOT NULL COMMENT 'EMAIL/WEBHOOK/WECOM',
+    `webhook_url` VARCHAR(255) NULL COMMENT '渠道地址',
+    `silence_minutes` INT NOT NULL DEFAULT 5 COMMENT '静默时间',
+    `enable_status` TINYINT NOT NULL DEFAULT 0 COMMENT '启停状态',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `creator_id` BIGINT NULL COMMENT '创建人ID',
+    `updater_id` BIGINT NULL COMMENT '更新人ID',
+    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
+    PRIMARY KEY (`id`),
+    INDEX `idx_group_id` (`group_id`),
+    INDEX `idx_enable_status` (`enable_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='监控规则表';
+
+CREATE TABLE IF NOT EXISTS `ea_alert_event` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `monitor_rule_id` BIGINT NOT NULL COMMENT '监控规则 ID',
+    `task_id` BIGINT NULL COMMENT '关联任务',
+    `alert_level` VARCHAR(16) NOT NULL COMMENT 'INFO/WARN/CRITICAL',
+    `alert_status` VARCHAR(16) NOT NULL DEFAULT 'OPEN' COMMENT 'OPEN/NOTIFIED/RECOVERED/CLOSED',
+    `alert_content` VARCHAR(1000) NOT NULL COMMENT '告警内容',
+    `notify_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-待发送 1-成功 2-失败',
+    `trigger_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '触发时间',
+    `recover_time` DATETIME NULL COMMENT '恢复时间',
+    `handler_user_id` BIGINT NULL COMMENT '处理人',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_monitor_rule_id` (`monitor_rule_id`),
+    INDEX `idx_task_id` (`task_id`),
+    INDEX `idx_alert_status` (`alert_status`),
+    INDEX `idx_trigger_time` (`trigger_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='告警事件表';
+
+-- ============================================================
+-- 站内通知模块（V9）
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS `ea_archive_group_notification_user` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `group_id` BIGINT NOT NULL COMMENT '归档分组ID',
+    `user_id` BIGINT NOT NULL COMMENT '通知用户ID',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_group_user` (`group_id`, `user_id`),
+    KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='归档分组站内通知成员';
+
+CREATE TABLE IF NOT EXISTS `ea_in_app_notification` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `biz_type` VARCHAR(32) NOT NULL COMMENT '业务类型',
+    `biz_id` BIGINT NOT NULL COMMENT '业务主键',
+    `category` VARCHAR(32) NOT NULL COMMENT '通知分类',
+    `level` VARCHAR(16) NOT NULL COMMENT '通知级别',
+    `group_id` BIGINT NULL COMMENT '归档分组ID快照',
+    `group_name` VARCHAR(128) NULL COMMENT '归档分组名称快照',
+    `task_id` BIGINT NULL COMMENT '任务ID快照',
+    `task_status` VARCHAR(16) NULL COMMENT '任务状态快照',
+    `title` VARCHAR(200) NOT NULL COMMENT '通知标题',
+    `content_summary` VARCHAR(500) NOT NULL COMMENT '通知摘要',
+    `payload_json` TEXT NOT NULL COMMENT '通知完整载荷',
+    `source_time` DATETIME NOT NULL COMMENT '业务事件发生时间',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_biz_type_biz_id_status` (`biz_type`, `biz_id`, `task_status`),
+    KEY `idx_group_created` (`group_id`, `created_time`),
+    KEY `idx_task_id` (`task_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='平台站内通知主表';
+
+CREATE TABLE IF NOT EXISTS `ea_in_app_notification_recipient` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `notification_id` BIGINT NOT NULL COMMENT '通知主表ID',
+    `recipient_user_id` BIGINT NOT NULL COMMENT '接收人用户ID',
+    `read_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-未读 1-已读',
+    `read_time` DATETIME NULL COMMENT '已读时间',
+    `delivery_status` TINYINT NOT NULL DEFAULT 1 COMMENT '1-已投递',
+    `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_notification_user` (`notification_id`, `recipient_user_id`),
+    KEY `idx_user_read_created` (`recipient_user_id`, `read_status`, `created_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='平台站内通知收件箱';
+
+-- ============================================================
+-- 初始化数据（V1 + V8 修复后的最终值）
+-- ============================================================
+
+INSERT INTO `sys_user` (`username`, `password`, `real_name`, `mobile`, `email`, `role_code`, `status`, `remark`) VALUES
+('admin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '系统管理员', '13800000000', 'admin@example.com', 'platform_admin', 0, '系统管理员账户');
+
+INSERT INTO `sys_role` (`role_code`, `role_name`, `status`, `data_scope_type`, `remark`) VALUES
+('platform_admin', '系统管理员', 0, 'ALL', '系统管理员，拥有所有权限'),
+('archive_admin', '归档管理员', 0, 'ASSIGNED', '归档管理员，负责归档配置管理'),
+('normal_user', '普通用户', 0, 'OWN', '普通用户，仅操作自有归档分组');
+
+INSERT INTO `sys_user_role` (`user_id`, `role_id`) VALUES
+(1, 1);
+
+-- 权限树结构
+INSERT INTO `sys_permission` (`permission_code`, `permission_name`, `permission_type`, `parent_id`, `route_path`, `component`, `sort_no`, `status`) VALUES
+-- 系统管理
+('system', '系统管理', 'MENU', NULL, '/system', 'Layout', 100, 0),
+('system:user', '用户管理', 'MENU', 1, '/system/user', 'system/user/index', 101, 0),
+('system:user:view', '查看用户', 'BUTTON', 2, NULL, NULL, 102, 0),
+('system:user:add', '新增用户', 'BUTTON', 2, NULL, NULL, 103, 0),
+('system:user:edit', '编辑用户', 'BUTTON', 2, NULL, NULL, 104, 0),
+('system:user:delete', '删除用户', 'BUTTON', 2, NULL, NULL, 105, 0),
+('system:role', '角色管理', 'MENU', 1, '/system/role', 'system/role/index', 110, 0),
+('system:role:view', '查看角色', 'BUTTON', 7, NULL, NULL, 111, 0),
+('system:role:add', '新增角色', 'BUTTON', 7, NULL, NULL, 112, 0),
+('system:role:edit', '编辑角色', 'BUTTON', 7, NULL, NULL, 113, 0),
+('system:permission', '权限管理', 'MENU', 1, '/system/permission', 'system/permission/index', 120, 0),
+('system:permission:view', '查看权限', 'BUTTON', 11, NULL, NULL, 121, 0),
+('system:log', '操作日志', 'MENU', 1, '/system/log', 'system/log/index', 130, 0),
+('system:log:view', '查看日志', 'BUTTON', 13, NULL, NULL, 131, 0),
+
+-- 归档管理
+('archive', '归档管理', 'MENU', NULL, '/archive', 'Layout', 200, 0),
+('archive:datasource', '数据源管理', 'MENU', 15, '/archive/datasource', 'archive/datasource/index', 201, 0),
+('archive:datasource:view', '查看数据源', 'BUTTON', 16, NULL, NULL, 202, 0),
+('archive:datasource:add', '新增数据源', 'BUTTON', 16, NULL, NULL, 203, 0),
+('archive:datasource:edit', '编辑数据源', 'BUTTON', 16, NULL, NULL, 204, 0),
+('archive:datasource:test', '测试连接', 'BUTTON', 16, NULL, NULL, 205, 0),
+('archive:group', '分组管理', 'MENU', 15, '/archive/group', 'archive/group/index', 210, 0),
+('archive:group:view', '查看分组', 'BUTTON', 21, NULL, NULL, 211, 0),
+('archive:group:add', '新增分组', 'BUTTON', 21, NULL, NULL, 212, 0),
+('archive:group:edit', '编辑分组', 'BUTTON', 21, NULL, NULL, 213, 0),
+('archive:rule', '规则管理', 'MENU', 15, '/archive/rule', 'archive/rule/index', 220, 0),
+('archive:rule:view', '查看规则', 'BUTTON', 26, NULL, NULL, 221, 0),
+('archive:rule:add', '新增规则', 'BUTTON', 26, NULL, NULL, 222, 0),
+('archive:rule:edit', '编辑规则', 'BUTTON', 26, NULL, NULL, 223, 0),
+('archive:rule:validate', '校验规则', 'BUTTON', 26, NULL, NULL, 224, 0),
+('archive:task', '任务管理', 'MENU', 15, '/archive/task', 'archive/task/index', 230, 0),
+('archive:task:view', '查看任务', 'BUTTON', 31, NULL, NULL, 231, 0),
+('archive:task:trigger', '触发任务', 'BUTTON', 31, NULL, NULL, 232, 0),
+('archive:task:cancel', '取消任务', 'BUTTON', 31, NULL, NULL, 233, 0),
+
+-- 监控中心
+('monitor', '监控中心', 'MENU', NULL, '/monitor', 'Layout', 300, 0),
+('monitor:dashboard', '监控大盘', 'MENU', 35, '/monitor/dashboard', 'monitor/dashboard/index', 301, 0),
+('monitor:dashboard:view', '查看大盘', 'BUTTON', 36, NULL, NULL, 302, 0),
+('monitor:rule', '监控规则', 'MENU', 35, '/monitor/rule', 'monitor/rule/index', 310, 0),
+('monitor:rule:view', '查看监控规则', 'BUTTON', 38, NULL, NULL, 311, 0),
+('monitor:rule:add', '新增监控规则', 'BUTTON', 38, NULL, NULL, 312, 0),
+('monitor:rule:edit', '编辑监控规则', 'BUTTON', 38, NULL, NULL, 313, 0),
+('monitor:alert', '告警中心', 'MENU', 35, '/monitor/alert', 'monitor/alert/index', 320, 0),
+('monitor:alert:view', '查看告警', 'BUTTON', 42, NULL, NULL, 321, 0),
+('monitor:alert:handle', '处理告警', 'BUTTON', 42, NULL, NULL, 322, 0);
+
+-- 为平台管理员分配所有权限
+INSERT INTO `sys_role_permission` (`role_id`, `permission_id`)
+SELECT 1, id FROM `sys_permission` WHERE deleted = 0;
+
+COMMIT;

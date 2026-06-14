@@ -466,10 +466,9 @@ INSERT INTO `sys_user` (`username`, `password`, `real_name`, `mobile`, `email`, 
 ('admin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '系统管理员', '13800000000', 'admin@example.com', 'platform_admin', 0, '系统管理员账户');
 
 INSERT INTO `sys_role` (`role_code`, `role_name`, `status`, `data_scope_type`, `remark`) VALUES
-('platform_admin', '平台管理员', 0, 'ALL', '平台管理员，拥有所有权限'),
+('platform_admin', '系统管理员', 0, 'ALL', '系统管理员，拥有所有权限'),
 ('archive_admin', '归档管理员', 0, 'ASSIGNED', '归档管理员，负责归档配置管理'),
-('auditor', '审计员', 0, 'VIEW', '审计员，仅查看权限'),
-('observer', '观察员', 0, 'VIEW', '观察员，仅查看基础信息');
+('normal_user', '普通用户', 0, 'OWN', '普通用户，仅操作自有归档分组');
 
 INSERT INTO `sys_user_role` (`user_id`, `role_id`) VALUES
 (1, 1);

@@ -124,7 +124,7 @@ docker compose restart backend
 mysql -u root -p -e "CREATE DATABASE easy_archive CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # 执行初始化脚本（可选，Docker Compose 方式会自动执行）
-mysql -u root -p easy_archive < easyarchive-starter/src/main/resources/db/migration/V1__init_archive_platform.sql
+mysql -u root -p easy_archive < docs/database/schema.sql
 ```
 
 ### 3.3 启动后端
