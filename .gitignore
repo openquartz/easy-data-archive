@@ -58,3 +58,7 @@ Thumbs.db
 .env.*
 *.pem
 *.key
+
+### AI dev artifacts ###
+docs/superpowers/
+docs/reports/
