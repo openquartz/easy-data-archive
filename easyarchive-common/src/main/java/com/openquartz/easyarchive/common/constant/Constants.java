@@ -13,6 +13,21 @@ public class Constants {
     public static final String EMPTY = "";
 
     /**
+     * 双括号左
+     */
+    public static final String DOUBLE_BRACE_LEFT = "{{";
+
+    /**
+     * 双括号右
+     */
+    public static final String DOUBLE_BRACE_RIGHT = "}}";
+
+    /**
+     * 连字符（双括号拼接标记）
+     */
+    public static final String JOIN_MARK = "";
+
+    /**
      * 逗号
      */
     public static final String COMMA = ",";

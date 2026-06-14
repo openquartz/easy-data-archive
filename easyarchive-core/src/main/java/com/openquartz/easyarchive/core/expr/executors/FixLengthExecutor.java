@@ -17,13 +17,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FixLengthExecutor implements CommandExecutor {
 
+    private static final String DEFAULT_FILL_CHAR = "0";
+    private static final String FILL_LEFT_FLAG = "l";
+
     @Override
     public Result exec(Command command) {
         int specificLen = Integer.parseInt(command.getSecondParam());
-        String fillString = "0";
+        String fillString = DEFAULT_FILL_CHAR;
         boolean fillLeft = false;
         if (command.getThirdParam() != null) {
-            fillLeft = "l".equals(command.getThirdParam());
+            fillLeft = FILL_LEFT_FLAG.equals(command.getThirdParam());
         }
         if (command.indexOfParam(4) != null) {
             fillString = command.indexOfParam(4);

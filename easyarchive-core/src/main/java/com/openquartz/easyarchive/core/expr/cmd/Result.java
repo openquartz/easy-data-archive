@@ -5,9 +5,9 @@ package com.openquartz.easyarchive.core.expr.cmd;
  */
 public class Result {
 
-    public static final int SUCCESS = 200;
-    public static final int PARAM_ERROR = 400;
-    public static final int SYSTEM_ERROR = 500;
+    public static final int CODE_SUCCESS = 200;
+    public static final int CODE_PARAM_ERROR = 400;
+    public static final int CODE_SYSTEM_ERROR = 500;
 
     /**
      * 缓存失败结果
@@ -18,11 +18,11 @@ public class Result {
 
     static {
         SYSTEM_ERROR_RESULT = new Result();
-        SYSTEM_ERROR_RESULT.code = SYSTEM_ERROR;
+        SYSTEM_ERROR_RESULT.code = CODE_SYSTEM_ERROR;
         PARAM_ERROR_RESULT = new Result();
-        PARAM_ERROR_RESULT.code = PARAM_ERROR;
+        PARAM_ERROR_RESULT.code = CODE_PARAM_ERROR;
         EMPTY_RETURN_SUCCESS_RESULT = new Result();
-        EMPTY_RETURN_SUCCESS_RESULT.code = SUCCESS;
+        EMPTY_RETURN_SUCCESS_RESULT.code = CODE_SUCCESS;
     }
 
     /**
@@ -37,12 +37,12 @@ public class Result {
     private String errorMsg;
 
     public boolean isSuccess() {
-        return code == SUCCESS;
+        return code == CODE_SUCCESS;
     }
 
     public static Result success(String output) {
         Result result = new Result();
-        result.setCode(SUCCESS);
+        result.setCode(CODE_SUCCESS);
         result.setOutput(output);
         return result;
     }
@@ -78,7 +78,7 @@ public class Result {
     public static Result systemError(String msg) {
         Result result = new Result();
         result.errorMsg = msg;
-        result.setCode(SYSTEM_ERROR);
+        result.setCode(CODE_SYSTEM_ERROR);
         return result;
     }
 

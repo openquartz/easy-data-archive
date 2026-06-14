@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 /**
  * 表达式服务
- * 使用 ""
+ * 表达式格式: ${expression}
  */
 @Slf4j
 public class ExpressionService {

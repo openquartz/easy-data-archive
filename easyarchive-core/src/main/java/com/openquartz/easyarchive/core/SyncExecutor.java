@@ -22,6 +22,8 @@ import com.openquartz.easyarchive.common.util.ExceptionUtils;
 @Slf4j
 public class SyncExecutor implements Closeable {
 
+    private static final String DB_PRESSURE_MSG = "归档太快会对DB有压力, sleep %dms";
+
     private final ArchiveConfig archiveConfig;
     private final PageSource reader;
     private final Sink sink;
@@ -63,7 +65,6 @@ public class SyncExecutor implements Closeable {
                 archiveRows += readData.size();
 
                 try {
-                    //归档太快会对DB有压力, sleep 100ms
                     Thread.sleep(stepIntervalMs);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

@@ -42,7 +42,6 @@ import com.openquartz.easyarchive.core.source.mysql.MysqlSource;
  */
 @Slf4j
 public class ArchiveExecutor implements Runnable {
-    private static final int NO_CUSTOM_PAUSE_MS = 0;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final ArchiveConnection sourceConnection;
@@ -205,7 +204,7 @@ public class ArchiveExecutor implements Runnable {
     }
 
     private int resolvePauseMs(ArchiveGroupItem rule) {
-        if (rule.getPauseMs() != null && rule.getPauseMs() != NO_CUSTOM_PAUSE_MS) {
+        if (rule.getPauseMs() != null) {
             return rule.getPauseMs();
         }
         return archiveConfig.getArchivePauseMs();

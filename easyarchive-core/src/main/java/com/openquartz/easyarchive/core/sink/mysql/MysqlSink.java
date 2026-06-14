@@ -16,6 +16,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import com.openquartz.easyarchive.common.api.Sink;
 import com.openquartz.easyarchive.common.api.model.DataRecord;
+import com.openquartz.easyarchive.common.constant.Constants;
 import com.openquartz.easyarchive.common.util.CollectionUtils;
 
 /**
@@ -26,8 +27,6 @@ import com.openquartz.easyarchive.common.util.CollectionUtils;
 @Slf4j
 public class MysqlSink implements Sink, Closeable {
 
-    private static final String COMMA = ",";
-    private static final String QUESTION_MASK = "?";
     private static final int BATCH_FLUSH_SIZE = 500;
 
     private final ArchiveConnection archiveConnection;
@@ -92,17 +91,17 @@ public class MysqlSink implements Sink, Closeable {
 
     private String buildInsertSql(String[] columns) {
         String[] commaList = new String[columns.length];
-        Arrays.fill(commaList, QUESTION_MASK);
+        Arrays.fill(commaList, "?");
 
         return "REPLACE INTO "
             + "\n"
             + tableName
             + "("
-            + String.join(COMMA, columns)
+            + String.join(Constants.COMMA, columns)
             + ")"
             + "VALUES"
             + "("
-            + String.join(COMMA, commaList)
+            + String.join(Constants.COMMA, commaList)
             + ")";
     }
 
