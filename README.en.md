@@ -80,6 +80,16 @@ easy-archive/
 └── pom.xml                      # Parent POM (Maven)
 ```
 
+## 📚 Guides
+
+| Document | Description |
+|----------|-------------|
+| [✨ Feature Details](docs/guides/features.md) | Datasource management, archive groups & rules, task monitoring, expression engine, notifications, RBAC |
+| [🚀 Deployment Guide](docs/guides/deployment.md) | Docker Compose one-command deploy, local dev setup, production hardening & tuning |
+| [💡 Expression Engine](docs/guides/expression-engine.md) | Expression syntax, 13 built-in commands, nesting patterns, practical examples |
+| [📡 API Reference](docs/guides/api-reference.md) | Complete RESTful API docs, parameters, request/response examples, client SDK usage |
+| [📘 Operator Guide](docs/OPERATOR_GUIDE.md) | Beginner walkthrough for the ops console — from login to completing your first archive task |
+
 ## 🚀 Quick Start
 
 ### Option 1: Docker Compose (Recommended)

@@ -40,6 +40,7 @@
 | [🚀 快速部署指南](docs/guides/deployment.md) | Docker Compose 一键部署、本地开发部署、生产环境部署、安全加固与性能调优 |
 | [💡 表达式引擎指南](docs/guides/expression-engine.md) | 表达式语法、13 种内置命令详解、嵌套用法、实战示例 |
 | [📡 API 参考文档](docs/guides/api-reference.md) | 完整的 RESTful API 接口说明、参数文档、请求/响应示例、客户端 SDK 用法 |
+| [📘 操作指南](docs/OPERATOR_GUIDE.md) | 面向运维控制台的新手引导，从登录到完成第一个归档任务的完整操作流程 |
 
 ---
 
