@@ -29,7 +29,6 @@ import org.apache.ibatis.jdbc.SqlRunner;
 @Slf4j
 public class MysqlSource implements PageSource, Closeable {
 
-    private static final String ID_COLUMN = "ID";
     private static final String SELECT_ALL_FROM_WHERE_IN_TEMPLATE = "SELECT * FROM %s WHERE %s IN (%s)";
     private static final String DELETE_FROM_WHERE_IN_TEMPLATE = "DELETE FROM %s WHERE %s IN (%s)";
 
@@ -66,7 +65,7 @@ public class MysqlSource implements PageSource, Closeable {
             try {
                 String fetDataSql = String.format(SELECT_ALL_FROM_WHERE_IN_TEMPLATE,
                     tableInfo.getTableName(),
-                    tableInfo.getIdColum().toUpperCase(),
+                    tableInfo.getIdColum(),
                     Joiner.on(Constants.COMMA).join(ids));
 
                 List<Map<String, Object>> list = runner.selectAll(fetDataSql);
@@ -100,7 +99,8 @@ public class MysqlSource implements PageSource, Closeable {
         if (this.enableDelete) {
             splitterFetchSql = this.fetchSql + " limit " + maxLoadRows;
         } else {
-            splitterFetchSql = this.fetchSql + " order by id limit " + (maxLoadRows * exePage) + Constants.COMMA + maxLoadRows;
+            splitterFetchSql = this.fetchSql + " order by " + tableInfo.getIdColum()
+                + " limit " + (maxLoadRows * exePage) + Constants.COMMA + maxLoadRows;
         }
         List<Long> ids = resolveId(splitterFetchSql, start, end);
         if (CollectionUtils.isEmpty(ids)) {
@@ -112,7 +112,10 @@ public class MysqlSource implements PageSource, Closeable {
 
     private List<Long> resolveId(String fetchSql, Object start, Object end) throws SQLException {
         List<Map<String, Object>> fetchIds = runner.selectAll(fetchSql, start, end);
-        return fetchIds.stream().map(t -> IdResolver.resolve(t.get(ID_COLUMN))).collect(Collectors.toList());
+        return fetchIds.stream()
+            .map(this::resolveRecordId)
+            .map(IdResolver::resolve)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -126,10 +129,14 @@ public class MysqlSource implements PageSource, Closeable {
             return;
         }
 
-        List<String> ids = data.stream().map(t -> t.getData().get(ID_COLUMN).toString()).collect(Collectors.toList());
+        List<String> ids = data.stream()
+            .map(DataRecord::getData)
+            .map(this::resolveRecordId)
+            .map(String::valueOf)
+            .collect(Collectors.toList());
         String sql = String.format(DELETE_FROM_WHERE_IN_TEMPLATE,
             this.getTableInfo().getTableName(),
-            tableInfo.getIdColum().toUpperCase(),
+            tableInfo.getIdColum(),
             String.join(Constants.COMMA, ids));
         if (StringUtils.isNotBlank(deleteWhere)) {
             sql = sql + "\n AND ";
@@ -147,5 +154,20 @@ public class MysqlSource implements PageSource, Closeable {
         if (runner != null) {
             runner.closeConnection();
         }
+    }
+
+    private Object resolveRecordId(Map<String, Object> row) {
+        String idColumn = tableInfo.getIdColum();
+        Object value = row.get(idColumn);
+        if (value == null) {
+            value = row.get(idColumn.toUpperCase());
+        }
+        if (value == null) {
+            value = row.get(idColumn.toLowerCase());
+        }
+        if (value == null) {
+            throw new NumberFormatException("Id 无法转换为Long，idColumn=" + idColumn + ", row=" + row);
+        }
+        return value;
     }
 }

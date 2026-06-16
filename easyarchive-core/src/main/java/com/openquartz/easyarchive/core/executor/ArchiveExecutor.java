@@ -121,7 +121,7 @@ public class ArchiveExecutor implements Runnable {
                         for (Date curDate = startDate; Objects.requireNonNull(curDate).compareTo(endDate) < 0; ) {
                             // 校验是否被取消和中断
                             checkCancellation();
-                            Date curEndDate = DateUtils.addHours(curDate, 1);
+                            Date curEndDate = resolveTimeWindowEnd(curDate, byTimeRule);
                             int batchRows = executor.execute(curDate, curEndDate, byTimeRule.getStepCount());
                             executeRows += batchRows;
                             totalProcessRecords += batchRows;
@@ -208,6 +208,10 @@ public class ArchiveExecutor implements Runnable {
             return rule.getPauseMs();
         }
         return archiveConfig.getArchivePauseMs();
+    }
+
+    static Date resolveTimeWindowEnd(Date currentStart, ArchiveGroupItemByTime rule) {
+        return DateUtils.addMinutes(currentStart, rule.getStepMinutes());
     }
 
     private void checkCancellation() {

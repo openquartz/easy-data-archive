@@ -55,4 +55,9 @@ class ConnectionFactoryTest {
         assertDoesNotThrow(() -> ConnectionFactory.init(config1));
         assertDoesNotThrow(() -> ConnectionFactory.init(config2));
     }
+
+    @Test
+    void mysqlDriver_shouldBeAvailableForCoreModule() {
+        assertDoesNotThrow(() -> Class.forName("com.mysql.jdbc.Driver"));
+    }
 }

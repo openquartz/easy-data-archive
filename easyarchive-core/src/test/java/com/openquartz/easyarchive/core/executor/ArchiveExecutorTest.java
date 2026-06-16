@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.core.executor;
 
 import com.openquartz.easyarchive.core.repository.ArchiveLogRepository;
+import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveTaskLog;
 import java.util.Date;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,16 @@ class ArchiveExecutorTest {
         assertEquals("INFO", log.getLogLevel());
         assertTrue(log.getLogContent().contains("规则范围:archive_order_202606"));
         assertTrue(log.getLogContent().contains("ID范围:10 -> 1000"));
+    }
+
+    @Test
+    void shouldAdvanceTimeWindowByConfiguredStepMinutes() {
+        ArchiveGroupItemByTime rule = new ArchiveGroupItemByTime();
+        rule.setStepMinutes(30);
+
+        Date next = ArchiveExecutor.resolveTimeWindowEnd(new Date(0L), rule);
+
+        assertEquals(30L * 60L * 1000L, next.getTime());
     }
 
     private static ArchiveTaskLog captureSavedTaskLog(ArchiveLogRepository repository) {
