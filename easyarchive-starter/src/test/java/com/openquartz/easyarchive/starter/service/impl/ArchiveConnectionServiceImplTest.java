@@ -366,7 +366,7 @@ class ArchiveConnectionServiceImplTest {
     }
 
     @Test
-    void findById_shouldDecryptEncryptedPassword() {
+    void findById_shouldMaskPasswordForApiResponse() {
         CurrentUserService currentUserService = mock(CurrentUserService.class);
         setupAdminMock(currentUserService);
 
@@ -387,13 +387,12 @@ class ArchiveConnectionServiceImplTest {
                 new ArchiveConnectionServiceImpl(mapper, null, currentUserService, datasourceAuthorizationService, presenter, recorder);
         ArchiveConnection result = service.findById(1L);
 
-        // Should be decrypted to plaintext
         assertNotNull(result);
-        assertEquals("found-password", result.getPasswordCipher());
+        assertEquals("****", result.getPasswordCipher());
     }
 
     @Test
-    void findAll_shouldDecryptAllPasswords() {
+    void findAll_shouldMaskPasswordsForApiResponse() {
         CurrentUserService currentUserService = mock(CurrentUserService.class);
         setupAdminMock(currentUserService);
 
@@ -419,7 +418,7 @@ class ArchiveConnectionServiceImplTest {
         java.util.List<ArchiveConnection> results = service.findAll();
 
         assertEquals(2, results.size());
-        assertEquals("pass1", results.get(0).getPasswordCipher());
-        assertEquals("pass2", results.get(1).getPasswordCipher());
+        assertEquals("****", results.get(0).getPasswordCipher());
+        assertEquals("****", results.get(1).getPasswordCipher());
     }
 }

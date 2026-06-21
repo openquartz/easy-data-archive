@@ -10,6 +10,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class CryptoUtilTest {
 
     @Test
+    void keyEnvironmentVariableName_isArchiveEncryptionKey() {
+        String keyName = assertDoesNotThrow(() ->
+                String.valueOf(CryptoUtil.class.getDeclaredField("KEY_ENVIRONMENT_VARIABLE").get(null)));
+
+        assertEquals("ARCHIVE_ENCRYPTION_KEY", keyName);
+    }
+
+    @Test
     void encryptDecrypt_roundTrip() {
         String original = "my-s3cret-p@ssw0rd!";
         String encrypted = CryptoUtil.encrypt(original);

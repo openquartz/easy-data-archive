@@ -3,6 +3,7 @@ package com.openquartz.easyarchive.starter.service.impl;
 import com.openquartz.easyarchive.common.entity.Pair;
 import com.openquartz.easyarchive.common.enums.ArchiveTaskStatusEnum;
 import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
+import com.openquartz.easyarchive.common.util.CryptoUtil;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
@@ -17,7 +18,6 @@ import com.openquartz.easyarchive.starter.rule.PlatformArchiveRuleLoader;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupExecutionService;
 import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
 import com.openquartz.easyarchive.starter.service.ArchiveTaskLogService;
-import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
 import com.openquartz.easyarchive.starter.support.ArchiveGroupTaskDispatcher;
 import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -132,7 +132,9 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
 
     private ArchiveConnection toArchiveConnection(Object datasource) {
         if (datasource instanceof ArchiveConnection) {
-            return (ArchiveConnection) datasource;
+            ArchiveConnection connection = (ArchiveConnection) datasource;
+            connection.setPassword(CryptoUtil.decrypt(connection.getPasswordCipher()));
+            return connection;
         }
 
         ArchiveConnection connection = new ArchiveConnection();
@@ -141,7 +143,7 @@ public class ArchiveGroupExecutionServiceImpl implements ArchiveGroupExecutionSe
         connection.setConnectType(readString(datasource, "getDatasourceType"));
         connection.setUrl(readString(datasource, "getJdbcUrl"));
         connection.setUsername(readString(datasource, "getUsername"));
-        connection.setPassword(readString(datasource, "getPasswordCipher"));
+        connection.setPassword(CryptoUtil.decrypt(readString(datasource, "getPasswordCipher")));
         connection.setStatus(readInteger(datasource, "getStatus"));
         connection.setRemark(readString(datasource, "getRemark"));
         return connection;

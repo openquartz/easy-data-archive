@@ -40,6 +40,8 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     private final CurrentUserService currentUserService;
     private final DatasourceAuthorizationService datasourceAuthorizationService;
     private final DatasourceOperationLogPresenter datasourceOperationLogPresenter;
+    private static final String MASKED_PASSWORD = "****";
+
     private final OperationLogRecorder operationLogRecorder;
 
     @Override
@@ -59,7 +61,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
             Set<Long> ids = datasourceAuthorizationService.listDatasourceIdsByLevel(currentUser.getUserId(), level);
             list = ids.isEmpty() ? Collections.emptyList() : datasourceMapper.selectAuthorizedListByIds(ids);
         }
-        return decryptPasswords(list);
+        return maskPasswords(list);
     }
 
     @Override
@@ -72,7 +74,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
             datasourceAuthorizationService.assertPermission(currentUser.getUserId(), id, DatasourcePermissionLevelEnum.USE);
             connection = datasourceMapper.selectById(id);
         }
-        return decryptPassword(connection);
+        return maskPassword(connection);
     }
 
     @Override
@@ -227,15 +229,22 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
         return connection;
     }
 
-    /**
-     * Decrypt passwords for all connections in the list.
-     */
-    private List<ArchiveConnection> decryptPasswords(List<ArchiveConnection> connections) {
+    private ArchiveConnection maskPassword(ArchiveConnection connection) {
+        if (connection == null) {
+            return null;
+        }
+        if (StringUtils.isNotBlank(connection.getPasswordCipher())) {
+            connection.setPasswordCipher(MASKED_PASSWORD);
+        }
+        return connection;
+    }
+
+    private List<ArchiveConnection> maskPasswords(List<ArchiveConnection> connections) {
         if (connections == null || connections.isEmpty()) {
             return connections;
         }
         for (ArchiveConnection conn : connections) {
-            decryptPassword(conn);
+            maskPassword(conn);
         }
         return connections;
     }

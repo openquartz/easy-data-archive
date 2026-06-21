@@ -19,6 +19,8 @@ import java.util.Base64;
  */
 public final class CryptoUtil {
 
+    public static final String KEY_ENVIRONMENT_VARIABLE = "ARCHIVE_ENCRYPTION_KEY";
+
     private static final String AES = "AES";
     private static final String TRANSFORMATION = "AES/GCM/NoPadding";
     private static final int GCM_IV_LENGTH = 12;
@@ -30,7 +32,7 @@ public final class CryptoUtil {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     static {
-        String raw = System.getenv("EASY_ARCHIVE_AES_KEY");
+        String raw = System.getenv(KEY_ENVIRONMENT_VARIABLE);
         byte[] b;
         if (StringUtils.isBlank(raw)) {
             // Dev-only fallback. MUST NOT be used in production.

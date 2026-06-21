@@ -175,6 +175,7 @@ void loadData();
             <th>{{ t("datasource.columns.type") }}</th>
             <th>{{ t("datasource.columns.jdbcUrl") }}</th>
             <th>{{ t("datasource.columns.username") }}</th>
+            <th>{{ t("datasource.columns.password") }}</th>
             <th>{{ t("datasource.columns.status") }}</th>
             <th>{{ t("datasource.columns.actions") }}</th>
           </tr>
@@ -186,6 +187,7 @@ void loadData();
             <td>{{ item.datasourceType }}</td>
             <td class="truncate" :title="item.jdbcUrl">{{ item.jdbcUrl }}</td>
             <td>{{ item.username }}</td>
+            <td>{{ item.passwordCipher || "****" }}</td>
             <td><span :class="getStatusTagClass(datasourceStatusDictionary, item.status)">{{ getStatusLabel(datasourceStatusDictionary, item.status) }}</span></td>
             <td class="row-actions">
               <button v-if="authStore.hasCapability('DATASOURCE_EDIT_AUTHORIZED')" class="btn btn--subtle" :disabled="isRowBusy(item.id)" @click="openEdit(item)">{{ t("common.edit") }}</button>

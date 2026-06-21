@@ -147,6 +147,7 @@ export const messages = {
         type: "Type",
         jdbcUrl: "Connection Address",
         username: "Username",
+        password: "Password",
         status: "Status",
         actions: "Actions"
       }
@@ -591,6 +592,7 @@ export const messages = {
         type: "类型",
         jdbcUrl: "连接地址",
         username: "用户名",
+        password: "密码",
         status: "状态",
         actions: "操作"
       }

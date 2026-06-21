@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.common.entity.Pair;
+import com.openquartz.easyarchive.common.util.CryptoUtil;
 import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
 import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
@@ -104,8 +105,10 @@ class ArchiveGroupExecutionServiceImplTest {
         ArchiveConnection dispatchedTarget = (ArchiveConnection) connectionCaptor.getValue().getValue();
         assertEquals("SRC", dispatchedSource.getConnectCode());
         assertEquals("jdbc:mysql://source", dispatchedSource.getUrl());
+        assertEquals("secret", dispatchedSource.getPassword());
         assertEquals("DST", dispatchedTarget.getConnectCode());
         assertEquals("jdbc:mysql://target", dispatchedTarget.getUrl());
+        assertEquals("secret", dispatchedTarget.getPassword());
     }
 
     @Test
@@ -202,7 +205,7 @@ class ArchiveGroupExecutionServiceImplTest {
             invokeSetter(datasource, "setDatasourceType", String.class, "MYSQL");
             invokeSetter(datasource, "setJdbcUrl", String.class, jdbcUrl);
             invokeSetter(datasource, "setUsername", String.class, "root");
-            invokeSetter(datasource, "setPasswordCipher", String.class, "secret");
+            invokeSetter(datasource, "setPasswordCipher", String.class, CryptoUtil.encrypt("secret"));
             invokeSetter(datasource, "setStatus", Integer.class, 1);
             return datasource;
         } catch (ReflectiveOperationException ex) {
