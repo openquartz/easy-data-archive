@@ -54,6 +54,11 @@ archive:
     default-batch-size: 1000
     default-pause-ms: 100
 
+
+# Environment Variable: EASY_ARCHIVE_AES_KEY
+# Required for datasource password encryption. Set to a 32-byte string.
+# If not set, a dev-only fallback key is used (NEVER use in production).
+# Example export: export EASY_ARCHIVE_AES_KEY='your-32-character-secret-key!!'
 logging:
   level:
     com.openquartz.easyarchive: DEBUG
