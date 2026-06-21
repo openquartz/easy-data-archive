@@ -1,7 +1,9 @@
 package com.openquartz.easyarchive.starter.service.impl;
 
-import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
+import com.openquartz.easyarchive.common.util.CryptoUtil;
+import com.openquartz.easyarchive.common.util.StringUtils;
+import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
 import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
@@ -48,28 +50,35 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
     @Override
     public List<ArchiveConnection> findAll() {
         CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        List<ArchiveConnection> list;
         if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
-            return datasourceMapper.selectList(null, null);
+            list = datasourceMapper.selectList(null, null);
+        } else {
+            DatasourcePermissionLevelEnum level = RoleConstants.isArchiveAdmin(currentUser.getRoleCode())
+                    ? DatasourcePermissionLevelEnum.MANAGE : DatasourcePermissionLevelEnum.USE;
+            Set<Long> ids = datasourceAuthorizationService.listDatasourceIdsByLevel(currentUser.getUserId(), level);
+            list = ids.isEmpty() ? Collections.emptyList() : datasourceMapper.selectAuthorizedListByIds(ids);
         }
-        DatasourcePermissionLevelEnum level = RoleConstants.isArchiveAdmin(currentUser.getRoleCode())
-                ? DatasourcePermissionLevelEnum.MANAGE : DatasourcePermissionLevelEnum.USE;
-        Set<Long> ids = datasourceAuthorizationService.listDatasourceIdsByLevel(currentUser.getUserId(), level);
-        return ids.isEmpty() ? Collections.emptyList() : datasourceMapper.selectAuthorizedListByIds(ids);
+        return decryptPasswords(list);
     }
 
     @Override
     public ArchiveConnection findById(Long id) {
         CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        ArchiveConnection connection;
         if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
-            return datasourceMapper.selectById(id);
+            connection = datasourceMapper.selectById(id);
+        } else {
+            datasourceAuthorizationService.assertPermission(currentUser.getUserId(), id, DatasourcePermissionLevelEnum.USE);
+            connection = datasourceMapper.selectById(id);
         }
-        datasourceAuthorizationService.assertPermission(currentUser.getUserId(), id, DatasourcePermissionLevelEnum.USE);
-        return datasourceMapper.selectById(id);
+        return decryptPassword(connection);
     }
 
     @Override
     public ArchiveConnection getByConnectionCode(String connectionCode) {
-        return datasourceMapper.selectByCode(connectionCode);
+        ArchiveConnection connection = datasourceMapper.selectByCode(connectionCode);
+        return decryptPassword(connection);
     }
 
     @Override
@@ -78,6 +87,9 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
         currentUserService.assertAdmin();
         if (datasource.getStatus() == null || !DatasourceStatusEnum.DISABLED.getCode().equals(datasource.getStatus())) {
             datasource.setStatus(DatasourceStatusEnum.UNTESTED.getCode());
+        }
+        if (StringUtils.isNotBlank(datasource.getPasswordCipher())) {
+            datasource.setPasswordCipher(CryptoUtil.encrypt(datasource.getPasswordCipher()));
         }
         datasourceMapper.insert(datasource);
         operationLogRecorder.record(datasourceOperationLogPresenter.buildCreate(datasource));
@@ -97,13 +109,16 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
         } else if (datasource.getStatus() == null) {
             datasource.setStatus(before.getStatus());
         }
-        if (!hasText(datasource.getPasswordCipher())) {
+        // Encrypt new password if provided, otherwise keep existing
+        if (StringUtils.isNotBlank(datasource.getPasswordCipher())) {
+            datasource.setPasswordCipher(CryptoUtil.encrypt(datasource.getPasswordCipher()));
+        } else {
             datasource.setPasswordCipher(before.getPasswordCipher());
         }
         datasourceMapper.update(datasource);
         ArchiveConnection after = datasourceMapper.selectById(datasource.getId());
         operationLogRecorder.record(datasourceOperationLogPresenter.buildUpdate(before, after));
-        return after;
+        return decryptPassword(after);
     }
 
     @Override
@@ -115,12 +130,14 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
             throw new StarterManageException(StarterErrorCode.DATASOURCE_NOT_FOUND);
         }
         validateStatusForManualUpdate(status);
-        ArchiveConnection datasource = new ArchiveConnection();
-        datasource.setId(id);
-        datasource.setStatus(status);
-        datasourceMapper.update(datasource);
+        ArchiveConnection update = new ArchiveConnection();
+        update.setId(id);
+        update.setStatus(status);
+        datasourceMapper.update(update);
         ArchiveConnection after = datasourceMapper.selectById(id);
-        operationLogRecorder.record(datasourceOperationLogPresenter.buildStatusUpdate(before, after));
+        if (before != null && after != null) {
+            operationLogRecorder.record(datasourceOperationLogPresenter.buildStatusUpdate(before, after));
+        }
     }
 
     @Override
@@ -169,7 +186,15 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
         merged.setDatasourceType(hasText(datasource.getDatasourceType()) ? datasource.getDatasourceType() : persisted.getDatasourceType());
         merged.setJdbcUrl(hasText(datasource.getJdbcUrl()) ? datasource.getJdbcUrl() : persisted.getJdbcUrl());
         merged.setUsername(hasText(datasource.getUsername()) ? datasource.getUsername() : persisted.getUsername());
-        merged.setPasswordCipher(hasText(datasource.getPasswordCipher()) ? datasource.getPasswordCipher() : persisted.getPasswordCipher());
+
+        // Decrypt password for connection testing
+        String passwordToTest;
+        if (hasText(datasource.getPasswordCipher())) {
+            passwordToTest = CryptoUtil.decrypt(datasource.getPasswordCipher());
+        } else {
+            passwordToTest = CryptoUtil.decrypt(persisted.getPasswordCipher());
+        }
+        merged.setPasswordCipher(passwordToTest);
         merged.setStatus(persisted.getStatus());
         return merged;
     }
@@ -182,5 +207,36 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
 
     private boolean hasText(String value) {
         return value != null && !value.trim().isEmpty();
+    }
+
+    /**
+     * Decrypt the password field of a single connection entity, returning a new instance.
+     */
+    private ArchiveConnection decryptPassword(ArchiveConnection connection) {
+        if (connection == null) {
+            return null;
+        }
+        try {
+            if (StringUtils.isNotBlank(connection.getPasswordCipher())) {
+                connection.setPasswordCipher(CryptoUtil.decrypt(connection.getPasswordCipher()));
+            }
+        } catch (Exception e) {
+            // Decryption failed — return the encrypted value as-is.
+            // This provides graceful handling for any legacy plaintext records.
+        }
+        return connection;
+    }
+
+    /**
+     * Decrypt passwords for all connections in the list.
+     */
+    private List<ArchiveConnection> decryptPasswords(List<ArchiveConnection> connections) {
+        if (connections == null || connections.isEmpty()) {
+            return connections;
+        }
+        for (ArchiveConnection conn : connections) {
+            decryptPassword(conn);
+        }
+        return connections;
     }
 }
