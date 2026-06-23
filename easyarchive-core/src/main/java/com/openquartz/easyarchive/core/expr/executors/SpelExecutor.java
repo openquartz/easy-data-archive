@@ -41,7 +41,7 @@ public class SpelExecutor implements CommandExecutor {
                 localContextParam.forEach(evaluationContext::setVariable);
             }
             // 执行表达式获取计算结果
-            Object value = expression.getValue();
+            Object value = expression.getValue(evaluationContext);
             return Result.success(String.valueOf(value));
         }catch (Exception ex){
             log.error("Spel expression exe error! expression:{}",expressionStr,ex);
