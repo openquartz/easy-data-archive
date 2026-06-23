@@ -7,13 +7,12 @@ import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
 import com.openquartz.easyarchive.starter.service.ArchiveConnectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
-
-/**
- * 数据源控制器
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/archive/datasources")
@@ -34,13 +33,18 @@ public class ArchiveConnectionController {
 
     @PostMapping
     @OperationLog(value = "新增数据源", module = "DATASOURCE", action = "CREATE", button = "新增数据源")
-    public ApiResponse<ArchiveConnection> createDatasource(@RequestBody ArchiveConnection datasource) {
+    public ApiResponse<ArchiveConnection> createDatasource(@Valid @RequestBody ArchiveConnection datasource) {
         return ApiResponse.success(datasourceService.create(datasource));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<ArchiveConnection> getDatasource(@PathVariable Long id) {
-        return ApiResponse.success(datasourceService.findById(id));
+    public ResponseEntity<ApiResponse<ArchiveConnection>> getDatasource(@PathVariable Long id) {
+        ArchiveConnection ds = datasourceService.findById(id);
+        if (ds == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("RESOURCE_NOT_FOUND", "归档连接不存在"));
+        }
+        return ResponseEntity.ok(ApiResponse.success(ds));
     }
 
     @PutMapping("/{id}")

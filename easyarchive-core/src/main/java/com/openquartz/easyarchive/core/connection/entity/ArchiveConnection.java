@@ -5,6 +5,7 @@ import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
 import java.util.Date;
 
 /**
@@ -23,21 +24,25 @@ public class ArchiveConnection extends BaseEntity {
     /**
      * 连接编码。唯一
      */
+    @NotBlank(message = "数据源编码不能为空")
     private String connectCode;
 
     /**
      * 连接类型。MYSQL、ES等
      */
+    @NotBlank(message = "数据源类型不能为空")
     private String connectType;
 
     /**
      * URL
      */
+    @NotBlank(message = "连接地址不能为空")
     private String url;
 
     /**
      * 用户名
      */
+    @NotBlank(message = "用户名不能为空")
     private String username;
 
     /**

@@ -63,7 +63,11 @@ public class ArchiveGroupItemController {
 
     @GetMapping("/id/{itemId}")
     public ApiResponse<ArchiveGroupItemById> getIdItem(@PathVariable Long groupId, @PathVariable Long itemId) {
-        return ApiResponse.success(idService.findById(groupId, itemId));
+        ArchiveGroupItemById item = idService.findById(groupId, itemId);
+        if (item == null) {
+            return ApiResponse.error("RESOURCE_NOT_FOUND", "归档明细不存在");
+        }
+        return ApiResponse.success(item);
     }
 
     @PostMapping("/id")
@@ -99,7 +103,11 @@ public class ArchiveGroupItemController {
 
     @GetMapping("/time/{itemId}")
     public ApiResponse<ArchiveGroupItemByTime> getTimeItem(@PathVariable Long groupId, @PathVariable Long itemId) {
-        return ApiResponse.success(timeService.findById(groupId, itemId));
+        ArchiveGroupItemByTime item = timeService.findById(groupId, itemId);
+        if (item == null) {
+            return ApiResponse.error("RESOURCE_NOT_FOUND", "归档明细不存在");
+        }
+        return ApiResponse.success(item);
     }
 
     @PostMapping("/time")

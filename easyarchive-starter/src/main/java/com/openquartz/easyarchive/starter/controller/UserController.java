@@ -6,8 +6,11 @@ import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
 import com.openquartz.easyarchive.starter.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -28,7 +31,7 @@ public class UserController {
 
     @PostMapping
     @OperationLog(value = "新增用户", module = "USER", action = "CREATE", button = "新增用户")
-    public ApiResponse<SysUser> createUser(@RequestBody SysUser user) {
+    public ApiResponse<SysUser> createUser(@Valid @RequestBody SysUser user) {
         return ApiResponse.success(userService.create(user));
     }
 
@@ -47,7 +50,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<SysUser> getUser(@PathVariable Long id) {
-        return ApiResponse.success(userService.findById(id));
+    public ResponseEntity<ApiResponse<SysUser>> getUser(@PathVariable Long id) {
+        SysUser user = userService.findById(id);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("RESOURCE_NOT_FOUND", "用户不存在"));
+        }
+        return ResponseEntity.ok(ApiResponse.success(user));
     }
 }

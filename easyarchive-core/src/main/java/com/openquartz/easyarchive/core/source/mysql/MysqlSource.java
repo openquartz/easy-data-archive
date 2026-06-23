@@ -111,7 +111,7 @@ public class MysqlSource implements PageSource, Closeable {
     }
 
     private List<Long> resolveId(String fetchSql, Object start, Object end) throws SQLException {
-        List<Map<String, Object>> fetchIds = runner.selectAll(fetchSql, start, end);
+        List<Map<String, Object>> fetchIds = runner.selectAll(fetchSql);
         return fetchIds.stream()
             .map(this::resolveRecordId)
             .map(IdResolver::resolve)

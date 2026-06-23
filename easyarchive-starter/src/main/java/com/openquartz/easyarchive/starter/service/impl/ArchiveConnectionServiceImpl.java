@@ -165,8 +165,9 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
         if (status == null) {
             throw new StarterManageException(StarterErrorCode.DATASOURCE_STATUS_REQUIRED);
         }
-        if (!DatasourceStatusEnum.DISABLED.getCode().equals(status)) {
-            throw new StarterManageException(StarterErrorCode.DATASOURCE_STATUS_MANUAL_UPDATE_UNSUPPORTED);
+        DatasourceStatusEnum fromCode = DatasourceStatusEnum.fromCode(status);
+        if (fromCode == null) {
+            throw new StarterManageException(StarterErrorCode.DATASOURCE_STATUS_INVALID);
         }
     }
 

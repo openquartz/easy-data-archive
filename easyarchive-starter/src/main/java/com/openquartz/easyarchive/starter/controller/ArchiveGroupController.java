@@ -11,6 +11,8 @@ import com.openquartz.easyarchive.starter.model.dto.UpdateOwnerRequest;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupExecutionService;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -53,13 +55,23 @@ public class ArchiveGroupController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<ArchiveGroupView> detail(@PathVariable Long id) {
-        return ApiResponse.success(groupService.findById(id));
+    public ResponseEntity<ApiResponse<ArchiveGroupView>> detail(@PathVariable Long id) {
+        ArchiveGroupView view = groupService.findById(id);
+        if (view == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("RESOURCE_NOT_FOUND", "归档分组不存在"));
+        }
+        return ResponseEntity.ok(ApiResponse.success(view));
     }
 
     @GetMapping("/{id}/overview")
-    public ApiResponse<ArchiveGroupOverviewView> overview(@PathVariable Long id) {
-        return ApiResponse.success(groupService.findOverview(id));
+    public ResponseEntity<ApiResponse<ArchiveGroupOverviewView>> overview(@PathVariable Long id) {
+        ArchiveGroupOverviewView view = groupService.findOverview(id);
+        if (view == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("RESOURCE_NOT_FOUND", "归档分组不存在"));
+        }
+        return ResponseEntity.ok(ApiResponse.success(view));
     }
 
     @PostMapping

@@ -20,6 +20,7 @@ public enum StarterErrorCode implements EasyArchiveErrorCode {
     DATASOURCE_REQUIRED("12", "归档连接不能为空"),
     DATASOURCE_STATUS_REQUIRED("13", "归档连接状态不能为空"),
     DATASOURCE_STATUS_MANUAL_UPDATE_UNSUPPORTED("14", "请先测试归档连接，测试成功后系统会自动启用"),
+    DATASOURCE_STATUS_INVALID("15", "数据源状态值不合法"),
     ARCHIVE_GROUP_CODE_REQUIRED("15", "分组编码不能为空"),
     ARCHIVE_GROUP_DISABLED("16", "Archive group is disabled"),
     ARCHIVE_GROUP_HAS_ACTIVE_TASK("17", "Archive group has active task"),
