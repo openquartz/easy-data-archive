@@ -265,7 +265,8 @@ export const messages = {
         validation: {
           tableRequired: "Source table, target table, and key fields are required",
           sqlRequired: "Fetch SQL and required range fields are required",
-          positiveRequired: "Priority and step fields must be positive"
+          positiveRequired: "Priority and step fields must be positive",
+          idRangeInvalid: "Start/End ID must be a non-negative integer or a valid expression (format: ${expression})"
         }
       }
     },
@@ -710,7 +711,8 @@ export const messages = {
         validation: {
           tableRequired: "源表、目标表和关键字段必填",
           sqlRequired: "抓取 SQL 和范围字段必填",
-          positiveRequired: "优先级和步进字段必须为正数"
+          positiveRequired: "优先级和步进字段必须为正数",
+          idRangeInvalid: "起始/结束ID必须为非负整数或合法的表达式（格式：${expression}）"
         }
       }
     },

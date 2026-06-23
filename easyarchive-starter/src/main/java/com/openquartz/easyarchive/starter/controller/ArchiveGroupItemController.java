@@ -3,8 +3,14 @@ package com.openquartz.easyarchive.starter.controller;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemById;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
 import com.openquartz.easyarchive.starter.annotation.OperationLog;
+import com.openquartz.easyarchive.starter.converter.ArchiveGroupItemByIdConverter;
+import com.openquartz.easyarchive.starter.converter.ArchiveGroupItemByTimeConverter;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupItemSummary;
+import com.openquartz.easyarchive.starter.model.request.ArchiveGroupItemByIdRequest;
+import com.openquartz.easyarchive.starter.model.request.ArchiveGroupItemByTimeRequest;
+import com.openquartz.easyarchive.starter.model.vo.ArchiveGroupItemByIdVO;
+import com.openquartz.easyarchive.starter.model.vo.ArchiveGroupItemByTimeVO;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupItemByIdService;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupItemByTimeService;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +29,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -40,6 +46,8 @@ public class ArchiveGroupItemController {
 
     private final ArchiveGroupItemByIdService idService;
     private final ArchiveGroupItemByTimeService timeService;
+    private final ArchiveGroupItemByIdConverter archiveGroupItemByIdConverter;
+    private final ArchiveGroupItemByTimeConverter archiveGroupItemByTimeConverter;
 
     @GetMapping
     public ApiResponse<List<ArchiveGroupItemSummary>> list(@PathVariable Long groupId,
@@ -62,27 +70,29 @@ public class ArchiveGroupItemController {
     }
 
     @GetMapping("/id/{itemId}")
-    public ApiResponse<ArchiveGroupItemById> getIdItem(@PathVariable Long groupId, @PathVariable Long itemId) {
+    public ApiResponse<ArchiveGroupItemByIdVO> getIdItem(@PathVariable Long groupId, @PathVariable Long itemId) {
         ArchiveGroupItemById item = idService.findById(groupId, itemId);
         if (item == null) {
             return ApiResponse.error("RESOURCE_NOT_FOUND", "归档明细不存在");
         }
-        return ApiResponse.success(item);
+        return ApiResponse.success(archiveGroupItemByIdConverter.toVO(item));
     }
 
     @PostMapping("/id")
     @OperationLog(value = "新增分组项", module = "ARCHIVE_GROUP_ITEM_ID", action = "CREATE", button = "新增分组项")
-    public ApiResponse<ArchiveGroupItemById> createIdItem(@PathVariable Long groupId,
-                                                          @RequestBody ArchiveGroupItemById item) {
-        return ApiResponse.success(idService.create(groupId, item));
+    public ApiResponse<ArchiveGroupItemByIdVO> createIdItem(@PathVariable Long groupId,
+                                                          @RequestBody ArchiveGroupItemByIdRequest request) {
+        ArchiveGroupItemById entity = archiveGroupItemByIdConverter.toEntity(request);
+        return ApiResponse.success(archiveGroupItemByIdConverter.toVO(idService.create(groupId, entity)));
     }
 
     @PutMapping("/id/{itemId}")
     @OperationLog(value = "编辑分组项", module = "ARCHIVE_GROUP_ITEM_ID", action = "UPDATE", button = "编辑分组项")
-    public ApiResponse<ArchiveGroupItemById> updateIdItem(@PathVariable Long groupId,
+    public ApiResponse<ArchiveGroupItemByIdVO> updateIdItem(@PathVariable Long groupId,
                                                           @PathVariable Long itemId,
-                                                          @RequestBody ArchiveGroupItemById item) {
-        return ApiResponse.success(idService.update(groupId, itemId, item));
+                                                          @RequestBody ArchiveGroupItemByIdRequest request) {
+        ArchiveGroupItemById entity = archiveGroupItemByIdConverter.toEntity(request);
+        return ApiResponse.success(archiveGroupItemByIdConverter.toVO(idService.update(groupId, itemId, entity)));
     }
 
     @PatchMapping("/id/{itemId}/status")
@@ -102,27 +112,29 @@ public class ArchiveGroupItemController {
     }
 
     @GetMapping("/time/{itemId}")
-    public ApiResponse<ArchiveGroupItemByTime> getTimeItem(@PathVariable Long groupId, @PathVariable Long itemId) {
+    public ApiResponse<ArchiveGroupItemByTimeVO> getTimeItem(@PathVariable Long groupId, @PathVariable Long itemId) {
         ArchiveGroupItemByTime item = timeService.findById(groupId, itemId);
         if (item == null) {
             return ApiResponse.error("RESOURCE_NOT_FOUND", "归档明细不存在");
         }
-        return ApiResponse.success(item);
+        return ApiResponse.success(archiveGroupItemByTimeConverter.toVO(item));
     }
 
     @PostMapping("/time")
     @OperationLog(value = "新增分组项", module = "ARCHIVE_GROUP_ITEM_TIME", action = "CREATE", button = "新增分组项")
-    public ApiResponse<ArchiveGroupItemByTime> createTimeItem(@PathVariable Long groupId,
-                                                              @RequestBody ArchiveGroupItemByTime item) {
-        return ApiResponse.success(timeService.create(groupId, item));
+    public ApiResponse<ArchiveGroupItemByTimeVO> createTimeItem(@PathVariable Long groupId,
+                                                              @RequestBody ArchiveGroupItemByTimeRequest request) {
+        ArchiveGroupItemByTime entity = archiveGroupItemByTimeConverter.toEntity(request);
+        return ApiResponse.success(archiveGroupItemByTimeConverter.toVO(timeService.create(groupId, entity)));
     }
 
     @PutMapping("/time/{itemId}")
     @OperationLog(value = "编辑分组项", module = "ARCHIVE_GROUP_ITEM_TIME", action = "UPDATE", button = "编辑分组项")
-    public ApiResponse<ArchiveGroupItemByTime> updateTimeItem(@PathVariable Long groupId,
+    public ApiResponse<ArchiveGroupItemByTimeVO> updateTimeItem(@PathVariable Long groupId,
                                                               @PathVariable Long itemId,
-                                                              @RequestBody ArchiveGroupItemByTime item) {
-        return ApiResponse.success(timeService.update(groupId, itemId, item));
+                                                              @RequestBody ArchiveGroupItemByTimeRequest request) {
+        ArchiveGroupItemByTime entity = archiveGroupItemByTimeConverter.toEntity(request);
+        return ApiResponse.success(archiveGroupItemByTimeConverter.toVO(timeService.update(groupId, itemId, entity)));
     }
 
     @PatchMapping("/time/{itemId}/status")

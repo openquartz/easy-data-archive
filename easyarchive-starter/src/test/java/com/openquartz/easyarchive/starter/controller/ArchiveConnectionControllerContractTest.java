@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.starter.controller;
 
 import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
+import com.openquartz.easyarchive.starter.converter.DatasourceConverter;
 import com.openquartz.easyarchive.starter.security.JwtAuthenticationEntryPoint;
 import com.openquartz.easyarchive.starter.security.JwtTokenUtil;
 import com.openquartz.easyarchive.starter.service.ArchiveConnectionService;
@@ -28,6 +29,9 @@ class ArchiveConnectionControllerContractTest {
 
     @MockBean
     private ArchiveConnectionService archiveConnectionService;
+
+    @MockBean
+    private DatasourceConverter datasourceConverter;
 
     @MockBean
     private JwtTokenUtil jwtTokenUtil;

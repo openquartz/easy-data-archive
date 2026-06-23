@@ -3,11 +3,15 @@ package com.openquartz.easyarchive.starter.controller;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
 import com.openquartz.easyarchive.starter.annotation.OperationLog;
+import com.openquartz.easyarchive.starter.converter.ArchiveGroupConverter;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupView;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
 import com.openquartz.easyarchive.starter.model.dto.PageResult;
 import com.openquartz.easyarchive.starter.model.dto.UpdateOwnerRequest;
+import com.openquartz.easyarchive.starter.model.request.ArchiveGroupCreateRequest;
+import com.openquartz.easyarchive.starter.model.request.ArchiveGroupUpdateRequest;
+import com.openquartz.easyarchive.starter.model.vo.ArchiveGroupVO;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupExecutionService;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/archive/groups")
@@ -35,6 +40,7 @@ public class ArchiveGroupController {
 
     private final ArchiveGroupService groupService;
     private final ArchiveGroupExecutionService executionService;
+    private final ArchiveGroupConverter archiveGroupConverter;
 
     @GetMapping
     public ApiResponse<List<ArchiveGroupView>> list(@RequestParam(required = false) Integer enableStatus) {
@@ -50,8 +56,10 @@ public class ArchiveGroupController {
     }
 
     @GetMapping("/tree")
-    public ApiResponse<List<ArchiveGroup>> tree() {
-        return ApiResponse.success(groupService.tree());
+    public ApiResponse<List<ArchiveGroupVO>> tree() {
+        return ApiResponse.success(groupService.tree().stream()
+                .map(archiveGroupConverter::toVO)
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/{id}")
@@ -76,15 +84,17 @@ public class ArchiveGroupController {
 
     @PostMapping
     @OperationLog(value = "新增分组", module = "ARCHIVE_GROUP", action = "CREATE", button = "新增分组")
-    public ApiResponse<ArchiveGroup> create(@RequestBody ArchiveGroup group) {
-        return ApiResponse.success(groupService.create(group));
+    public ApiResponse<ArchiveGroupVO> create(@Valid @RequestBody ArchiveGroupCreateRequest request) {
+        ArchiveGroup entity = archiveGroupConverter.toEntity(request);
+        return ApiResponse.success(archiveGroupConverter.toVO(groupService.create(entity)));
     }
 
     @PutMapping("/{id}")
     @OperationLog(value = "保存分组", module = "ARCHIVE_GROUP", action = "UPDATE", button = "保存分组")
-    public ApiResponse<ArchiveGroup> update(@PathVariable Long id, @RequestBody ArchiveGroup group) {
-        group.setId(id);
-        return ApiResponse.success(groupService.update(group));
+    public ApiResponse<ArchiveGroupVO> update(@PathVariable Long id, @Valid @RequestBody ArchiveGroupUpdateRequest request) {
+        ArchiveGroup entity = archiveGroupConverter.toEntity(request);
+        entity.setId(id);
+        return ApiResponse.success(archiveGroupConverter.toVO(groupService.update(entity)));
     }
 
     @PatchMapping("/{id}/status")
@@ -103,9 +113,9 @@ public class ArchiveGroupController {
 
     @PutMapping("/{id}/owner")
     @OperationLog(value = "变更负责人", module = "ARCHIVE_GROUP", action = "UPDATE_OWNER", button = "变更负责人")
-    public ApiResponse<ArchiveGroup> updateOwner(@PathVariable Long id,
+    public ApiResponse<ArchiveGroupVO> updateOwner(@PathVariable Long id,
                                                  @Valid @RequestBody UpdateOwnerRequest request) {
-        return ApiResponse.success(groupService.updateOwner(id, request.getNewOwnerUserId()));
+        return ApiResponse.success(archiveGroupConverter.toVO(groupService.updateOwner(id, request.getNewOwnerUserId())));
     }
 
     @PostMapping("/{id}/trigger")

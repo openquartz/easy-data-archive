@@ -34,6 +34,18 @@ const form = reactive<ArchiveGroupItemByTimePayload>({
 });
 const errorMessage = ref("");
 const { t } = useI18n();
+
+/**
+ * 统一日期时间格式为 yyyy-MM-dd HH:mm:ss
+ * datetime-local 输入产生 yyyy-MM-ddTHH:mm（无秒），需补全
+ */
+function normalizeDateTime(value: string | undefined): string {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const base = trimmed.replace("T", " ");
+  return base.length === 16 ? `${base}:00` : base;
+}
 const title = computed(() =>
   props.readonly
     ? t("archiveGroup.item.timeDetailTitle")
@@ -52,7 +64,7 @@ watch(
       priority: props.initialValue?.priority ?? 10,
       fetchSql: props.initialValue?.fetchSql || "",
       deleteWhere: props.initialValue?.deleteWhere || "",
-      startTime: props.initialValue?.startTime?.slice(0, 16) || "",
+      startTime: normalizeDateTime(props.initialValue?.startTime),
       keepDay: props.initialValue?.keepDay ?? 30,
       stepMinutes: props.initialValue?.stepMinutes ?? 60,
       stepCount: props.initialValue?.stepCount ?? 1000,
@@ -92,7 +104,8 @@ function handleSubmit(): void {
     targetTable: form.targetTable.trim(),
     fetchSql: form.fetchSql.trim(),
     deleteWhere: form.deleteWhere?.trim(),
-    idColumn: form.idColumn.trim()
+    idColumn: form.idColumn.trim(),
+    startTime: normalizeDateTime(form.startTime)
   });
 }
 </script>

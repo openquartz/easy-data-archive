@@ -66,6 +66,8 @@ watch(
   { immediate: true }
 );
 
+const ID_EXPRESSION_PATTERN = /\$([^$]+)\$/;
+
 function validate(): boolean {
   if (!form.sourceTable.trim() || !form.targetTable.trim() || !form.idColumn.trim()) {
     errorMessage.value = t("archiveGroup.item.validation.tableRequired");
@@ -75,11 +77,24 @@ function validate(): boolean {
     errorMessage.value = t("archiveGroup.item.validation.sqlRequired");
     return false;
   }
+  if (!isValidIdValue(form.startId.trim()) || !isValidIdValue(form.endId.trim())) {
+    errorMessage.value = t("archiveGroup.item.validation.idRangeInvalid");
+    return false;
+  }
   if (form.priority <= 0 || form.stepCount <= 0 || form.stepRounds <= 0) {
     errorMessage.value = t("archiveGroup.item.validation.positiveRequired");
     return false;
   }
   return true;
+}
+
+function isValidIdValue(value: string): boolean {
+  // 纯非负整数
+  if (/^\d+$/.test(value)) {
+    return true;
+  }
+  // $表达式$ 格式
+  return ID_EXPRESSION_PATTERN.test(value);
 }
 
 function handleSubmit(): void {

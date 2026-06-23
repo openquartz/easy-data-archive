@@ -1,6 +1,7 @@
 package com.openquartz.easyarchive.starter.controller;
 
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask;
+import com.openquartz.easyarchive.starter.converter.ArchiveGroupConverter;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupItemStatsView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupOverviewView;
 import com.openquartz.easyarchive.starter.model.dto.ArchiveGroupTaskStatsView;
@@ -40,6 +41,9 @@ class ArchiveGroupControllerContractTest {
 
     @MockBean
     private ArchiveGroupService groupService;
+
+    @MockBean
+    private ArchiveGroupConverter archiveGroupConverter;
 
     @MockBean
     private ArchiveGroupExecutionService executionService;
@@ -86,7 +90,7 @@ class ArchiveGroupControllerContractTest {
                 .andExpect(jsonPath("$.data[0].activeTaskStatus").value(ArchiveGroupExecuteTask.STATUS_RUNNING))
                 .andExpect(jsonPath("$.data[0].activeTaskProcessedRecords").value(1234))
                 .andExpect(jsonPath("$.data[0].activeTaskProcessedSpeed").value(56.78))
-                .andExpect(jsonPath("$.data[0].activeTaskHeartbeatTime").value("2024-01-01T00:00:00.000+00:00"))
+                .andExpect(jsonPath("$.data[0].activeTaskHeartbeatTime").value("2024-01-01 08:00:00"))
                 .andExpect(jsonPath("$.data[0].canTrigger").value(false))
                 .andExpect(jsonPath("$.data[0].canCancelActiveTask").value(true));
     }
@@ -156,7 +160,7 @@ class ArchiveGroupControllerContractTest {
                 .andExpect(jsonPath("$.data.group.ownerDisplayName").value("系统管理员 (admin)"))
                 .andExpect(jsonPath("$.data.group.activeTaskProcessedRecords").value(1234))
                 .andExpect(jsonPath("$.data.group.activeTaskProcessedSpeed").value(56.78))
-                .andExpect(jsonPath("$.data.group.activeTaskHeartbeatTime").value("2024-01-01T00:00:00.000+00:00"))
+                .andExpect(jsonPath("$.data.group.activeTaskHeartbeatTime").value("2024-01-01 08:00:00"))
                 .andExpect(jsonPath("$.data.itemStats.totalCount").value(6))
                 .andExpect(jsonPath("$.data.itemStats.idTypeCount").value(3))
                 .andExpect(jsonPath("$.data.taskStats.totalCount").value(20))

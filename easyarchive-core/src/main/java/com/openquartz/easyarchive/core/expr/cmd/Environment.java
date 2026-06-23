@@ -45,7 +45,7 @@ public class Environment {
         }
     }
 
-    public void registerLocalContextParam(Map<String, String> localParams) {
+    public void registerLocalContextParam(Map<String, Object> localParams) {
         if (localParams == null) {
             return;
         }

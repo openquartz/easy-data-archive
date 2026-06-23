@@ -23,24 +23,25 @@ public class ExpressionService {
     private final ExpressionEngine expressionEngine = ExpressionEngine.builder().build();
 
     // 匹配 $表达式$ 格式的正则表达式
-    private static final Pattern EXPRESSION_PATTERN = Pattern.compile("\\$([^$]+)\\$");
+    public static final Pattern EXPRESSION_PATTERN = Pattern.compile("\\$([^$]+)\\$");
 
-    public String parse(String expr){
-        return parseExpression(expr,null);
+    public String parse(String expr) {
+        return parseExpression(expr, null);
     }
 
-    public String parse(String expr, AssignExtParam param){
+    public String parse(String expr, AssignExtParam param) {
         return parseExpression(expr, param);
     }
 
     /**
      * 解析表达式
-     * @param expr 表达式
+     *
+     * @param expr  表达式
      * @param param param
      * @return 解析结果
      */
     private String parseExpression(String expr, AssignExtParam param) {
-        if (expr == null||expr.isEmpty()){
+        if (expr == null || expr.isEmpty()) {
             return expr;
         }
 
@@ -52,20 +53,20 @@ public class ExpressionService {
             String expression = matcher.group(1);
             String executionResult;
 
-            try{
+            try {
                 // 表达式执行结果
-                if (param!=null&& param.getParams()!=null){
+                if (param != null && param.getParams() != null) {
                     executionResult = expressionEngine.execute(expression, param.getParams());
-                }else {
+                } else {
                     executionResult = expressionEngine.execute(expression);
                 }
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 log.error("parse expression error", ex);
                 throw ex;
             }
 
             // 转义特殊字符以避免替换时出现问题
-            matcher.appendReplacement(result, executionResult != null?
+            matcher.appendReplacement(result, executionResult != null ?
                     Matcher.quoteReplacement(executionResult) : "");
         }
 

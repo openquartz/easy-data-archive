@@ -1,5 +1,6 @@
 package com.openquartz.easyarchive.core.rule.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.openquartz.easyarchive.common.entity.BaseEntity;
 import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskExecutePhaseEnum;
 import com.openquartz.easyarchive.core.rule.enums.ArchiveTaskLogLevelEnum;
@@ -38,6 +39,7 @@ public class ArchiveTaskLog extends BaseEntity {
     /**
      * 日志时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date logTime;
 
     /**

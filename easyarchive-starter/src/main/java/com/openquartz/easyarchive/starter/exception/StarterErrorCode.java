@@ -64,7 +64,9 @@ public enum StarterErrorCode implements EasyArchiveErrorCode {
     OWNER_UPDATE_NOT_ALLOWED("55", "普通用户不允许变更负责人"),
     OWNER_USER_INVALID("56", "负责人用户不存在"),
     OWNER_USER_DISABLED("57", "负责人用户已禁用"),
-    OWNER_USER_NOT_CREATED_BY_YOU("58", "该用户不是你创建的");
+    OWNER_USER_NOT_CREATED_BY_YOU("58", "该用户不是你创建的"),
+    START_ID_INVALID("59", "开始ID必须为>=0的整数或合法的表达式（格式：${expression}）"),
+    END_ID_INVALID("5A", "结束ID必须为>=0的整数或合法的表达式（格式：${expression}）");
 
     private static final String BASE_CODE = "StarterError-";
 

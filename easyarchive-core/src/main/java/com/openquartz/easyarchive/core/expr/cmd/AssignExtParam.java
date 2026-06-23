@@ -1,6 +1,8 @@
 package com.openquartz.easyarchive.core.expr.cmd;
 
 import com.google.common.collect.ImmutableSortedSet;
+import lombok.Getter;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,9 +11,10 @@ import java.util.stream.Collectors;
 /**
  * @author svnee
  */
+@Getter
 public class AssignExtParam {
 
-    private Map<String, String> params = new HashMap<>();
+    private Map<String, Object> params = new HashMap<>();
     public static final AssignExtParam EMPTY_PARAM = AssignExtParam.create();
 
     static {
@@ -22,11 +25,7 @@ public class AssignExtParam {
 
     }
 
-    public Map<String, String> getParams() {
-        return params;
-    }
-
-    public AssignExtParam set(String key, String value) {
+    public AssignExtParam set(String key, Object value) {
         this.params.put(key, value);
         return this;
     }

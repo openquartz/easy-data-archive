@@ -1,5 +1,6 @@
 package com.openquartz.easyarchive.core.connection.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.openquartz.easyarchive.common.entity.BaseEntity;
 import com.openquartz.easyarchive.common.enums.DatasourceStatusEnum;
 import lombok.Data;
@@ -68,6 +69,7 @@ public class ArchiveConnection extends BaseEntity {
     /**
      * 最近校验时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date lastCheckTime;
 
     /**

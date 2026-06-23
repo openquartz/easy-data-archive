@@ -1,5 +1,6 @@
 package com.openquartz.easyarchive.core.rule.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.openquartz.easyarchive.common.entity.BaseEntity;
 import com.openquartz.easyarchive.common.enums.BinarySwitchEnum;
 import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
@@ -50,6 +51,7 @@ public class ArchiveGroupItemByTime extends BaseEntity implements ArchiveGroupIt
     /**
      * 开始时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date startTime;
 
     /**

@@ -2,6 +2,8 @@ package com.openquartz.easyarchive.starter.controller;
 
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemById;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemByTime;
+import com.openquartz.easyarchive.starter.converter.ArchiveGroupItemByIdConverter;
+import com.openquartz.easyarchive.starter.converter.ArchiveGroupItemByTimeConverter;
 import com.openquartz.easyarchive.starter.security.JwtAuthenticationEntryPoint;
 import com.openquartz.easyarchive.starter.security.JwtTokenUtil;
 import com.openquartz.easyarchive.starter.service.ArchiveGroupItemByIdService;
@@ -33,6 +35,12 @@ class ArchiveGroupItemControllerContractTest {
 
     @MockBean
     private ArchiveGroupItemByTimeService timeService;
+
+    @MockBean
+    private ArchiveGroupItemByIdConverter archiveGroupItemByIdConverter;
+
+    @MockBean
+    private ArchiveGroupItemByTimeConverter archiveGroupItemByTimeConverter;
 
     @MockBean
     private JwtTokenUtil jwtTokenUtil;

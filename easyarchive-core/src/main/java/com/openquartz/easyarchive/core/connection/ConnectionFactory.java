@@ -59,8 +59,9 @@ public class ConnectionFactory {
     }
 
     private static HikariDataSource createDataSource(ArchiveConnection conn) {
+        String enhancedUrl = JdbcUrlEnhancer.enhance(conn.getUrl());
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(conn.getUrl());
+        config.setJdbcUrl(enhancedUrl);
         config.setUsername(conn.getUsername());
         config.setPassword(conn.getPassword());
         config.setDriverClassName("com.mysql.jdbc.Driver");
@@ -74,11 +75,11 @@ public class ConnectionFactory {
         }
 
         config.setConnectionTestQuery("SELECT 1");
-        log.info("[ConnectionFactory#createDataSource] creating pool for {}", conn.getUrl());
+        log.info("[ConnectionFactory#createDataSource] creating pool for {}", enhancedUrl);
         return new HikariDataSource(config);
     }
 
     private static String buildPoolKey(ArchiveConnection conn) {
-        return conn.getUrl() + "|" + conn.getUsername();
+        return JdbcUrlEnhancer.enhance(conn.getUrl()) + "|" + conn.getUsername();
     }
 }

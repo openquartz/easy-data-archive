@@ -2,8 +2,12 @@ package com.openquartz.easyarchive.starter.controller;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.starter.annotation.OperationLog;
+import com.openquartz.easyarchive.starter.converter.DatasourceConverter;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
 import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
+import com.openquartz.easyarchive.starter.model.request.DatasourceCreateRequest;
+import com.openquartz.easyarchive.starter.model.request.DatasourceUpdateRequest;
+import com.openquartz.easyarchive.starter.model.vo.DatasourceVO;
 import com.openquartz.easyarchive.starter.service.ArchiveConnectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/archive/datasources")
@@ -20,6 +26,7 @@ import java.util.List;
 public class ArchiveConnectionController {
 
     private final ArchiveConnectionService datasourceService;
+    private final DatasourceConverter datasourceConverter;
 
     @GetMapping("/types")
     public ApiResponse<List<DatasourceTypeOption>> getDatasourceTypes() {
@@ -27,31 +34,35 @@ public class ArchiveConnectionController {
     }
 
     @GetMapping
-    public ApiResponse<List<ArchiveConnection>> getDatasources() {
-        return ApiResponse.success(datasourceService.findAll());
+    public ApiResponse<List<DatasourceVO>> getDatasources() {
+        return ApiResponse.success(datasourceService.findAll().stream()
+                .map(datasourceConverter::toVO)
+                .collect(Collectors.toList()));
     }
 
     @PostMapping
     @OperationLog(value = "新增数据源", module = "DATASOURCE", action = "CREATE", button = "新增数据源")
-    public ApiResponse<ArchiveConnection> createDatasource(@Valid @RequestBody ArchiveConnection datasource) {
-        return ApiResponse.success(datasourceService.create(datasource));
+    public ApiResponse<DatasourceVO> createDatasource(@Valid @RequestBody DatasourceCreateRequest request) {
+        ArchiveConnection entity = datasourceConverter.toEntity(request);
+        return ApiResponse.success(datasourceConverter.toVO(datasourceService.create(entity)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ArchiveConnection>> getDatasource(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<DatasourceVO>> getDatasource(@PathVariable Long id) {
         ArchiveConnection ds = datasourceService.findById(id);
         if (ds == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("RESOURCE_NOT_FOUND", "归档连接不存在"));
         }
-        return ResponseEntity.ok(ApiResponse.success(ds));
+        return ResponseEntity.ok(ApiResponse.success(datasourceConverter.toVO(ds)));
     }
 
     @PutMapping("/{id}")
     @OperationLog(value = "编辑数据源", module = "DATASOURCE", action = "UPDATE", button = "编辑数据源")
-    public ApiResponse<ArchiveConnection> updateDatasource(@PathVariable Long id, @RequestBody ArchiveConnection datasource) {
-        datasource.setId(id);
-        return ApiResponse.success(datasourceService.update(datasource));
+    public ApiResponse<DatasourceVO> updateDatasource(@PathVariable Long id, @Valid @RequestBody DatasourceUpdateRequest request) {
+        ArchiveConnection entity = datasourceConverter.toEntity(request);
+        entity.setId(id);
+        return ApiResponse.success(datasourceConverter.toVO(datasourceService.update(entity)));
     }
 
     @PatchMapping("/{id}/status")

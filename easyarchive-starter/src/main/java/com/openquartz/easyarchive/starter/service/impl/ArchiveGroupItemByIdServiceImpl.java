@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.starter.service.impl;
 
 import com.openquartz.easyarchive.common.enums.BinarySwitchEnum;
 import com.openquartz.easyarchive.common.enums.EnableStatusEnum;
+import com.openquartz.easyarchive.core.expr.ExpressionService;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import com.openquartz.easyarchive.core.rule.entity.ArchiveGroupItemById;
 import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Matcher;
 
 /**
  * 按ID归档分组明细服务实现
@@ -116,6 +118,8 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
         if (isBlank(item.getEndId())) {
             throw new StarterManageException(StarterErrorCode.END_ID_REQUIRED);
         }
+        validateIdExpression(item.getStartId(), StarterErrorCode.START_ID_INVALID);
+        validateIdExpression(item.getEndId(), StarterErrorCode.END_ID_INVALID);
         validatePositive(item.getStepRounds(), StarterErrorCode.STEP_ROUNDS_INVALID);
     }
 
@@ -273,6 +277,27 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
         if (value != null && value < 0) {
             throw new StarterManageException(errorCode);
         }
+    }
+
+    /**
+     * 校验 startId / endId 格式：
+     * 1) 为 >=0 的纯整数（如 "0", "100"）
+     * 2) 或合法的 $表达式$ 格式（如 "${const 100}"）
+     */
+    private void validateIdExpression(String value, StarterErrorCode errorCode) {
+        if (isBlank(value)) {
+            return;
+        }
+        // 尝试匹配纯非负整数
+        if (value.matches("\\d+")) {
+            return;
+        }
+        // 尝试匹配 $表达式$ 格式
+        Matcher matcher = ExpressionService.EXPRESSION_PATTERN.matcher(value);
+        if (matcher.find()) {
+            return;
+        }
+        throw new StarterManageException(errorCode);
     }
 
     private Integer valueOrExisting(Integer value, Integer existing) {

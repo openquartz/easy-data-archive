@@ -1,5 +1,6 @@
 package com.openquartz.easyarchive.core.common;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.openquartz.easyarchive.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,6 +31,7 @@ public class SysUser extends BaseEntity {
 
     private Integer status;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date lastLoginTime;
 
     private String remark;

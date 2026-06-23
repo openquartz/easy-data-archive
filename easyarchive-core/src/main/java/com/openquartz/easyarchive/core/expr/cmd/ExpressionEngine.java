@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 例如：
@@ -22,14 +23,19 @@ public class ExpressionEngine {
     private ExprExecuteStrategy strategy;
     private Environment environment;
 
+    /**
+     * SpEL 表达式前缀，用于路由到 SpelExecutor
+     */
+    private static final String SPEL_PREFIX = "spel ";
+
     public String execute(String expr) {
         return execute(expr, null);
     }
 
-    public String execute(String expr, Map<String, String> localContextParams) {
+    public String execute(String expr, Map<String, Object> localContextParams) {
         long startTime = System.currentTimeMillis();
         try {
-            expr = wrapAsConstCmd(expr);
+            expr = wrapExpression(expr);
             if (localContextParams != null) {
                 registerLocalContextParams(localContextParams);
             }
@@ -44,7 +50,7 @@ public class ExpressionEngine {
         }
     }
 
-    private void registerLocalContextParams(Map<String, String> localContextParams) {
+    private void registerLocalContextParams(Map<String, Object> localContextParams) {
         environment.registerLocalContextParam(localContextParams);
     }
 
@@ -52,7 +58,15 @@ public class ExpressionEngine {
         environment.clearLocalContext();
     }
 
-    private static String wrapAsConstCmd(String expr) {
+    /**
+     * 根据表达式类型添加正确的命令前缀：
+     * - 以 "spel " 开头的表达式 → {spel ...} 路由到 SpelExecutor
+     * - 其他表达式 → {const ...} 路由到 ConstExecutor
+     */
+    private static String wrapExpression(String expr) {
+        if (expr.startsWith(SPEL_PREFIX)) {
+            return String.format("{spel %s}", expr.substring(SPEL_PREFIX.length()));
+        }
         return String.format("{const %s}", expr);
     }
 
@@ -113,11 +127,7 @@ public class ExpressionEngine {
                 environment.registerGlobalContextParam(globalContextInfo);
             }
             expressionEngine.environment = environment;
-            if (this.strategy == null) {
-                expressionEngine.strategy = ExprExecuteStrategyFactory.getDefaultStrategy();
-            } else {
-                expressionEngine.strategy = this.strategy;
-            }
+            expressionEngine.strategy = Objects.requireNonNullElseGet(this.strategy, ExprExecuteStrategyFactory::getDefaultStrategy);
             return expressionEngine;
         }
     }
