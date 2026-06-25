@@ -68,7 +68,7 @@ public class ArchiveGroupItemById extends BaseEntity implements ArchiveGroupItem
     /**
      * 滚动步长
      */
-    private Integer stepRounds = 5000;
+    private Long stepRounds = 5000L;
 
     /**
      * 规则停顿时间，单位毫秒，为空时走全局配置

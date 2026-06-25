@@ -28,7 +28,7 @@ export interface ArchiveGroupItemById {
   startId: string;
   endId: string;
   stepCount: number;
-  stepRounds: number;
+  stepRounds: string;
   pauseMs?: number;
   enableClean: number;
   enableWrite: number;

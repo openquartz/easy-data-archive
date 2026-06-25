@@ -34,7 +34,7 @@ public class ArchiveGroupItemByIdVO {
 
     private Integer stepCount;
 
-    private Integer stepRounds;
+    private Long stepRounds;
 
     private Integer pauseMs;
 

@@ -37,20 +37,24 @@ public class SyncExecutor implements Closeable {
     }
 
     public int execute(Long start, Long end, int step) {
-        return doExecute(start, end, step);
+        return doExecute(start, end, step, archiveConfig.getMaxLoadRows());
+    }
+
+    public int execute(Long start, Long end, int step, Long maxRows) {
+        return doExecute(start, end, step, maxRows.intValue());
     }
 
     public int execute(Date start, Date end, int step) {
-        return doExecute(start, end, step);
+        return doExecute(start, end, step, archiveConfig.getMaxLoadRows());
     }
 
-    private int doExecute(Object start, Object end, int step) {
+    private int doExecute(Object start, Object end, int step, int maxRows) {
 
         int archiveRows = 0;
 
         // 执行循环归档
         for (Integer exeLoadFreq = 0; exeLoadFreq < archiveConfig.getMaxTryLoadFrequencyUnitTime(); exeLoadFreq++) {
-            DataIterator itr = reader.read(start, end, exeLoadFreq, archiveConfig.getMaxLoadRows(), step);
+            DataIterator itr = reader.read(start, end, exeLoadFreq, maxRows, step);
             if (itr instanceof EmptyDataIterator) {
                 log.info("[SyncExecutor#execute]execute end!start:{},end:{},exeFreq:{}", start, end, exeLoadFreq);
                 break;

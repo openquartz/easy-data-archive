@@ -303,7 +303,7 @@ CREATE TABLE IF NOT EXISTS `ea_archive_group_item_by_id` (
     `start_id` VARCHAR(255) NOT NULL DEFAULT '0' COMMENT '起始 ID 表达式',
     `end_id` VARCHAR(255) NOT NULL DEFAULT '9223372036854775807' COMMENT '结束 ID 表达式',
     `step_count` INT NOT NULL DEFAULT 1000 COMMENT '单批大小',
-    `step_rounds` INT NOT NULL DEFAULT 5000 COMMENT 'ID 滚动窗口',
+    `step_rounds` BIGINT NOT NULL DEFAULT 5000 COMMENT 'ID 滚动窗口',
     `pause_ms` INT NULL COMMENT '批间停顿毫秒',
     `enable_clean` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用清理 1-不清理',
     `enable_write` TINYINT NOT NULL DEFAULT 0 COMMENT '0-启用写入 1-不写入',

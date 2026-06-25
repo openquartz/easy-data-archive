@@ -143,7 +143,7 @@ public class ArchiveExecutor implements Runnable {
                             // 校验是否被取消和中断
                             checkCancellation();
                             Long curEndId = startId + byIdRule.getStepRounds();
-                            int batchRows = executor.execute(startId, curEndId, byIdRule.getStepCount());
+                            int batchRows = executor.execute(startId, curEndId, byIdRule.getStepCount(), byIdRule.getStepRounds());
                             executeRows += batchRows;
                             totalProcessRecords += batchRows;
                             // 上报进度

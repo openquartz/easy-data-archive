@@ -273,6 +273,12 @@ public class ArchiveGroupItemByIdServiceImpl implements ArchiveGroupItemByIdServ
         }
     }
 
+    private void validatePositive(Long value, StarterErrorCode errorCode) {
+        if (value == null || value <= 0) {
+            throw new StarterManageException(errorCode);
+        }
+    }
+
     private void validateNonNegative(Integer value, StarterErrorCode errorCode) {
         if (value != null && value < 0) {
             throw new StarterManageException(errorCode);

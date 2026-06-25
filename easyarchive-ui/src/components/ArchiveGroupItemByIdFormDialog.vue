@@ -25,7 +25,7 @@ const form = reactive<ArchiveGroupItemByIdPayload>({
   startId: "0",
   endId: "9223372036854775807",
   stepCount: 1000,
-  stepRounds: 5000,
+  stepRounds: "5000",
   pauseMs: undefined,
   enableClean: 0,
   enableWrite: 0,
@@ -55,7 +55,7 @@ watch(
       startId: props.initialValue?.startId || "0",
       endId: props.initialValue?.endId || "9223372036854775807",
       stepCount: props.initialValue?.stepCount ?? 1000,
-      stepRounds: props.initialValue?.stepRounds ?? 5000,
+      stepRounds: props.initialValue?.stepRounds ?? "5000",
       pauseMs: props.initialValue?.pauseMs,
       enableClean: props.initialValue?.enableClean ?? 0,
       enableWrite: props.initialValue?.enableWrite ?? 0,
@@ -81,7 +81,7 @@ function validate(): boolean {
     errorMessage.value = t("archiveGroup.item.validation.idRangeInvalid");
     return false;
   }
-  if (form.priority <= 0 || form.stepCount <= 0 || form.stepRounds <= 0) {
+  if (form.priority <= 0 || form.stepCount <= 0 || Number(form.stepRounds) <= 0) {
     errorMessage.value = t("archiveGroup.item.validation.positiveRequired");
     return false;
   }
@@ -126,7 +126,7 @@ function handleSubmit(): void {
         <label>{{ t("archiveGroup.item.startId") }}<input v-model="form.startId" :disabled="submitting || readonly" /></label>
         <label>{{ t("archiveGroup.item.endId") }}<input v-model="form.endId" :disabled="submitting || readonly" /></label>
         <label>{{ t("archiveGroup.item.stepCount") }}<input v-model.number="form.stepCount" type="number" :disabled="submitting || readonly" /></label>
-        <label>{{ t("archiveGroup.item.stepRounds") }}<input v-model.number="form.stepRounds" type="number" :disabled="submitting || readonly" /></label>
+        <label>{{ t("archiveGroup.item.stepRounds") }}<input v-model="form.stepRounds" type="number" :disabled="submitting || readonly" /></label>
         <label>{{ t("archiveGroup.item.pauseMs") }}<input v-model.number="form.pauseMs" type="number" :disabled="submitting || readonly" /></label>
         <label>
           {{ t("archiveGroup.item.enableWrite") }}

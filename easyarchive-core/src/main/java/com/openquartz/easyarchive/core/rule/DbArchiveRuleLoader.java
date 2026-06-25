@@ -91,7 +91,7 @@ public class DbArchiveRuleLoader implements ArchiveRuleLoader {
         rule.setStartId(rs.getString("start_id"));
         rule.setEndId(rs.getString("end_id"));
         rule.setStepCount(rs.getInt("step_count"));
-        rule.setStepRounds(rs.getInt("step_rounds"));
+        rule.setStepRounds(rs.getLong("step_rounds"));
 
         return rule;
     }

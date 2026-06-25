@@ -30,7 +30,7 @@ public class ArchiveGroupItemByIdRequest {
     @NotNull(message = "步长不能为空")
     private Integer stepCount;
 
-    private Integer stepRounds;
+    private Long stepRounds;
 
     private Integer pauseMs;
 
