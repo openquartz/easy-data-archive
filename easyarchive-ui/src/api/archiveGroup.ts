@@ -111,3 +111,28 @@ export function triggerArchiveGroupApi(id: number): Promise<TaskItem> {
 export function cancelArchiveGroupActiveTaskApi(id: number, cancelReason?: string): Promise<TaskItem> {
   return http.post<TaskItem>(`/archive/groups/${id}/cancel-active-task`, { cancelReason });
 }
+
+export interface PageResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export interface ArchiveGroupPageParams {
+  page?: number;
+  size?: number;
+  enableStatus?: number;
+  keyword?: string;
+  ownerUserId?: number;
+}
+
+export function getArchiveGroupsPageApi(params: ArchiveGroupPageParams): Promise<PageResult<ArchiveGroup>> {
+  const query = new URLSearchParams();
+  if (params.page != null) query.set("page", String(params.page));
+  if (params.size != null) query.set("size", String(params.size));
+  if (params.enableStatus !== undefined) query.set("enableStatus", String(params.enableStatus));
+  if (params.keyword) query.set("keyword", params.keyword);
+  if (params.ownerUserId != null) query.set("ownerUserId", String(params.ownerUserId));
+  return http.get<PageResult<ArchiveGroup>>(`/archive/groups/page?${query.toString()}`);
+}

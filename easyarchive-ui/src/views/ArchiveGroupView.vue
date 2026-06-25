@@ -4,8 +4,9 @@ import {
   createArchiveGroupApi,
   deleteArchiveGroupApi,
   type ArchiveGroup,
+  type ArchiveGroupPageParams,
   type ArchiveGroupPayload,
-  getArchiveGroupsApi,
+  getArchiveGroupsPageApi,
   triggerArchiveGroupApi,
   updateArchiveGroupApi,
   updateArchiveGroupStatusApi
@@ -36,6 +37,9 @@ const users = ref<User[]>([]);
 const busyRows = ref(new Set<number>());
 const busyActions = ref(new Set<string>());
 
+const pagination = ref({ page: 1, size: 20, total: 0 });
+const filters = ref({ keyword: "", enableStatus: undefined as number | undefined, ownerUserId: undefined as number | undefined });
+
 const groupDialogVisible = ref(false);
 const groupDialogMode = ref<"create" | "edit">("create");
 const groupDialogSubmitting = ref(false);
@@ -50,6 +54,8 @@ const authStore = useAuthStore();
 
 const groupEmptyText = computed(() => (loading.value ? t("archiveGroup.emptyLoading") : t("archiveGroup.empty")));
 const hasActiveTasks = computed(() => groups.value.some((item) => typeof item.activeTaskId === "number"));
+const totalPages = computed(() => Math.ceil(pagination.value.total / pagination.value.size));
+const hasActiveFilter = computed(() => !!filters.value.keyword || filters.value.enableStatus !== undefined || !!filters.value.ownerUserId);
 
 const getActionKey = (action: string, id: number): string => `${action}:${id}`;
 const isRowBusy = (id: number): boolean => busyRows.value.has(id);
@@ -72,18 +78,50 @@ const formatNotifyChannel = (channel?: ArchiveGroup["notifyChannel"]): string =>
 async function loadData(): Promise<void> {
   loading.value = true;
   try {
+    const params: ArchiveGroupPageParams = {
+      page: pagination.value.page,
+      size: pagination.value.size,
+      enableStatus: filters.value.enableStatus,
+      keyword: filters.value.keyword || undefined,
+      ownerUserId: filters.value.ownerUserId,
+    };
     const [groupResult, datasourceResult, userResult] = await Promise.all([
-      getArchiveGroupsApi(),
+      getArchiveGroupsPageApi(params),
       getDatasourcesApi(),
       getUsersApiSilent().catch(() => [] as User[])
     ]);
-    groups.value = groupResult;
+    groups.value = groupResult.data;
+    pagination.value.total = groupResult.total;
     datasources.value = datasourceResult;
     users.value = userResult;
   } finally {
     loading.value = false;
     syncPolling();
   }
+}
+
+function handleSearch(): void {
+  pagination.value.page = 1;
+  void loadData();
+}
+
+function handleReset(): void {
+  filters.value.keyword = "";
+  filters.value.enableStatus = undefined;
+  filters.value.ownerUserId = undefined;
+  pagination.value.page = 1;
+  void loadData();
+}
+
+function handlePageChange(page: number): void {
+  pagination.value.page = page;
+  void loadData();
+}
+
+function handleSizeChange(size: number): void {
+  pagination.value.size = size;
+  pagination.value.page = 1;
+  void loadData();
 }
 
 function openDetail(group: ArchiveGroup): void {
@@ -248,7 +286,31 @@ onBeforeUnmount(() => {
         <button v-if="authStore.hasCapability('ARCHIVE_GROUP_CREATE')" class="btn btn--primary" :disabled="loading" @click="openCreateGroup">{{ t("archiveGroup.new") }}</button>
       </div>
     </header>
+    <div class="filter-bar">
+      <input
+        v-model="filters.keyword"
+        type="text"
+        :placeholder="t('archiveGroup.filters.keywordPlaceholder')"
+        class="filter-bar__input"
+      />
+      <select v-model.number="filters.enableStatus" class="filter-bar__select" @change="handleSearch">
+        <option :value="undefined">{{ t("archiveGroup.filters.statusAll") }}</option>
+        <option :value="0">{{ t("status.enabled") }}</option>
+        <option :value="1">{{ t("status.disabled") }}</option>
+      </select>
+      <select v-model.number="filters.ownerUserId" class="filter-bar__select" @change="handleSearch">
+        <option :value="undefined">{{ t("archiveGroup.filters.ownerAll") }}</option>
+        <option v-for="user in users" :key="user.id" :value="user.id">
+          {{ user.realName || user.username }}
+        </option>
+      </select>
+      <button class="btn btn--subtle" @click="handleSearch">{{ t("archiveGroup.filters.search") }}</button>
+      <button v-if="hasActiveFilter" class="btn btn--subtle" @click="handleReset">{{ t("archiveGroup.filters.reset") }}</button>
+    </div>
     <div v-if="loading" class="empty">{{ groupEmptyText }}</div>
+    <div v-else-if="!groups.length && hasActiveFilter" class="empty">
+      {{ t("archiveGroup.emptyFilter") }}
+    </div>
     <div v-else-if="!groups.length" class="empty">{{ groupEmptyText }}</div>
     <div v-else class="table-wrap">
       <table class="table">
@@ -363,6 +425,25 @@ onBeforeUnmount(() => {
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div v-if="pagination.total > pagination.size" class="pager">
+      <div class="pager__info">
+        {{ t("archiveGroup.pager", { page: pagination.page, totalPages, total: pagination.total }) }}
+      </div>
+      <div class="pager__controls">
+        <button class="btn btn--subtle" :disabled="pagination.page <= 1 || loading" @click="handlePageChange(pagination.page - 1)">
+          {{ t("common.prev") }}
+        </button>
+        <button class="btn btn--subtle" :disabled="pagination.page >= totalPages || loading" @click="handlePageChange(pagination.page + 1)">
+          {{ t("common.next") }}
+        </button>
+        <select :value="pagination.size" class="pager__size" @change="handleSizeChange(Number(($event.target as HTMLSelectElement).value))">
+          <option :value="10">10</option>
+          <option :value="20">20</option>
+          <option :value="50">50</option>
+        </select>
+      </div>
     </div>
 
     <ArchiveGroupFormDialog

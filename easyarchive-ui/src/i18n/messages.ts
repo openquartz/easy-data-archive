@@ -170,6 +170,18 @@ export const messages = {
       items: "Items",
       trigger: "Trigger",
       viewTask: "View Archive Task",
+      filters: {
+        keyword: "Search",
+        keywordPlaceholder: "Group name or code",
+        status: "Status",
+        statusAll: "All",
+        owner: "Owner",
+        ownerAll: "All",
+        search: "Search",
+        reset: "Reset"
+      },
+      pager: "Page {page} / {totalPages} · Total {total} records",
+      emptyFilter: "No matching archive groups found. Try different keywords or reset filters.",
       preview: {
         title: "Archive Group Items - {name}",
         timeSection: "Time Items",
@@ -616,6 +628,18 @@ export const messages = {
       items: "明细",
       trigger: "触发",
       viewTask: "查看归档任务",
+      filters: {
+        keyword: "搜索",
+        keywordPlaceholder: "分组名称或编码",
+        status: "状态",
+        statusAll: "全部",
+        owner: "负责人",
+        ownerAll: "全部",
+        search: "查询",
+        reset: "重置"
+      },
+      pager: "第 {page} / {totalPages} 页 · 共 {total} 条",
+      emptyFilter: "未找到匹配条件的归档分组，请尝试其他关键词或重置筛选",
       preview: {
         title: "归档分组明细 - {name}",
         timeSection: "按时间明细",
