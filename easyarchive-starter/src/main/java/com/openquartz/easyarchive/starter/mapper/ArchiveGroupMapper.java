@@ -54,4 +54,24 @@ public interface ArchiveGroupMapper {
 
     int countByOwner(@Param("userId") Long userId,
                      @Param("enableStatus") Integer enableStatus);
+
+    /**
+     * 按关键词和负责人筛选分页查询
+     */
+    List<ArchiveGroup> selectByKeyword(
+        @Param("keyword") String keyword,
+        @Param("enableStatus") Integer enableStatus,
+        @Param("ownerUserId") Long ownerUserId,
+        @Param("start") int start,
+        @Param("size") int size
+    );
+
+    /**
+     * 按关键词和负责人筛选计数
+     */
+    int countByKeyword(
+        @Param("keyword") String keyword,
+        @Param("enableStatus") Integer enableStatus,
+        @Param("ownerUserId") Long ownerUserId
+    );
 }

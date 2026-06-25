@@ -121,7 +121,7 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
     }
 
     @Override
-    public PageResult<ArchiveGroupView> findPage(Integer enableStatus, int page, int size) {
+    public PageResult<ArchiveGroupView> findPage(Integer enableStatus, int page, int size, String keyword, Long ownerUserId) {
         CurrentUserInfo currentUser = currentUserService.getCurrentUser();
         int start = (page - 1) * size;
 
@@ -130,8 +130,8 @@ public class ArchiveGroupServiceImpl implements ArchiveGroupService {
 
         if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
             // 系统管理员 - 查看所有分组
-            total = groupMapper.count(enableStatus);
-            groups = groupMapper.selectPage(enableStatus, start, size);
+            total = groupMapper.countByKeyword(keyword, enableStatus, ownerUserId);
+            groups = groupMapper.selectByKeyword(keyword, enableStatus, ownerUserId, start, size);
         } else if (RoleConstants.isArchiveAdmin(currentUser.getRoleCode())) {
             // 归档管理员 - 查看有权限的数据源分组
             Long userId = currentUser.getUserId();

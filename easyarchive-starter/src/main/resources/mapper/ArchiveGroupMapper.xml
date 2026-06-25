@@ -245,4 +245,44 @@
         </where>
     </select>
 
+    <!-- 新增：按关键词搜索的分页查询 -->
+    <select id="selectByKeyword" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group
+        <where>
+            <if test="enableStatus != null">
+                AND enable_status = #{enableStatus}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (group_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR group_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="ownerUserId != null">
+                AND owner_user_id = #{ownerUserId}
+            </if>
+            AND deleted = 0
+        </where>
+        ORDER BY group_level ASC, parent_id ASC, id DESC
+        LIMIT #{start}, #{size}
+    </select>
+
+    <!-- 新增：按关键词搜索的计数 -->
+    <select id="countByKeyword" resultType="int">
+        SELECT COUNT(*)
+        FROM ea_archive_group
+        <where>
+            <if test="enableStatus != null">
+                AND enable_status = #{enableStatus}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (group_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR group_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="ownerUserId != null">
+                AND owner_user_id = #{ownerUserId}
+            </if>
+            AND deleted = 0
+        </where>
+    </select>
+
 </mapper>

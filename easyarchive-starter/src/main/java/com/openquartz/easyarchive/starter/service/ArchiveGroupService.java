@@ -22,7 +22,7 @@ public interface ArchiveGroupService {
      * @param size 每页大小
      * @return 分页结果
      */
-    PageResult<ArchiveGroupView> findPage(Integer enableStatus, int page, int size);
+    PageResult<ArchiveGroupView> findPage(Integer enableStatus, int page, int size, String keyword, Long ownerUserId);
 
     List<ArchiveGroup> tree();
 

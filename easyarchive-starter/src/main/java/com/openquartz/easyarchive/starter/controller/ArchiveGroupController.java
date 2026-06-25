@@ -51,8 +51,10 @@ public class ArchiveGroupController {
     public ApiResponse<PageResult<ArchiveGroupView>> page(
             @RequestParam(required = false) Integer enableStatus,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.success(groupService.findPage(enableStatus, page, size));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long ownerUserId) {
+        return ApiResponse.success(groupService.findPage(enableStatus, page, size, keyword, ownerUserId));
     }
 
     @GetMapping("/tree")
