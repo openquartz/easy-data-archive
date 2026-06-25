@@ -85,7 +85,7 @@ class ArchiveGroupItemByIdServiceImplTest {
     void shouldRejectInvalidIdSpecificRanges() {
         when(groupMapper.selectById(10L)).thenReturn(enabledGroup());
         ArchiveGroupItemById item = validIdItem();
-        item.setStepRounds(0);
+        item.setStepRounds(0L);
 
         StarterManageException error = assertThrows(StarterManageException.class, () -> service.create(10L, item));
         assertEquals(StarterErrorCode.STEP_ROUNDS_INVALID, error.getErrorCode());
@@ -287,7 +287,7 @@ class ArchiveGroupItemByIdServiceImplTest {
         item.setStartId("0");
         item.setEndId("10000");
         item.setStepCount(1000);
-        item.setStepRounds(5000);
+        item.setStepRounds(5000L);
         item.setEnableClean(0);
         item.setEnableWrite(0);
         item.setEnableStatus(0);
