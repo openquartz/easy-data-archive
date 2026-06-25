@@ -272,11 +272,11 @@ class ArchiveGroupOwnerTest {
         ArchiveGroup group2 = new ArchiveGroup();
         group2.setId(2L);
 
-        when(groupMapper.count(null)).thenReturn(10);
-        when(groupMapper.selectPage(null, 0, 2)).thenReturn(Arrays.asList(group1, group2));
+        when(groupMapper.countByKeyword(null, null, null)).thenReturn(10);
+        when(groupMapper.selectByKeyword(null, null, null, 0, 2)).thenReturn(Arrays.asList(group1, group2));
         when(taskMapper.selectLatestActiveByGroupIds(anyList())).thenReturn(Collections.emptyList());
 
-        PageResult<ArchiveGroupView> result = service.findPage(null, 1, 2);
+        PageResult<ArchiveGroupView> result = service.findPage(null, 1, 2, null, null);
 
         assertEquals(2, result.getData().size());
         assertEquals(10, result.getTotal());
@@ -299,7 +299,7 @@ class ArchiveGroupOwnerTest {
         when(groupMapper.selectPageByOwner(1L, null, 0, 10)).thenReturn(Collections.singletonList(ownGroup));
         when(taskMapper.selectLatestActiveByGroupIds(anyList())).thenReturn(Collections.emptyList());
 
-        PageResult<ArchiveGroupView> result = service.findPage(null, 1, 10);
+        PageResult<ArchiveGroupView> result = service.findPage(null, 1, 10, null, null);
 
         assertEquals(1, result.getData().size());
         assertEquals(5, result.getTotal());
@@ -319,7 +319,7 @@ class ArchiveGroupOwnerTest {
         when(groupMapper.selectAuthorizedPage(2L, null, 0, 10)).thenReturn(Collections.singletonList(authorizedGroup));
         when(taskMapper.selectLatestActiveByGroupIds(anyList())).thenReturn(Collections.emptyList());
 
-        PageResult<ArchiveGroupView> result = service.findPage(null, 1, 10);
+        PageResult<ArchiveGroupView> result = service.findPage(null, 1, 10, null, null);
 
         assertEquals(1, result.getData().size());
         assertEquals(3, result.getTotal());
@@ -333,10 +333,10 @@ class ArchiveGroupOwnerTest {
         admin.setRoleCode(RoleConstants.PLATFORM_ADMIN);
         when(currentUserService.getCurrentUser()).thenReturn(admin);
 
-        when(groupMapper.count(null)).thenReturn(0);
-        when(groupMapper.selectPage(null, 0, 10)).thenReturn(Collections.emptyList());
+        when(groupMapper.countByKeyword(null, null, null)).thenReturn(0);
+        when(groupMapper.selectByKeyword(null, null, null, 0, 10)).thenReturn(Collections.emptyList());
 
-        PageResult<ArchiveGroupView> result = service.findPage(null, 1, 10);
+        PageResult<ArchiveGroupView> result = service.findPage(null, 1, 10, null, null);
 
         assertEquals(0, result.getData().size());
         assertEquals(0, result.getTotal());
