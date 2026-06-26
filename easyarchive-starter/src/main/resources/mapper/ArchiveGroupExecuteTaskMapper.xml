@@ -6,6 +6,7 @@
     <resultMap id="BaseResultMap" type="com.openquartz.easyarchive.core.rule.entity.ArchiveGroupExecuteTask">
         <id column="id" property="id"/>
         <result column="group_id" property="groupId"/>
+        <result column="group_name" property="groupName"/>
         <result column="start_time" property="startTime"/>
         <result column="end_time" property="endTime"/>
         <result column="execute_status" property="executeStatus"/>
@@ -22,7 +23,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, group_id, start_time, end_time, execute_status, error_msg,
+        id, group_id, group_name, start_time, end_time, execute_status, error_msg,
         processed_records, processed_speed, heartbeat_time, finished_flag,
         created_time, updated_time, creator_id, updater_id, deleted
     </sql>
@@ -51,13 +52,16 @@
     </update>
 
     <select id="selectById" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM ea_archive_group_execute_task
-        WHERE id = #{id} AND deleted = 0
+        SELECT t.id, t.group_id, g.group_name, t.start_time, t.end_time, t.execute_status, t.error_msg,
+               t.processed_records, t.processed_speed, t.heartbeat_time, t.finished_flag,
+               t.created_time, t.updated_time, t.creator_id, t.updater_id, t.deleted
+        FROM ea_archive_group_execute_task t
+        LEFT JOIN ea_archive_group g ON g.id = t.group_id AND g.deleted = 0
+        WHERE t.id = #{id} AND t.deleted = 0
     </select>
 
     <select id="selectByIdAndUser" resultMap="BaseResultMap">
-        SELECT t.id, t.group_id, t.start_time, t.end_time, t.execute_status, t.error_msg,
+        SELECT t.id, t.group_id, g.group_name, t.start_time, t.end_time, t.execute_status, t.error_msg,
                t.processed_records, t.processed_speed, t.heartbeat_time, t.finished_flag,
                t.created_time, t.updated_time, t.creator_id, t.updater_id, t.deleted
         FROM ea_archive_group_execute_task t
@@ -75,24 +79,29 @@
     </select>
 
     <select id="selectPage" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM ea_archive_group_execute_task
+        SELECT t.id, t.group_id, g.group_name, t.start_time, t.end_time, t.execute_status, t.error_msg,
+               t.processed_records, t.processed_speed, t.heartbeat_time, t.finished_flag,
+               t.created_time, t.updated_time, t.creator_id, t.updater_id, t.deleted
+        FROM ea_archive_group_execute_task t
+        LEFT JOIN ea_archive_group g ON g.id = t.group_id AND g.deleted = 0
         <where>
-            <if test="status != null and status != ''">AND execute_status = #{status}</if>
-            AND deleted = 0
+            <if test="status != null and status != ''">AND t.execute_status = #{status}</if>
+            <if test="groupId != null">AND t.group_id = #{groupId}</if>
+            AND t.deleted = 0
         </where>
-        ORDER BY id DESC
+        ORDER BY t.id DESC
         LIMIT #{offset}, #{size}
     </select>
 
     <select id="selectPageByUser" resultMap="BaseResultMap">
-        SELECT t.id, t.group_id, t.start_time, t.end_time, t.execute_status, t.error_msg,
+        SELECT t.id, t.group_id, g.group_name, t.start_time, t.end_time, t.execute_status, t.error_msg,
                t.processed_records, t.processed_speed, t.heartbeat_time, t.finished_flag,
                t.created_time, t.updated_time, t.creator_id, t.updater_id, t.deleted
         FROM ea_archive_group_execute_task t
         JOIN ea_archive_group g ON g.id = t.group_id AND g.deleted = 0
         <where>
             <if test="status != null and status != ''">AND t.execute_status = #{status}</if>
+            <if test="groupId != null">AND t.group_id = #{groupId}</if>
             AND t.deleted = 0
             AND EXISTS (
                 SELECT 1
@@ -109,10 +118,12 @@
 
     <select id="count" resultType="int">
         SELECT COUNT(1)
-        FROM ea_archive_group_execute_task
+        FROM ea_archive_group_execute_task t
+        LEFT JOIN ea_archive_group g ON g.id = t.group_id AND g.deleted = 0
         <where>
-            <if test="status != null and status != ''">AND execute_status = #{status}</if>
-            AND deleted = 0
+            <if test="status != null and status != ''">AND t.execute_status = #{status}</if>
+            <if test="groupId != null">AND t.group_id = #{groupId}</if>
+            AND t.deleted = 0
         </where>
     </select>
 
@@ -122,6 +133,7 @@
         JOIN ea_archive_group g ON g.id = t.group_id AND g.deleted = 0
         <where>
             <if test="status != null and status != ''">AND t.execute_status = #{status}</if>
+            <if test="groupId != null">AND t.group_id = #{groupId}</if>
             AND t.deleted = 0
             AND EXISTS (
                 SELECT 1

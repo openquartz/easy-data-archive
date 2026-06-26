@@ -33,6 +33,11 @@ public class ArchiveGroupExecuteTask extends BaseEntity {
     private Long groupId;
 
     /**
+     * 归档分组名称 (JOIN 查询填充)
+     */
+    private String groupName;
+
+    /**
      * 执行开始时间
      */
     private Date startTime;

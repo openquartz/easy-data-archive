@@ -17,6 +17,8 @@ public class TaskVO {
 
     private Long groupId;
 
+    private String groupName;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date startTime;
 
