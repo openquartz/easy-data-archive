@@ -413,7 +413,8 @@ export const messages = {
       filters: {
         all: "All",
         group: "Archive Group",
-        groupPlaceholder: "Select archive group"
+        groupPlaceholder: "Search archive group",
+        status: "Status"
       },
       columns: {
         id: "ID",
@@ -880,7 +881,8 @@ export const messages = {
       filters: {
         all: "全部",
         group: "归档分组",
-        groupPlaceholder: "选择归档分组"
+        groupPlaceholder: "搜索归档分组",
+        status: "状态"
       },
       columns: {
         id: "ID",

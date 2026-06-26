@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRouter } from "vue-router";
-import { cancelTaskApi, getArchiveGroupOptionsApi, getTasksApi, type ArchiveGroupOption, type TaskItem } from "../api/task";
+import { cancelTaskApi, getTasksApi, searchArchiveGroupsApi, type ArchiveGroupSearchOption, type TaskItem } from "../api/task";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
 import EntityLink from "../components/EntityLink.vue";
 import { useI18n } from "../i18n";
@@ -10,13 +10,15 @@ import { createPolling } from "../utils/polling";
 const router = useRouter();
 const loading = ref(false);
 const list = ref<TaskItem[]>([]);
-const groupOptions = ref<ArchiveGroupOption[]>([]);
 const errorMessage = ref("");
 const page = ref(1);
 const size = ref(20);
 const total = ref(0);
 const statusFilter = ref("");
 const groupFilter = ref<number | undefined>(undefined);
+const groupKeyword = ref("");
+const groupSuggestions = ref<ArchiveGroupSearchOption[]>([]);
+const groupSearching = ref(false);
 const cancellingIds = ref(new Set<number>());
 const { t } = useI18n();
 
@@ -39,18 +41,14 @@ async function loadData(): Promise<void> {
   loading.value = true;
   errorMessage.value = "";
   try {
-    const [taskResult, groupResult] = await Promise.all([
-      getTasksApi({
-        page: page.value,
-        size: size.value,
-        status: statusFilter.value || undefined,
-        groupId: groupFilter.value
-      }),
-      getArchiveGroupOptionsApi().catch(() => [] as ArchiveGroupOption[])
-    ]);
+    const taskResult = await getTasksApi({
+      page: page.value,
+      size: size.value,
+      status: statusFilter.value || undefined,
+      groupId: groupFilter.value
+    });
     list.value = taskResult.list || [];
     total.value = taskResult.total || 0;
-    groupOptions.value = groupResult;
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : t("task.loadFailed");
   } finally {
@@ -89,6 +87,44 @@ async function cancelTask(task: TaskItem): Promise<void> {
 function applyFilter(): void {
   page.value = 1;
   void loadData();
+}
+
+let groupSearchToken = 0;
+async function searchGroups(keyword: string): Promise<void> {
+  const token = ++groupSearchToken;
+  if (!keyword) {
+    groupSuggestions.value = [];
+    return;
+  }
+  groupSearching.value = true;
+  try {
+    const result = await searchArchiveGroupsApi(keyword);
+    if (token === groupSearchToken) {
+      groupSuggestions.value = result;
+    }
+  } catch {
+    if (token === groupSearchToken) {
+      groupSuggestions.value = [];
+    }
+  } finally {
+    if (token === groupSearchToken) {
+      groupSearching.value = false;
+    }
+  }
+}
+
+function selectGroup(groupId: number, groupName: string): void {
+  groupFilter.value = groupId;
+  groupKeyword.value = groupName;
+  groupSuggestions.value = [];
+  applyFilter();
+}
+
+function clearGroupFilter(): void {
+  groupFilter.value = undefined;
+  groupKeyword.value = "";
+  groupSuggestions.value = [];
+  applyFilter();
 }
 
 function refresh(): void {
@@ -137,12 +173,31 @@ onBeforeRouteLeave(() => {
             {{ item.label }}
           </option>
         </select>
-        <select v-model="groupFilter" :disabled="loading">
-          <option :value="undefined">{{ t("task.filters.all") }}</option>
-          <option v-for="group in groupOptions" :key="group.id" :value="group.id">
-            {{ group.name }}
-          </option>
-        </select>
+        <div class="group-filter">
+          <input
+            type="text"
+            :placeholder="t('task.filters.groupPlaceholder')"
+            :disabled="loading"
+            :value="groupFilter != null ? groupKeyword : ''"
+            @input="searchGroups(($event.target as HTMLInputElement).value)"
+            @focus="searchGroups(groupKeyword)"
+          />
+          <button
+            v-if="groupFilter != null"
+            class="btn btn--subtle"
+            type="button"
+            @click="clearGroupFilter"
+          >×</button>
+          <ul v-if="groupSuggestions.length" class="group-suggestions">
+            <li
+              v-for="group in groupSuggestions"
+              :key="group.id"
+              @click="selectGroup(group.id, group.name)"
+            >
+              {{ group.name }}
+            </li>
+          </ul>
+        </div>
         <button class="btn btn--subtle" :disabled="loading" @click="applyFilter">{{ t("common.query") }}</button>
       </div>
     </header>
@@ -200,3 +255,41 @@ onBeforeRouteLeave(() => {
     </footer>
   </section>
 </template>
+
+<style scoped>
+.group-filter {
+  position: relative;
+  display: inline-block;
+}
+
+.group-filter input {
+  padding-right: 24px;
+  width: 200px;
+}
+
+.group-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.group-suggestions li {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.group-suggestions li:hover {
+  background-color: #f5f5f5;
+}
+</style>
