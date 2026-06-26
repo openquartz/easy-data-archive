@@ -21,6 +21,20 @@ export interface DatasourceTypeOption {
   name: string;
 }
 
+export interface DatasourcePagedResult {
+  data: Datasource[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export interface DatasourceQuery {
+  page: number;
+  size: number;
+  keyword?: string;
+  status?: number;
+}
+
 export interface DatasourcePayload {
   id?: number;
   datasourceCode: string;
@@ -38,8 +52,13 @@ export function getDatasourceTypesApi(): Promise<DatasourceTypeOption[]> {
   return http.get<DatasourceTypeOption[]>("/archive/datasources/types");
 }
 
-export function getDatasourcesApi(): Promise<Datasource[]> {
-  return http.get<Datasource[]>("/archive/datasources");
+export function getDatasourcesApi(query: DatasourceQuery): Promise<DatasourcePagedResult> {
+  const params = new URLSearchParams();
+  params.set("page", String(query.page));
+  params.set("size", String(query.size));
+  if (query.keyword) params.set("keyword", encodeURIComponent(query.keyword));
+  if (query.status != null) params.set("status", String(query.status));
+  return http.get<DatasourcePagedResult>(`/archive/datasources/page?${params.toString()}`);
 }
 
 export function createDatasourceApi(payload: DatasourcePayload): Promise<Datasource> {

@@ -111,6 +111,10 @@ export const messages = {
       new: "New Archive Connection",
       emptyLoading: "Loading archive connections...",
       empty: "No archive connection records.",
+      keyword: "Search",
+      keywordPlaceholder: "Enter code or name",
+      query: "Query",
+      reset: "Reset",
       created: "Archive connection created.",
       updated: "Archive connection updated.",
       statusUpdated: "Archive connection status updated.",
@@ -405,11 +409,14 @@ export const messages = {
       logEmpty: "No archive task logs.",
       pager: "Page {page} / {totalPages} · Total {total}",
       filters: {
-        all: "All"
+        all: "All",
+        group: "Archive Group",
+        groupPlaceholder: "Select archive group"
       },
       columns: {
         id: "ID",
         groupId: "Group ID",
+        groupName: "Group Name",
         status: "Status",
         processed: "Processed",
         speed: "Speed",
@@ -568,6 +575,10 @@ export const messages = {
       new: "新建归档连接",
       emptyLoading: "正在加载归档连接...",
       empty: "暂无归档连接记录。",
+      keyword: "搜索",
+      keywordPlaceholder: "输入编码或名称",
+      query: "查询",
+      reset: "重置",
       created: "归档连接已创建。",
       updated: "归档连接已更新。",
       statusUpdated: "归档连接状态已更新。",
@@ -863,11 +874,14 @@ export const messages = {
       logEmpty: "暂无归档任务日志。",
       pager: "第 {page} / {totalPages} 页 · 共 {total} 条",
       filters: {
-        all: "全部"
+        all: "全部",
+        group: "归档分组",
+        groupPlaceholder: "选择归档分组"
       },
       columns: {
         id: "ID",
         groupId: "分组 ID",
+        groupName: "分组名称",
         status: "状态",
         processed: "已处理",
         speed: "速度",
