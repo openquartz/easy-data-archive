@@ -64,8 +64,22 @@ export interface ArchiveGroupOption {
   name: string;
 }
 
+export interface ArchiveGroupSearchOption {
+  id: number;
+  name: string;
+}
+
 export function getArchiveGroupOptionsApi(): Promise<ArchiveGroupOption[]> {
   return http.get<ArchiveGroupOption[]>("/archive/groups/options");
+}
+
+export function searchArchiveGroupsApi(keyword: string): Promise<ArchiveGroupSearchOption[]> {
+  const params = new URLSearchParams();
+  params.set("page", "1");
+  params.set("size", "20");
+  if (keyword) params.set("keyword", keyword);
+  return http.get<{ list: ArchiveGroupSearchOption[] }>(`/archive/groups/page?${params.toString()}`)
+    .then((result) => result.list || []);
 }
 
 export function getTaskDetailApi(taskId: number): Promise<TaskItem> {
