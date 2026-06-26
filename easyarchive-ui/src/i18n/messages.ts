@@ -54,6 +54,8 @@ export const messages = {
       page: "Page",
       prev: "Prev",
       next: "Next",
+      pager: "Page {page} / {totalPages} · Total {total}",
+      query: "Query",
       loading: "Loading...",
       dismiss: "Dismiss",
       passwordChanged: "Password changed, please sign in again."
@@ -518,6 +520,8 @@ export const messages = {
       page: "第",
       prev: "上一页",
       next: "下一页",
+      pager: "第 {page} / {totalPages} 页 · 共 {total} 条",
+      query: "查询",
       loading: "加载中...",
       dismiss: "关闭",
       passwordChanged: "密码修改成功，请重新登录。"

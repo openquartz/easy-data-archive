@@ -44,8 +44,9 @@ const { t } = useI18n();
 const authStore = useAuthStore();
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / size.value)));
+const emptyText = computed(() => (loading.value ? t("datasource.emptyLoading") : t("datasource.empty")));
 const pagerText = computed(() =>
-  t("datasource.pager", { page: page.value, totalPages: totalPages.value, total: total.value })
+  t("common.pager", { page: page.value, totalPages: totalPages.value, total: total.value })
 );
 const statusOptions = computed(() => [
   { label: t("task.filters.all"), value: undefined },

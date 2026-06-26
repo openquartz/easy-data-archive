@@ -143,7 +143,7 @@ onBeforeRouteLeave(() => {
             {{ group.name }}
           </option>
         </select>
-        <button class="btn btn--subtle" :disabled="loading" @click="applyFilter">{{ t("common.refresh") }}</button>
+        <button class="btn btn--subtle" :disabled="loading" @click="applyFilter">{{ t("common.query") }}</button>
       </div>
     </header>
 
