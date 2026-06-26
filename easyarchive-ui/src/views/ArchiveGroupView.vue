@@ -87,7 +87,7 @@ async function loadData(): Promise<void> {
     };
     const [groupResult, datasourceResult, userResult] = await Promise.all([
       getArchiveGroupsPageApi(params),
-      getDatasourcesApi(),
+      getDatasourcesApi({ page: 1, size: 1000 }).then((r) => r.data),
       getUsersApiSilent().catch(() => [] as User[])
     ]);
     groups.value = groupResult.data;

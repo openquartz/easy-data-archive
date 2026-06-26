@@ -59,7 +59,7 @@ async function loadData(): Promise<void> {
   loading.value = true;
   errorMessage.value = "";
   try {
-    const [userList, datasourceList] = await Promise.all([getUsersApi(), getDatasourcesApi()]);
+    const [userList, datasourceList] = await Promise.all([getUsersApi(), getDatasourcesApi({ page: 1, size: 1000 }).then((r) => r.data)]);
     list.value = userList;
     datasources.value = datasourceList;
   } catch (error) {

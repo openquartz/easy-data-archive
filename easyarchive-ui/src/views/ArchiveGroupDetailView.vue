@@ -177,7 +177,7 @@ async function loadDetail(): Promise<void> {
     const [itemsResult, overviewResult, datasourceResult, userResult] = await Promise.all([
       getArchiveGroupItemsApi(groupId.value),
       getArchiveGroupOverviewApi(groupId.value),
-      getDatasourcesApi(),
+      getDatasourcesApi({ page: 1, size: 1000 }).then((r) => r.data),
       getUsersApiSilent().catch(() => [] as User[])
     ]);
 
