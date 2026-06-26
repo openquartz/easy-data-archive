@@ -101,6 +101,16 @@
         WHERE id = #{id} AND deleted = 0
     </select>
 
+    <select id="selectByIds" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ea_archive_group
+        WHERE deleted = 0
+          AND id IN
+          <foreach collection="ids" item="id" open="(" separator="," close=")">
+              #{id}
+          </foreach>
+    </select>
+
     <select id="selectAuthorizedById" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ea_archive_group g

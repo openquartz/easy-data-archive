@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
     private final CurrentUserService currentUserService;
     private final ArchiveTaskOperationLogPresenter archiveTaskOperationLogPresenter;
     private final OperationLogRecorder operationLogRecorder;
+    private final ArchiveTaskGroupNameResolver archiveTaskGroupNameResolver;
 
     @Override
     public Map<String, Object> queryTasks(int page, int size, String status, Long groupId) {
@@ -53,6 +55,7 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
             list = archiveGroupExecuteTaskMapper.selectPageByUser(userId, offset, size, status, groupId);
             total = archiveGroupExecuteTaskMapper.countByUser(userId, status, groupId);
         }
+        archiveTaskGroupNameResolver.fillGroupNames(list);
         Map<String, Object> result = new HashMap<>();
         result.put("list", TaskConvertUtils.fromEntityTaskList(list));
         result.put("total", total);
@@ -64,7 +67,9 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
     @Override
     public TaskVO queryTaskById(Long taskId) {
         archiveResourceAccessService.assertTaskAccessible(taskId);
-        return TaskConvertUtils.fromEntity(archiveLogRepository.queryTaskById(taskId));
+        ArchiveGroupExecuteTask task = archiveLogRepository.queryTaskById(taskId);
+        archiveTaskGroupNameResolver.fillGroupNames(Collections.singletonList(task));
+        return TaskConvertUtils.fromEntity(task);
     }
 
     @Override

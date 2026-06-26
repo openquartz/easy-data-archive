@@ -20,7 +20,9 @@ class DashboardServiceImplTest {
 
     private final ArchiveGroupExecuteTaskMapper taskMapper = mock(ArchiveGroupExecuteTaskMapper.class);
     private final ArchiveConnectionMapper datasourceMapper = mock(ArchiveConnectionMapper.class);
-    private final DashboardServiceImpl service = new DashboardServiceImpl(taskMapper, datasourceMapper);
+    private final ArchiveTaskGroupNameResolver groupNameResolver = mock(ArchiveTaskGroupNameResolver.class);
+    private final DashboardServiceImpl service = new DashboardServiceImpl(taskMapper, datasourceMapper,
+            groupNameResolver);
 
     @Test
     void shouldBuildSevenDayTrendAndFillMissingDates() {

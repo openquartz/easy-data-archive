@@ -24,13 +24,18 @@ public class DashboardServiceImpl implements DashboardService {
     private static final int TREND_DAYS = 7;
     private final ArchiveGroupExecuteTaskMapper archiveGroupExecuteTaskMapper;
     private final ArchiveConnectionMapper eaArchiveDatasourceMapper;
+    private final ArchiveTaskGroupNameResolver archiveTaskGroupNameResolver;
 
     @Override
     public Map<String, Object> getOverview() {
         Map<String, Object> result = new HashMap<>();
+        List<ArchiveGroupExecuteTask> recentTasks = archiveGroupExecuteTaskMapper.selectRecentTasks(RECENT_TASK_LIMIT);
+        List<ArchiveGroupExecuteTask> failedTasks = archiveGroupExecuteTaskMapper.selectFailedTasks(FAILED_TASK_LIMIT);
+        archiveTaskGroupNameResolver.fillGroupNames(recentTasks);
+        archiveTaskGroupNameResolver.fillGroupNames(failedTasks);
         result.put("taskStatusCounts", archiveGroupExecuteTaskMapper.countByExecuteStatus());
-        result.put("recentTasks", archiveGroupExecuteTaskMapper.selectRecentTasks(RECENT_TASK_LIMIT));
-        result.put("failedTasks", archiveGroupExecuteTaskMapper.selectFailedTasks(FAILED_TASK_LIMIT));
+        result.put("recentTasks", recentTasks);
+        result.put("failedTasks", failedTasks);
         result.put("dailyTaskTrend", buildDailyTaskTrend());
         result.put("datasourceStatusSummary", buildDatasourceStatusSummary());
         return result;

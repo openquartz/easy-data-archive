@@ -34,19 +34,21 @@ class ArchiveTaskLogServiceImplTest {
     private final CurrentUserService currentUserService = mock(CurrentUserService.class);
     private final ArchiveTaskOperationLogPresenter presenter = mock(ArchiveTaskOperationLogPresenter.class);
     private final OperationLogRecorder recorder = mock(OperationLogRecorder.class);
+    private final ArchiveTaskGroupNameResolver groupNameResolver = mock(ArchiveTaskGroupNameResolver.class);
     private final ArchiveTaskLogServiceImpl service = new ArchiveTaskLogServiceImpl(
-            archiveLogRepository, taskMapper, archiveResourceAccessService, currentUserService, presenter, recorder);
+            archiveLogRepository, taskMapper, archiveResourceAccessService, currentUserService, presenter, recorder,
+            groupNameResolver);
 
     @Test
     void shouldUseAuthorizedTaskPageForNormalUser() {
         when(currentUserService.getCurrentUser()).thenReturn(currentUser());
-        when(taskMapper.selectPageByUser(2L, 0, 20, "1")).thenReturn(Collections.emptyList());
-        when(taskMapper.countByUser(2L, "1")).thenReturn(0);
+        when(taskMapper.selectPageByUser(2L, 0, 20, "1", null)).thenReturn(Collections.emptyList());
+        when(taskMapper.countByUser(2L, "1", null)).thenReturn(0);
 
         Map<String, Object> result = service.queryTasks(1, 20, "1", null);
 
         assertEquals(0, result.get("total"));
-        verify(taskMapper).selectPageByUser(2L, 0, 20, "1");
+        verify(taskMapper).selectPageByUser(2L, 0, 20, "1", null);
     }
 
     @Test

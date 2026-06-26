@@ -4,6 +4,7 @@ import com.openquartz.easyarchive.core.rule.entity.ArchiveGroup;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -23,6 +24,8 @@ public interface ArchiveGroupMapper {
     int deleteById(@Param("id") Long id);
 
     ArchiveGroup selectById(@Param("id") Long id);
+
+    List<ArchiveGroup> selectByIds(@Param("ids") Collection<Long> ids);
 
     ArchiveGroup selectAuthorizedById(@Param("userId") Long userId, @Param("id") Long id);
 
