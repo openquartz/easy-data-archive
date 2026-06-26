@@ -279,9 +279,12 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="page-card">
-    <header class="page-toolbar">
-      <h1>{{ t("archiveGroup.title") }}</h1>
-      <div class="actions">
+    <header class="page-toolbar page-toolbar--split">
+      <div class="toolbar-top">
+        <h1>{{ t("archiveGroup.title") }}</h1>
+        <button v-if="authStore.hasCapability('ARCHIVE_GROUP_CREATE')" class="btn btn--primary" :disabled="loading" @click="openCreateGroup">{{ t("archiveGroup.new") }}</button>
+      </div>
+      <div class="toolbar-filter">
         <input
           v-model="filters.keyword"
           type="text"
@@ -302,7 +305,6 @@ onBeforeUnmount(() => {
         <button class="btn btn--subtle" @click="handleSearch">{{ t("archiveGroup.filters.search") }}</button>
         <button v-if="hasActiveFilter" class="btn btn--subtle" @click="handleReset">{{ t("archiveGroup.filters.reset") }}</button>
         <button class="btn btn--subtle" :disabled="loading" @click="loadData">{{ t("common.refresh") }}</button>
-        <button v-if="authStore.hasCapability('ARCHIVE_GROUP_CREATE')" class="btn btn--primary" :disabled="loading" @click="openCreateGroup">{{ t("archiveGroup.new") }}</button>
       </div>
     </header>
     <div v-if="loading" class="empty">{{ groupEmptyText }}</div>

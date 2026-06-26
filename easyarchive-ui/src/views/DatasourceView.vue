@@ -203,9 +203,12 @@ void loadData();
 
 <template>
   <section class="page-card">
-    <header class="page-toolbar">
-      <h1>{{ t("datasource.title") }}</h1>
-      <div class="actions">
+    <header class="page-toolbar page-toolbar--split">
+      <div class="toolbar-top">
+        <h1>{{ t("datasource.title") }}</h1>
+        <button v-if="authStore.hasCapability('DATASOURCE_CREATE')" class="btn btn--primary" :disabled="loading" @click="openCreate">{{ t("datasource.new") }}</button>
+      </div>
+      <div class="toolbar-filter">
         <input
           v-model="keywordFilter"
           type="text"
@@ -220,7 +223,6 @@ void loadData();
         <button class="btn btn--subtle" :disabled="loading" @click="handleQuery">{{ t("datasource.query") }}</button>
         <button class="btn btn--subtle" :disabled="loading" @click="handleReset">{{ t("datasource.reset") }}</button>
         <button class="btn btn--subtle" :disabled="loading" @click="loadData">{{ t("common.refresh") }}</button>
-        <button v-if="authStore.hasCapability('DATASOURCE_CREATE')" class="btn btn--primary" :disabled="loading" @click="openCreate">{{ t("datasource.new") }}</button>
       </div>
     </header>
     <p v-if="successMessage" class="feedback">{{ successMessage }}</p>
