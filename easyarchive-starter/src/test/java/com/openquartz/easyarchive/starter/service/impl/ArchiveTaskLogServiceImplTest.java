@@ -9,13 +9,17 @@ import com.openquartz.easyarchive.starter.mapper.ArchiveGroupExecuteTaskMapper;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogCommand;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
 import com.openquartz.easyarchive.starter.operationlog.presenter.ArchiveTaskOperationLogPresenter;
+import com.openquartz.easyarchive.starter.model.dto.TaskVO;
 import com.openquartz.easyarchive.starter.security.CurrentUserInfo;
+import com.openquartz.easyarchive.starter.security.RoleConstants;
 import com.openquartz.easyarchive.starter.service.ArchiveResourceAccessService;
 import com.openquartz.easyarchive.starter.service.CurrentUserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,6 +42,23 @@ class ArchiveTaskLogServiceImplTest {
     private final ArchiveTaskLogServiceImpl service = new ArchiveTaskLogServiceImpl(
             archiveLogRepository, taskMapper, archiveResourceAccessService, currentUserService, presenter, recorder,
             groupNameResolver);
+
+    @Test
+    void shouldFillGroupNamesForAdminQueryTasks() {
+        ArchiveGroupExecuteTask task = new ArchiveGroupExecuteTask();
+        task.setId(1L);
+        task.setGroupId(7L);
+        task.setExecuteStatus(ArchiveGroupExecuteTask.STATUS_RUNNING);
+        when(currentUserService.getCurrentUser()).thenReturn(adminUser());
+        when(archiveLogRepository.queryTasks(1, 20, "1", 7L)).thenReturn(Collections.singletonList(task));
+        when(archiveLogRepository.countTasks("1", 7L)).thenReturn(1);
+
+        Map<String, Object> result = service.queryTasks(1, 20, "1", 7L);
+
+        verify(groupNameResolver).fillGroupNames(any());
+        TaskVO vo = (TaskVO) ((List<?>) result.get("list")).get(0);
+        assertEquals(7L, vo.getGroupId());
+    }
 
     @Test
     void shouldUseAuthorizedTaskPageForNormalUser() {
@@ -132,6 +153,13 @@ class ArchiveTaskLogServiceImplTest {
         currentUserInfo.setUserId(2L);
         currentUserInfo.setRoleCode("normal_user");
         return currentUserInfo;
+    }
+
+    private static CurrentUserInfo adminUser() {
+        CurrentUserInfo adminUserInfo = new CurrentUserInfo();
+        adminUserInfo.setUserId(1L);
+        adminUserInfo.setRoleCode(RoleConstants.PLATFORM_ADMIN);
+        return adminUserInfo;
     }
 
     private ArchiveTaskLog captureSavedTaskLog() {
