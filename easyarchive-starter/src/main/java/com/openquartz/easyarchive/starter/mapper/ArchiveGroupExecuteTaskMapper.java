@@ -22,14 +22,29 @@ public interface ArchiveGroupExecuteTaskMapper {
                                               @Param("size") int size,
                                               @Param("status") String status);
 
+    List<ArchiveGroupExecuteTask> selectPage(@Param("offset") int offset,
+                                              @Param("size") int size,
+                                              @Param("status") String status,
+                                              @Param("groupId") Long groupId);
+
     List<ArchiveGroupExecuteTask> selectPageByUser(@Param("userId") Long userId,
                                                    @Param("offset") int offset,
                                                    @Param("size") int size,
                                                    @Param("status") String status);
 
+    List<ArchiveGroupExecuteTask> selectPageByUser(@Param("userId") Long userId,
+                                                   @Param("offset") int offset,
+                                                   @Param("size") int size,
+                                                   @Param("status") String status,
+                                                   @Param("groupId") Long groupId);
+
     int count(@Param("status") String status);
 
+    int count(@Param("status") String status, @Param("groupId") Long groupId);
+
     int countByUser(@Param("userId") Long userId, @Param("status") String status);
+
+    int countByUser(@Param("userId") Long userId, @Param("status") String status, @Param("groupId") Long groupId);
 
     int countActiveByGroupId(@Param("groupId") Long groupId);
 

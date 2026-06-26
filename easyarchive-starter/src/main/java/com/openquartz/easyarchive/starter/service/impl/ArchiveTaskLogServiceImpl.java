@@ -40,18 +40,18 @@ public class ArchiveTaskLogServiceImpl implements ArchiveTaskLogService {
     private final OperationLogRecorder operationLogRecorder;
 
     @Override
-    public Map<String, Object> queryTasks(int page, int size, String status) {
+    public Map<String, Object> queryTasks(int page, int size, String status, Long groupId) {
         List<ArchiveGroupExecuteTask> list;
         int total;
         CurrentUserInfo currentUser = currentUserService.getCurrentUser();
         if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
-            list = archiveLogRepository.queryTasks(page, size, status);
-            total = archiveLogRepository.countTasks(status);
+            list = archiveLogRepository.queryTasks(page, size, status, groupId);
+            total = archiveLogRepository.countTasks(status, groupId);
         } else {
             int offset = (page - 1) * size;
             Long userId = currentUser.getUserId();
-            list = archiveGroupExecuteTaskMapper.selectPageByUser(userId, offset, size, status);
-            total = archiveGroupExecuteTaskMapper.countByUser(userId, status);
+            list = archiveGroupExecuteTaskMapper.selectPageByUser(userId, offset, size, status, groupId);
+            total = archiveGroupExecuteTaskMapper.countByUser(userId, status, groupId);
         }
         Map<String, Object> result = new HashMap<>();
         result.put("list", TaskConvertUtils.fromEntityTaskList(list));

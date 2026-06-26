@@ -21,10 +21,11 @@ public class ArchiveTaskLogController {
     public ApiResponse<Map<String, Object>> getTasks(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long groupId) {
         page = Math.max(1, page);
         size = Math.min(Math.max(1, size), 500);
-        return ApiResponse.success(taskLogService.queryTasks(page, size, status));
+        return ApiResponse.success(taskLogService.queryTasks(page, size, status, groupId));
     }
 
     @GetMapping("/tasks/{taskId}")

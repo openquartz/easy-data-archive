@@ -14,9 +14,9 @@ public interface ArchiveLogRepository {
 
     ArchiveGroupExecuteTask queryTaskById(Long taskId);
 
-    List<ArchiveGroupExecuteTask> queryTasks(int page, int size, String status);
+    List<ArchiveGroupExecuteTask> queryTasks(int page, int size, String status, Long groupId);
 
-    int countTasks(String status);
+    int countTasks(String status, Long groupId);
 
     List<ArchiveTaskLog> queryLogsByTaskId(Long taskId, int page, int size, String executePhase);
 

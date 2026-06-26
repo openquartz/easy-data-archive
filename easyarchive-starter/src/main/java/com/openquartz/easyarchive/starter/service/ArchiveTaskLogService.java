@@ -5,7 +5,7 @@ import java.util.Map;
 
 public interface ArchiveTaskLogService {
 
-    Map<String, Object> queryTasks(int page, int size, String status);
+    Map<String, Object> queryTasks(int page, int size, String status, Long groupId);
 
     TaskVO queryTaskById(Long taskId);
 

@@ -39,14 +39,14 @@ public class JdbcArchiveLogRepository implements ArchiveLogRepository {
     }
 
     @Override
-    public List<ArchiveGroupExecuteTask> queryTasks(int page, int size, String status) {
+    public List<ArchiveGroupExecuteTask> queryTasks(int page, int size, String status, Long groupId) {
         int offset = (page - 1) * size;
-        return executeTaskMapper.selectPage(offset, size, status);
+        return executeTaskMapper.selectPage(offset, size, status, groupId);
     }
 
     @Override
-    public int countTasks(String status) {
-        return executeTaskMapper.count(status);
+    public int countTasks(String status, Long groupId) {
+        return executeTaskMapper.count(status, groupId);
     }
 
     @Override
