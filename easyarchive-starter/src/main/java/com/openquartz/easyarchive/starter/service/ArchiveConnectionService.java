@@ -2,6 +2,7 @@ package com.openquartz.easyarchive.starter.service;
 
 import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
+import com.openquartz.easyarchive.starter.model.dto.PageResult;
 
 import java.util.List;
 
@@ -13,6 +14,8 @@ public interface ArchiveConnectionService extends com.openquartz.easyarchive.cor
     List<DatasourceTypeOption> listDatasourceTypes();
 
     List<ArchiveConnection> findAll();
+
+    PageResult<ArchiveConnection> findPage(int page, int size, String keyword, Integer status);
 
     ArchiveConnection findById(Long id);
 

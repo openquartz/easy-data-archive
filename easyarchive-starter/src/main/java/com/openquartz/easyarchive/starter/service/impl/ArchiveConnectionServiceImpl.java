@@ -7,6 +7,7 @@ import com.openquartz.easyarchive.core.connection.entity.ArchiveConnection;
 import com.openquartz.easyarchive.starter.exception.StarterErrorCode;
 import com.openquartz.easyarchive.starter.exception.StarterManageException;
 import com.openquartz.easyarchive.starter.mapper.ArchiveConnectionMapper;
+import com.openquartz.easyarchive.starter.model.dto.PageResult;
 import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
 import com.openquartz.easyarchive.starter.model.enums.DatasourceTypeEnum;
 import com.openquartz.easyarchive.starter.operationlog.OperationLogRecorder;
@@ -27,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 数据源服务实现
@@ -62,6 +64,37 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
             list = ids.isEmpty() ? Collections.emptyList() : datasourceMapper.selectAuthorizedListByIds(ids);
         }
         return maskPasswords(list);
+    }
+
+    @Override
+    public PageResult<ArchiveConnection> findPage(int page, int size, String keyword, Integer status) {
+        CurrentUserInfo currentUser = currentUserService.getCurrentUser();
+        int start = (page - 1) * size;
+        List<ArchiveConnection> list;
+        long total;
+        if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
+            total = datasourceMapper.countByKeyword(keyword, status);
+            list = datasourceMapper.selectByKeyword(keyword, status, start, size);
+        } else {
+            Long userId = currentUser.getUserId();
+            Set<Long> ids = datasourceAuthorizationService.listDatasourceIdsByLevel(userId,
+                    RoleConstants.isArchiveAdmin(currentUser.getRoleCode())
+                            ? DatasourcePermissionLevelEnum.MANAGE : DatasourcePermissionLevelEnum.USE);
+            if (ids.isEmpty()) {
+                return PageResult.of(Collections.emptyList(), 0, page, size);
+            }
+            List<ArchiveConnection> authorized = datasourceMapper.selectAuthorizedListByIds(ids);
+            List<ArchiveConnection> filtered = authorized.stream()
+                    .filter(d -> keyword == null || keyword.isEmpty()
+                            || d.getDatasourceName().contains(keyword)
+                            || d.getDatasourceCode().contains(keyword))
+                    .filter(d -> status == null || status.equals(d.getStatus()))
+                    .collect(Collectors.toList());
+            total = filtered.size();
+            int end = Math.min(start + size, filtered.size());
+            list = start >= filtered.size() ? Collections.emptyList() : filtered.subList(start, end);
+        }
+        return PageResult.of(maskPasswords(list), total, page, size);
     }
 
     @Override

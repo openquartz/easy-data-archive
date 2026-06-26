@@ -40,4 +40,11 @@ public interface ArchiveConnectionMapper {
 
     List<Map<String, Object>> countByStatus();
 
+    long countByKeyword(@Param("keyword") String keyword, @Param("status") Integer status);
+
+    List<ArchiveConnection> selectByKeyword(@Param("keyword") String keyword,
+                                            @Param("status") Integer status,
+                                            @Param("start") int start,
+                                            @Param("size") int size);
+
 }

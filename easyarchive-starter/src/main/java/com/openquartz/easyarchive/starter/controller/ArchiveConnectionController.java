@@ -5,6 +5,7 @@ import com.openquartz.easyarchive.starter.annotation.OperationLog;
 import com.openquartz.easyarchive.starter.converter.DatasourceConverter;
 import com.openquartz.easyarchive.starter.model.dto.ApiResponse;
 import com.openquartz.easyarchive.starter.model.dto.DatasourceTypeOption;
+import com.openquartz.easyarchive.starter.model.dto.PageResult;
 import com.openquartz.easyarchive.starter.model.request.DatasourceCreateRequest;
 import com.openquartz.easyarchive.starter.model.request.DatasourceUpdateRequest;
 import com.openquartz.easyarchive.starter.model.vo.DatasourceVO;
@@ -16,7 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -38,6 +41,26 @@ public class ArchiveConnectionController {
         return ApiResponse.success(datasourceService.findAll().stream()
                 .map(datasourceConverter::toVO)
                 .collect(Collectors.toList()));
+    }
+
+    @GetMapping("/page")
+    public ApiResponse<Map<String, Object>> getDatasourcesPage(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer status) {
+        page = Math.max(1, page);
+        size = Math.min(Math.max(1, size), 500);
+        PageResult<ArchiveConnection> result = datasourceService.findPage(page, size, keyword, status);
+        List<DatasourceVO> voList = result.getData().stream()
+                .map(datasourceConverter::toVO)
+                .collect(Collectors.toList());
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", voList);
+        response.put("total", result.getTotal());
+        response.put("page", result.getPage());
+        response.put("size", result.getSize());
+        return ApiResponse.success(response);
     }
 
     @PostMapping

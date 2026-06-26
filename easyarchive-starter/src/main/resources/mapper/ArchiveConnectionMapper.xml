@@ -157,4 +157,30 @@
         GROUP BY status
     </select>
 
+    <select id="countByKeyword" resultType="int">
+        SELECT COUNT(1) FROM ea_archive_datasource
+        <where>
+            <if test="status != null">AND status = #{status}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (datasource_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR datasource_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            AND deleted = 0
+        </where>
+    </select>
+
+    <select id="selectByKeyword" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM ea_archive_datasource
+        <where>
+            <if test="status != null">AND status = #{status}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (datasource_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR datasource_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            AND deleted = 0
+        </where>
+        ORDER BY id DESC
+        LIMIT #{start}, #{size}
+    </select>
+
 </mapper>

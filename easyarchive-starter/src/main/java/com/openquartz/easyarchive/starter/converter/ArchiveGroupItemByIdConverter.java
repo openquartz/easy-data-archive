@@ -25,7 +25,7 @@ public class ArchiveGroupItemByIdConverter {
         entity.setStartId(request.getStartId() != null ? request.getStartId() : "0");
         entity.setEndId(request.getEndId() != null ? request.getEndId() : String.valueOf(Long.MAX_VALUE));
         entity.setStepCount(request.getStepCount() != null ? request.getStepCount() : 1000);
-        entity.setStepRounds(request.getStepRounds() != null ? request.getStepRounds() : 5000);
+        entity.setStepRounds(request.getStepRounds() != null ? request.getStepRounds() : 5000L);
         entity.setPauseMs(request.getPauseMs());
         entity.setEnableClean(request.getEnableClean());
         entity.setEnableWrite(request.getEnableWrite());
