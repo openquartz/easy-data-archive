@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRouter } from "vue-router";
-import { cancelTaskApi, getTasksApi, type TaskItem } from "../api/task";
+import { cancelTaskApi, getArchiveGroupOptionsApi, getTasksApi, type ArchiveGroupOption, type TaskItem } from "../api/task";
 import TaskStatusTag from "../components/TaskStatusTag.vue";
 import EntityLink from "../components/EntityLink.vue";
 import { useI18n } from "../i18n";
@@ -10,11 +10,13 @@ import { createPolling } from "../utils/polling";
 const router = useRouter();
 const loading = ref(false);
 const list = ref<TaskItem[]>([]);
+const groupOptions = ref<ArchiveGroupOption[]>([]);
 const errorMessage = ref("");
 const page = ref(1);
 const size = ref(20);
 const total = ref(0);
 const statusFilter = ref("");
+const groupFilter = ref<number | undefined>(undefined);
 const cancellingIds = ref(new Set<number>());
 const { t } = useI18n();
 
@@ -37,9 +39,18 @@ async function loadData(): Promise<void> {
   loading.value = true;
   errorMessage.value = "";
   try {
-    const result = await getTasksApi({ page: page.value, size: size.value, status: statusFilter.value || undefined });
-    list.value = result.list || [];
-    total.value = result.total || 0;
+    const [taskResult, groupResult] = await Promise.all([
+      getTasksApi({
+        page: page.value,
+        size: size.value,
+        status: statusFilter.value || undefined,
+        groupId: groupFilter.value
+      }),
+      getArchiveGroupOptionsApi().catch(() => [] as ArchiveGroupOption[])
+    ]);
+    list.value = taskResult.list || [];
+    total.value = taskResult.total || 0;
+    groupOptions.value = groupResult;
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : t("task.loadFailed");
   } finally {
@@ -121,12 +132,18 @@ onBeforeRouteLeave(() => {
     <header class="page-toolbar">
       <h1>{{ t("task.title") }}</h1>
       <div class="actions">
-        <select v-model="statusFilter" :disabled="loading" @change="applyFilter">
+        <select v-model="statusFilter" :disabled="loading">
           <option v-for="item in statusOptions" :key="item.value || 'all'" :value="item.value">
             {{ item.label }}
           </option>
         </select>
-        <button class="btn btn--subtle" :disabled="loading" @click="refresh">{{ t("common.refresh") }}</button>
+        <select v-model="groupFilter" :disabled="loading">
+          <option :value="undefined">{{ t("task.filters.all") }}</option>
+          <option v-for="group in groupOptions" :key="group.id" :value="group.id">
+            {{ group.name }}
+          </option>
+        </select>
+        <button class="btn btn--subtle" :disabled="loading" @click="applyFilter">{{ t("common.refresh") }}</button>
       </div>
     </header>
 
@@ -139,6 +156,7 @@ onBeforeRouteLeave(() => {
           <tr>
             <th>{{ t("task.columns.id") }}</th>
             <th>{{ t("task.columns.groupId") }}</th>
+            <th>{{ t("task.columns.groupName") }}</th>
             <th>{{ t("task.columns.status") }}</th>
             <th>{{ t("task.columns.processed") }}</th>
             <th>{{ t("task.columns.speed") }}</th>
@@ -151,6 +169,7 @@ onBeforeRouteLeave(() => {
           <tr v-for="item in list" :key="item.id">
             <td><EntityLink type="task" :id="item.id">{{ item.id }}</EntityLink></td>
             <td><EntityLink type="group" :id="item.groupId">{{ item.groupId }}</EntityLink></td>
+            <td>{{ item.groupName || "-" }}</td>
             <td><TaskStatusTag :status="item.executeStatus" /></td>
             <td>{{ item.processedRecords ?? 0 }}</td>
             <td>{{ item.processedSpeed ?? "-" }}</td>

@@ -282,31 +282,29 @@ onBeforeUnmount(() => {
     <header class="page-toolbar">
       <h1>{{ t("archiveGroup.title") }}</h1>
       <div class="actions">
+        <input
+          v-model="filters.keyword"
+          type="text"
+          :placeholder="t('archiveGroup.filters.keywordPlaceholder')"
+          class="filter-bar__input"
+        />
+        <select v-model.number="filters.enableStatus" class="filter-bar__select">
+          <option :value="undefined">{{ t("archiveGroup.filters.statusAll") }}</option>
+          <option :value="0">{{ t("status.enabled") }}</option>
+          <option :value="1">{{ t("status.disabled") }}</option>
+        </select>
+        <select v-model.number="filters.ownerUserId" class="filter-bar__select">
+          <option :value="undefined">{{ t("archiveGroup.filters.ownerAll") }}</option>
+          <option v-for="user in users" :key="user.id" :value="user.id">
+            {{ user.realName || user.username }}
+          </option>
+        </select>
+        <button class="btn btn--subtle" @click="handleSearch">{{ t("archiveGroup.filters.search") }}</button>
+        <button v-if="hasActiveFilter" class="btn btn--subtle" @click="handleReset">{{ t("archiveGroup.filters.reset") }}</button>
         <button class="btn btn--subtle" :disabled="loading" @click="loadData">{{ t("common.refresh") }}</button>
         <button v-if="authStore.hasCapability('ARCHIVE_GROUP_CREATE')" class="btn btn--primary" :disabled="loading" @click="openCreateGroup">{{ t("archiveGroup.new") }}</button>
       </div>
     </header>
-    <div class="filter-bar">
-      <input
-        v-model="filters.keyword"
-        type="text"
-        :placeholder="t('archiveGroup.filters.keywordPlaceholder')"
-        class="filter-bar__input"
-      />
-      <select v-model.number="filters.enableStatus" class="filter-bar__select" @change="handleSearch">
-        <option :value="undefined">{{ t("archiveGroup.filters.statusAll") }}</option>
-        <option :value="0">{{ t("status.enabled") }}</option>
-        <option :value="1">{{ t("status.disabled") }}</option>
-      </select>
-      <select v-model.number="filters.ownerUserId" class="filter-bar__select" @change="handleSearch">
-        <option :value="undefined">{{ t("archiveGroup.filters.ownerAll") }}</option>
-        <option v-for="user in users" :key="user.id" :value="user.id">
-          {{ user.realName || user.username }}
-        </option>
-      </select>
-      <button class="btn btn--subtle" @click="handleSearch">{{ t("archiveGroup.filters.search") }}</button>
-      <button v-if="hasActiveFilter" class="btn btn--subtle" @click="handleReset">{{ t("archiveGroup.filters.reset") }}</button>
-    </div>
     <div v-if="loading" class="empty">{{ groupEmptyText }}</div>
     <div v-else-if="!groups.length && hasActiveFilter" class="empty">
       {{ t("archiveGroup.emptyFilter") }}

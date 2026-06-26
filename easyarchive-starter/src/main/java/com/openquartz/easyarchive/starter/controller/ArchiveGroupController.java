@@ -64,6 +64,22 @@ public class ArchiveGroupController {
                 .collect(Collectors.toList()));
     }
 
+    @GetMapping("/options")
+    public ApiResponse<List<Map<String, Object>>> options() {
+        List<ArchiveGroupVO> groups = groupService.tree().stream()
+                .map(archiveGroupConverter::toVO)
+                .collect(Collectors.toList());
+        List<Map<String, Object>> result = groups.stream()
+                .map(g -> {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("id", g.getId());
+                    item.put("name", g.getGroupName());
+                    return item;
+                })
+                .collect(Collectors.toList());
+        return ApiResponse.success(result);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ArchiveGroupView>> detail(@PathVariable Long id) {
         ArchiveGroupView view = groupService.findById(id);
