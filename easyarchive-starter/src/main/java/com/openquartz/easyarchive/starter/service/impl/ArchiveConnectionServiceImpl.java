@@ -71,7 +71,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
         CurrentUserInfo currentUser = currentUserService.getCurrentUser();
         int start = (page - 1) * size;
         List<ArchiveConnection> list;
-        long total;
+        Long total;
         if (RoleConstants.isAdmin(currentUser.getRoleCode())) {
             total = datasourceMapper.countByKeyword(keyword, status);
             list = datasourceMapper.selectByKeyword(keyword, status, start, size);
@@ -90,7 +90,7 @@ public class ArchiveConnectionServiceImpl implements ArchiveConnectionService {
                             || d.getDatasourceCode().contains(keyword))
                     .filter(d -> status == null || status.equals(d.getStatus()))
                     .collect(Collectors.toList());
-            total = filtered.size();
+            total = (long) filtered.size();
             int end = Math.min(start + size, filtered.size());
             list = start >= filtered.size() ? Collections.emptyList() : filtered.subList(start, end);
         }

@@ -157,7 +157,7 @@
         GROUP BY status
     </select>
 
-    <select id="countByKeyword" resultType="int">
+    <select id="countByKeyword" resultType="long">
         SELECT COUNT(1) FROM ea_archive_datasource
         <where>
             <if test="status != null">AND status = #{status}</if>
